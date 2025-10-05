@@ -1,27 +1,33 @@
-# 💰 Wallet App - AI-Powered Expense Tracker
+# 💰 Wallet Tracker - Smart Personal Finance Manager
 
-A modern, React-based wallet application with AI-powered natural language processing for expense tracking. No external APIs required - everything runs locally!
+A comprehensive React-based personal finance application with intelligent transaction parsing and real-time balance tracking. Built with modern web technologies and Firebase backend.
 
 ## ✨ Features
 
-- 🤖 **Enhanced AI Chat Interface** - Advanced NLP with regex patterns and Compromise.js
-- 🔥 **Firebase Backend** - Real-time data synchronization with proper security rules
-- 📊 **Real-time Dashboard** - Live updates with weekly/monthly statistics
-- 🏷️ **Smart Categorization** - Intelligent expense/income detection with confidence scoring
-- 💬 **Advanced NLP Processing** - Pattern matching + linguistic analysis for better accuracy
-- 🎨 **Modern Redesigned UI** - Beautiful gradient cards and responsive design
-- 🔐 **Secure Authentication** - Email/Password and Google Sign-in with proper Firebase rules
-- ⚡ **Live Updates** - Dashboard refreshes automatically on transaction changes
+- 🤖 **Smart Chat Interface** - Natural language transaction input with intelligent parsing
+- � **Real-time Balance Updates** - Dynamic balance calculation with transaction edits
+- 📊 **Interactive Dashboard** - Comprehensive spending analytics and transaction history
+- 🏷️ **Intelligent Categorization** - Automatic expense/income detection with emoji icons
+- ✏️ **Live Transaction Editing** - Edit transactions with automatic balance recalculation
+- 🎨 **Modern UI/UX** - Beautiful gradient design with dark/light theme support
+- 🔐 **Secure Authentication** - Email/Password and Google Sign-in with Firebase Auth
+- 📱 **Responsive Design** - Optimized for desktop, tablet, and mobile devices
+- 🗂️ **User Management** - Complete profile management with settings and preferences
+- 🔒 **Account Security** - Re-authentication for sensitive operations like account deletion
+- 📤 **Data Export** - Export all your financial data in JSON format
+- 🗃️ **Transaction Management** - Full CRUD operations with transaction history
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - Firebase Account (free)
 
 ### Installation
 
 1. **Clone and Install**
+
    ```bash
    git clone <your-repo>
    cd wallet-app
@@ -38,6 +44,7 @@ A modern, React-based wallet application with AI-powered natural language proces
 3. **Environment Setup**
    - Rename `.env.example` to `.env`
    - Add your Firebase configuration:
+
    ```env
    VITE_FIREBASE_API_KEY=your_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
@@ -48,33 +55,44 @@ A modern, React-based wallet application with AI-powered natural language proces
    ```
 
 4. **Run the App**
+
    ```bash
    npm run dev
    ```
 
 ## 🎯 How to Use
 
-### Adding Transactions via Chat
+### Smart Chat Interface
 
-The enhanced AI assistant with advanced NLP understands complex natural language! Try these:
+The intelligent chat interface parses natural language for transaction entry. Simply describe your transaction in plain English:
 
-**💸 Advanced Expense Examples:**
+**💸 Expense Examples:**
+
 - "I bought groceries for 500 taka today"
-- "Paid the electricity bill 2000 BDT"
-- "Spent 350 on movie tickets last night"
-- "Ordered pizza delivery for 800"
-- "Movie ticket cost 350"
+- "Paid electricity bill 2000 BDT"
+- "Movie tickets cost 350 last night"
+- "Ordered pizza for 800"
 - "Uber ride 200 BDT"
 
-**💰 Advanced Income Examples:**
-- "Received my monthly salary 50000"
+**💰 Income Examples:**
+
+- "Received salary 50000"
 - "Got paid 3000 for freelance work"
-- "Earned bonus 5000 from company"
-- "Sold my old phone for 15000"
+- "Earned bonus 5000"
+- "Sold old phone for 15000"
+
+### Key Features
+
+- **Real-time Balance Updates**: Your balance updates instantly when you add, edit, or delete transactions
+- **Transaction Editing**: Click any transaction to edit amount, category, or description
+- **Smart Categorization**: Automatically detects and categorizes expenses (Food, Transport, Bills, etc.)
+- **Account Management**: Complete user profile with settings, data export, and secure account deletion
+- **Re-authentication Security**: Sensitive operations require password confirmation for security
 
 ### Categories
 
 The app automatically categorizes transactions:
+
 - 🍔 Food (groceries, restaurant, meals)
 - 🚗 Transport (uber, taxi, fuel)
 - 🎬 Entertainment (movies, games)
@@ -87,37 +105,43 @@ The app automatically categorizes transactions:
 ## 🛠️ Tech Stack
 
 - **Frontend:** React 18 + Vite
-- **Styling:** Tailwind CSS
-- **Icons:** Lucide React
-- **Backend:** Firebase (Auth + Firestore)
-- **NLP:** Compromise.js (Local processing)
-- **Forms:** React Hook Form
-- **Charts:** Recharts
-- **Date Handling:** date-fns
+- **Styling:** Tailwind CSS with custom gradients
+- **Icons:** Lucide React for modern iconography
+- **Backend:** Firebase (Authentication + Firestore Database)
+- **State Management:** React Context API with custom hooks
+- **UI Components:** Custom modal system with toast notifications
+- **Transaction Parsing:** Intelligent regex-based natural language processing
+- **Security:** Firebase Auth with re-authentication for sensitive operations
+- **Real-time Updates:** Firestore listeners with automatic balance calculation
 
 ## 📁 Project Structure
 
 ```
 src/
 ├── components/
-│   ├── Auth/           # Login/Register components
-│   ├── Chat/           # AI Chat interface
-│   ├── Dashboard/      # Main dashboard
-│   └── Layout/         # Navigation components
+│   ├── Auth/           # Authentication components
+│   │   └── Login.jsx
+│   ├── Chat/           # Interactive chat interface
+│   │   └── ChatWidget.jsx
+│   ├── Dashboard/      # Main dashboard components
+│   │   ├── Dashboard.jsx
+│   │   └── TransactionList.jsx
+│   └── User/           # User management components
+│       └── SettingsModal.jsx
 ├── config/
 │   └── firebase.js     # Firebase configuration
 ├── context/
-│   └── AuthContext.jsx # Authentication context
+│   └── AuthContext.jsx # Authentication context with user state
 ├── hooks/
-│   └── useAuth.js      # Authentication hook
+│   └── useAuth.js      # Custom authentication hook
 ├── services/
-│   ├── authService.js      # Authentication logic
-│   └── transactionService.js # Transaction CRUD
+│   ├── authService.js      # Authentication & user management
+│   └── transactionService.js # Transaction CRUD operations
 ├── utils/
-│   ├── transactionParser.js # Local NLP parser
+│   ├── transactionParser.js # Natural language transaction parsing
 │   └── helpers.js           # Utility functions
-├── App.jsx
-└── main.jsx
+├── App.jsx             # Main application component
+└── main.jsx            # Application entry point
 ```
 
 ## 🔐 Firebase Security Rules
@@ -150,6 +174,7 @@ service cloud.firestore {
 ## 🎨 Customization
 
 ### Adding New Categories
+
 Edit `src/utils/transactionParser.js`:
 
 ```javascript
@@ -160,21 +185,30 @@ const categoryKeywords = {
 ```
 
 ### Styling
+
 The app uses Tailwind CSS. Customize colors and themes in `tailwind.config.js`.
 
 ## 🐛 Troubleshooting
 
-1. **Firebase Connection Issues**
-   - Verify your `.env` file has correct Firebase config
-   - Check Firebase project settings
+1. **Firebase Authentication Issues**
+   - Verify Firebase config in `src/config/firebase.js`
+   - Check Firebase console for enabled auth providers
+   - Ensure Firestore security rules are properly configured
 
-2. **Tailwind Not Working**
-   - Ensure PostCSS is configured
-   - Check `tailwind.config.js` content paths
+2. **Balance Not Updating**
+   - Check browser console for transaction service errors
+   - Verify user profile refresh is working correctly
+   - Ensure proper userId is passed to transaction operations
 
-3. **Chat Not Responding**
-   - Check browser console for errors
-   - Verify NLP parser is importing correctly
+3. **Transaction Parsing Issues**
+   - Check `transactionParser.js` for keyword matches
+   - Verify regex patterns are working for your input format
+   - Browser console will show parsing results for debugging
+
+4. **Account Deletion Problems**
+   - Recent login required for account deletion (Firebase security)
+   - Use re-authentication dialog if prompted
+   - Check Firebase Auth error messages in console
 
 ## 📄 License
 
@@ -189,12 +223,32 @@ MIT License - feel free to use this project for personal or commercial purposes.
 
 ---
 
-**Made with ❤️ using React, Firebase, and local AI processing**
+## 📊 Current Status
 
-## React Compiler
+✅ **Fully Functional Features:**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- User authentication (email/password, Google sign-in)
+- Real-time transaction management with live balance updates
+- Interactive chat interface for transaction entry
+- Transaction editing with automatic balance recalculation
+- Secure account management with re-authentication
+- Data export functionality
+- Responsive UI with modern design
 
-## Expanding the ESLint configuration
+## 🔗 Links
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Repository**: [GitHub Repository](https://github.com/HadiuzzamanBappy/Wallet-Tracker)
+- **Demo**: Deploy to see it in action!
+
+## 💡 Future Enhancements
+
+- [ ] Dark/Light theme toggle
+- [ ] Transaction analytics and charts
+- [ ] Budget planning and alerts
+- [ ] Receipt photo uploads
+- [ ] Multi-currency support
+- [ ] Export to CSV/PDF formats
+
+---
+
+Made using React, Firebase, and intelligent transaction parsing
