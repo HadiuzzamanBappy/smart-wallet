@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, BarChart3, FileText, PieChart, Calendar, List, TrendingUp } from 'lucide-react';
 import TransactionList from './TransactionList';
 import SpendingAnalytics from './SpendingAnalytics';
@@ -6,54 +6,7 @@ import SpendingAnalytics from './SpendingAnalytics';
 const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   const [activeSection, setActiveSection] = useState(null);
 
-  // Detect small screens and set Transactions as default on mobile so the panel isn't attached
-  useEffect(() => {
-    // If running in a browser environment, check viewport width and default to transactions on small screens
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      const mq = window.matchMedia('(max-width: 767px)');
-      // If mobile, default to transactions
-      if (mq.matches) {
-        setActiveSection('transactions');
-        if (onSectionChange) onSectionChange('transactions');
-      }
-
-      // Also listen for changes (e.g., rotate or resize)
-      const handler = (e) => {
-        if (e.matches) {
-          setActiveSection('transactions');
-          if (onSectionChange) onSectionChange('transactions');
-        } else {
-          // when switching to desktop we don't auto-close the section; keep current selection
-        }
-      };
-
-      try {
-        mq.addEventListener ? mq.addEventListener('change', handler) : mq.addListener(handler);
-      } catch (e) {
-        // fallback for older browsers which may throw on addEventListener
-        try {
-          mq.addListener(handler);
-        } catch (innerErr) {
-          // best-effort: log and continue
-          console.warn('Failed to attach media query listener', innerErr, e);
-        }
-      }
-
-      return () => {
-        try {
-          mq.removeEventListener ? mq.removeEventListener('change', handler) : mq.removeListener(handler);
-        } catch (e) {
-          try {
-            mq.removeListener(handler);
-          } catch (innerErr) {
-            console.warn('Failed to remove media query listener', innerErr, e);
-          }
-        }
-      };
-    }
-
-    return undefined;
-  }, [onSectionChange]);
+  // No auto-open behavior: sections open only on explicit user interaction
 
   const toggleSection = (section) => {
     // Basic toggle: clicking an already-active section hides it, otherwise show the clicked section
