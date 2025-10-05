@@ -3,9 +3,12 @@ import {
   signInWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  deleteUser as firebaseDeleteUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
 export const registerUser = async (email, password, displayName) => {
@@ -69,11 +72,61 @@ export const loginWithGoogle = async () => {
   }
 };
 
+export const updateUserProfile = async (userId, profileData) => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      ...profileData,
+      updatedAt: Timestamp.now()
+    });
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+
+};
+
 export const logoutUser = async () => {
   try {
     await signOut(auth);
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Attempt to delete the currently signed-in Firebase Auth user.
+ * Note: Deleting an Auth user often requires recent authentication. Callers should handle re-auth flow if needed.
+ */
+export const deleteAuthUser = async () => {
+  try {
+    const u = auth.currentUser;
+    if (!u) throw new Error('No authenticated user');
+
+    await firebaseDeleteUser(u);
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting auth user:', error);
+    return { success: false, error: error.message, code: error.code };
+  }
+};
+
+/**
+ * Reauthenticate the current user with their password.
+ * Useful to refresh credentials before sensitive actions (delete).
+ */
+export const reauthenticateUser = async (password) => {
+  try {
+    const u = auth.currentUser;
+    if (!u) throw new Error('No authenticated user');
+    if (!u.email) throw new Error('User has no email');
+
+    const cred = EmailAuthProvider.credential(u.email, password);
+    await reauthenticateWithCredential(u, cred);
+    return { success: true };
+  } catch (error) {
+    console.error('Reauthentication failed:', error);
+    return { success: false, error: error.message, code: error.code };
   }
 };

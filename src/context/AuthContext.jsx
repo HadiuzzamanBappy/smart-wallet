@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { getUserProfile } from '../services/transactionService';
-import { AuthContext } from './AuthContextProvider';
+import { AuthContext } from './createAuthContext';
+import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -28,16 +29,41 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
+  // Function to refresh user profile from Firebase
+  const refreshUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const profileResult = await getUserProfile(user.uid);
+      if (profileResult.success) {
+        setUserProfile(profileResult.data);
+        return profileResult.data;
+      }
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
+    }
+    return null;
+  };
+
   const value = {
     user,
     userProfile,
     loading,
-    setUserProfile
+    setUserProfile,
+    refreshUserProfile
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {loading ? (
+        <LoadingSpinner 
+          message="Loading your wallet..." 
+          size="lg" 
+          fullScreen={true}
+        />
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };
