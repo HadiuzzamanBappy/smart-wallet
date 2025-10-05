@@ -4,6 +4,7 @@ import {
   signOut,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   reauthenticateWithCredential,
   EmailAuthProvider,
   deleteUser as firebaseDeleteUser
@@ -44,14 +45,19 @@ export const loginUser = async (email, password) => {
 };
 
 export const loginWithGoogle = async () => {
+  const provider = new GoogleAuthProvider();
+
+  // Try popup first (fastest UX). Some environments with Cross-Origin-Opener-Policy or
+  // other restrictions block access to popup.window.closed or otherwise prevent popup flows.
+  // If the popup approach fails with a COOP/blocked error, fall back to redirect flow which
+  // does not rely on window.opener/window.closed checks.
   try {
-    const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
-    
+
     // Check if user profile exists
     const userDoc = await getDoc(doc(db, 'users', user.uid));
-    
+
     if (!userDoc.exists()) {
       // Create new user profile
       await setDoc(doc(db, 'users', user.uid), {
@@ -65,10 +71,28 @@ export const loginWithGoogle = async () => {
         updatedAt: Timestamp.now()
       });
     }
-    
+
     return { success: true, user };
-  } catch (error) {
-    return { success: false, error: error.message };
+  } catch (popupError) {
+    // Detect likely COOP/COEP / popup-blocking scenarios and fall back to redirect
+    const message = popupError?.message || '';
+    const code = popupError?.code || '';
+    const isCoopOrBlocked = code === 'auth/operation-not-supported-in-this-environment'
+      || message.includes('Cross-Origin-Opener-Policy')
+      || /blocked a frame/i.test(message)
+      || /popup blocked/i.test(message);
+
+    if (isCoopOrBlocked) {
+      try {
+        await signInWithRedirect(auth, provider);
+        // The redirect will navigate away; the caller should handle the redirect result on app load
+        return { success: true, redirect: true, message: 'Using redirect flow due to popup restrictions' };
+      } catch (redirectErr) {
+        return { success: false, error: redirectErr?.message || 'Redirect sign-in failed', code: redirectErr?.code };
+      }
+    }
+
+    return { success: false, error: message || String(popupError), code };
   }
 };
 

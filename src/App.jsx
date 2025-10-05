@@ -58,7 +58,7 @@ const AppContent = () => {
       <Header isRefreshing={isRefreshing} />
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
+  <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 lg:py-10 space-y-6 md:space-y-6 lg:space-y-8">
 
         {/* Compact Financial Summary - Always visible */}
         <CompactSummary refreshTrigger={refreshKey} onRefresh={handleRefresh} />
@@ -67,7 +67,9 @@ const AppContent = () => {
         <BudgetProgress key={`budget-${refreshKey}`} onSettingsClick={() => setSettingsOpen(true)} />
 
         {/* Central Chat Interface - Only on tablet+ */}
-        <MinimalChatInterface onTransactionAdded={handleTransactionAdded} />
+        <div className="mt-2 md:mt-0">
+          <MinimalChatInterface onTransactionAdded={handleTransactionAdded} />
+        </div>
 
         {/* Expandable Detail Sections - Always visible, no extra container */}
         <ExpandableDetailsSection key={`details-${refreshKey}`} onTransactionChange={handleTransactionAdded} />

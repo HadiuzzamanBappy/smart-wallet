@@ -220,7 +220,7 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
       {/* Smart AI Help - Only show helpful context */}
       {showSuggestions && !feedback && (
         <div className="mt-6 animate-in fade-in duration-200">
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200 dark:border-blue-800 shadow-sm">
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl dark:border-blue-800 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
               <div className="p-1.5 bg-blue-500 dark:bg-blue-600 rounded-lg">
                 <Sparkles className="w-4 h-4 text-white" />

@@ -134,7 +134,7 @@ const BudgetProgress = ({ onSettingsClick }) => {
     const remaining = Math.max(0, (budgetStatus.budget || 0) - spent);
 
     return (
-        <div className="rounded-md p-3 bg-gray-800/50 border border-gray-600/30">
+        <div className="rounded-md p-3 bg-gray-800/50">
             <div className="flex items-start justify-between gap-3 mb-2">
                 <div>
                     <div className={`text-xs font-medium ${
