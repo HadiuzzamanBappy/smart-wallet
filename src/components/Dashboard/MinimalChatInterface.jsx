@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Send, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { parseTransaction, formatTransactionMessage, getCategoryEmoji } from '../../utils/transactionParser';
-import { addTransaction, getUserProfile } from '../../services/transactionService';
+import { addTransaction, getUserProfile, getTransactions } from '../../services/transactionService';
+import { checkBudgetAfterTransaction } from '../../services/budgetService';
 import EditParsedModal from './EditParsedModal';
+import Toast from '../UI/Toast';
 
 const MinimalChatInterface = ({ onTransactionAdded }) => {
   const [message, setMessage] = useState('');
@@ -11,7 +13,8 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [editing, setEditing] = useState({ open: false, original: null, parsed: null });
-  const { user, setUserProfile, refreshUserProfile } = useAuth();
+  const [budgetAlert, setBudgetAlert] = useState({ open: false, message: '', type: 'info' });
+  const { user, userProfile, setUserProfile, refreshUserProfile } = useAuth();
 
   // Remove predefined suggestions - let users express freely
 
@@ -27,14 +30,39 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
       const parseResult = parseTransaction(message);
       
       if (parseResult.success) {
+        // Add original message and source to transaction data for Firebase storage
+        const transactionWithMeta = {
+          ...parseResult.data,
+          originalMessage: message,
+          source: 'chat-interface'
+        };
         // Try to add transaction to Firebase
-        const addResult = await addTransaction(user.uid, parseResult.data);
+        const addResult = await addTransaction(user.uid, transactionWithMeta);
         
         if (addResult.success) {
           // Refresh user profile to get updated balance
           const profileResult = await getUserProfile(user.uid);
           if (profileResult.success) {
             setUserProfile(profileResult.data);
+          }
+
+          // Check budget after transaction (only for expenses)
+          if (parseResult.data.type === 'expense' && userProfile?.budgetAlerts && userProfile?.monthlyBudget) {
+            try {
+              const transactionsResult = await getTransactions(user.uid);
+              if (transactionsResult.success) {
+                const budgetCheck = checkBudgetAfterTransaction(userProfile, transactionsResult.data, parseResult.data);
+                if (budgetCheck.needsAlert) {
+                  setBudgetAlert({ 
+                    open: true, 
+                    message: budgetCheck.alertMessage, 
+                    type: budgetCheck.alertType === 'danger' ? 'error' : budgetCheck.alertType === 'warning' ? 'warning' : 'info' 
+                  });
+                }
+              }
+            } catch (error) {
+              console.warn('Budget check failed:', error);
+            }
           }
 
           // Show success feedback
@@ -54,7 +82,7 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
                 arr = JSON.parse(raw);
                 if (!Array.isArray(arr)) arr = [];
               }
-              const newItem = { ...parseResult.data, id: addResult.id, userId: user.uid, savedAt: Date.now(), originalMessage: message };
+              const newItem = { ...parseResult.data, id: addResult.id, userId: user.uid, savedAt: Date.now(), originalMessage: message, source: 'chat-interface' };
               const deduped = [newItem, ...arr.filter(a => a.id !== newItem.id && a._id !== newItem._id)];
               const sliced = deduped.slice(0, 10);
               localStorage.setItem(key, JSON.stringify(sliced));
@@ -67,6 +95,16 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
           // Call parent callback if provided
           if (onTransactionAdded) {
             onTransactionAdded();
+          }
+          
+          // Dispatch global event for real-time updates
+          try {
+            window.dispatchEvent(new CustomEvent('wallet:transaction-added', {
+              detail: { transactionId: addResult.id, transaction: parseResult.data }
+            }));
+            console.log('MinimalChatInterface: Dispatched transaction-added event');
+          } catch (error) {
+            console.warn('Failed to dispatch transaction-added event:', error);
           }
         } else {
           setFeedback({
@@ -97,7 +135,7 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto hidden md:block">
+    <div className="w-full hidden md:block">
       {/* Feedback Message */}
       {feedback && (
         <div className={`mb-4 p-4 rounded-lg border ${
@@ -201,6 +239,8 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
           </div>
         </div>
       )}
+      
+      <Toast open={budgetAlert.open} message={budgetAlert.message} type={budgetAlert.type} onClose={() => setBudgetAlert({ open: false, message: '', type: 'info' })} />
     </div>
   );
 };

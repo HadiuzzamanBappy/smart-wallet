@@ -2,17 +2,30 @@ import React from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { useAuth } from './hooks/useAuth';
+import dynamicTranslator from './services/dynamicTranslation';
 import Login from './components/User/Login';
 import Header from './components/Layout/Header';
 import CompactSummary from './components/Dashboard/CompactSummary';
+import BudgetProgress from './components/Dashboard/BudgetProgress';
 import MinimalChatInterface from './components/Dashboard/MinimalChatInterface';
 import ExpandableDetailsSection from './components/Dashboard/ExpandableDetailsSection';
 import ChatWidget from './components/Dashboard/ChatWidget';
+import SettingsModal from './components/User/SettingsModal';
+import Modal from './components/UI/Modal';
 
 const AppContent = () => {
-  const { user, refreshUserProfile } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+
+  // Initialize translation based on user's language preference
+  React.useEffect(() => {
+    if (userProfile?.language) {
+      console.log('User preferred language:', userProfile.language);
+      dynamicTranslator.initializeForUser(userProfile.language);
+    }
+  }, [userProfile?.language]);
 
   if (!user) {
     return <Login />;
@@ -21,7 +34,7 @@ const AppContent = () => {
   const handleTransactionAdded = async () => {
     // Refresh user profile immediately to update balance in header
     await refreshUserProfile();
-    
+
     // Trigger refresh of all components
     setRefreshKey(prev => prev + 1);
   };
@@ -43,17 +56,19 @@ const AppContent = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header isRefreshing={isRefreshing} />
-      
+
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
+
         {/* Compact Financial Summary - Always visible */}
         <CompactSummary refreshTrigger={refreshKey} onRefresh={handleRefresh} />
-        
+
+        {/* Budget Progress - Always visible */}
+        <BudgetProgress key={`budget-${refreshKey}`} onSettingsClick={() => setSettingsOpen(true)} />
+
         {/* Central Chat Interface - Only on tablet+ */}
-        <div className="flex justify-center">
-          <MinimalChatInterface onTransactionAdded={handleTransactionAdded} />
-        </div>
-        
+        <MinimalChatInterface onTransactionAdded={handleTransactionAdded} />
+
         {/* Expandable Detail Sections - Always visible, no extra container */}
         <ExpandableDetailsSection key={`details-${refreshKey}`} onTransactionChange={handleTransactionAdded} />
       </main>
@@ -65,6 +80,11 @@ const AppContent = () => {
       <div className="hidden md:block">
         <ChatWidget onTransactionAdded={handleTransactionAdded} />
       </div>
+
+      {/* Settings Modal */}
+      <Modal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} title="Settings">
+        <SettingsModal />
+      </Modal>
     </div>
   );
 };

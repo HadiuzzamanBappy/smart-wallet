@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { getTransactions } from '../../services/transactionService';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus } from 'lucide-react';
 import { isCreditCategory, isLoanCategory } from '../../utils/transactionParser';
+import AddTransactionModal from './AddTransactionModal';
 
 const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -14,12 +15,24 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-BD', {
+    const currency = userProfile?.currency || 'BDT';
+    const currencyLocales = {
+      BDT: 'en-BD',
+      USD: 'en-US',
+      EUR: 'en-DE',
+      GBP: 'en-GB',
+      INR: 'en-IN'
+    };
+
+    const locale = currencyLocales[currency] || 'en-BD';
+    
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'BDT',
-      minimumFractionDigits: 0
+      currency: currency,
+      minimumFractionDigits: currency === 'BDT' ? 0 : 2
     }).format(amount || 0);
   };
 
@@ -40,52 +53,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     }
   };
 
-  const loadData = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    try {
-      // Fetch updated user profile
-      const profileResult = await refreshUserProfile();
-
-      // Fetch recent transactions for stats
-      const transactionsResult = await getTransactions(user.uid, { limit: 100 });
-      if (transactionsResult.success && profileResult) {
-        calculateStats(transactionsResult.data, profileResult);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user?.uid) {
-      loadData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.uid]); // Only depend on user ID to avoid infinite loop
-
-  // Refresh when refreshTrigger changes (for real-time updates)
-  useEffect(() => {
-    if (refreshTrigger && user?.uid) {
-      loadData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshTrigger, user?.uid]);
-
-  // Initialize stats with existing userProfile data if available
-  useEffect(() => {
-    if (userProfile && stats.balance === 0) {
-      setStats(prev => ({
-        ...prev,
-        balance: userProfile.balance || 0
-      }));
-    }
-  }, [userProfile, stats.balance]);
-
-  const calculateStats = (transactions, profile) => {
+  const calculateStats = useCallback((transactions, profile) => {
     const now = new Date();
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -139,44 +107,98 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       thisMonthCreditGiven: monthCreditGiven,
       thisMonthLoanTaken: monthLoanTaken
     });
-  };
+  }, [userProfile]);
+
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      // Fetch updated user profile
+      const profileResult = await refreshUserProfile();
+
+      // Fetch recent transactions for stats
+      const transactionsResult = await getTransactions(user.uid, { limit: 100 });
+      if (transactionsResult.success && profileResult) {
+        calculateStats(transactionsResult.data, profileResult);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, refreshUserProfile, calculateStats]);
+
+  useEffect(() => {
+    if (user?.uid) {
+      loadData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]); // Only depend on user ID to avoid infinite loop
+
+  // Refresh when refreshTrigger changes (for real-time updates)
+  useEffect(() => {
+    if (refreshTrigger && user?.uid) {
+      loadData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger, user?.uid]);
+
+  // Initialize stats with existing userProfile data if available
+  useEffect(() => {
+    if (userProfile && stats.balance === 0) {
+      setStats(prev => ({
+        ...prev,
+        balance: userProfile.balance || 0
+      }));
+    }
+  }, [userProfile, stats.balance]);
+
+  // Listen for transaction updates from other components
+  useEffect(() => {
+    const handleTransactionUpdate = () => {
+      console.log('CompactSummary: Refreshing due to transaction update');
+      loadData();
+    };
+
+    // Add event listeners
+    window.addEventListener('wallet:transaction-added', handleTransactionUpdate);
+    window.addEventListener('wallet:transaction-edited', handleTransactionUpdate);
+    window.addEventListener('wallet:transaction-deleted', handleTransactionUpdate);
+
+    return () => {
+      window.removeEventListener('wallet:transaction-added', handleTransactionUpdate);
+      window.removeEventListener('wallet:transaction-edited', handleTransactionUpdate);
+      window.removeEventListener('wallet:transaction-deleted', handleTransactionUpdate);
+    };
+  }, [loadData]);
 
   if (loading) {
     return (
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto md:max-w-4xl w-full">
-          {/* Loading greeting strip */}
-          <div className="mb-4">
-            <div className="w-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 py-3 px-4 rounded-lg animate-pulse">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-48 mb-2"></div>
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64"></div>
-                </div>
-                <div className="h-9 bg-gray-300 dark:bg-gray-600 rounded-lg w-20"></div>
+      <div className="w-full">
+        {/* header skeleton: greeting + small action */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex-1">
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40 animate-pulse" />
+            <div className="mt-1 h-3 bg-gray-200 dark:bg-gray-700 rounded w-28 animate-pulse" />
+          </div>
+          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        </div>
+
+        {/* compact grid skeleton: 2 cols on mobile, 4 on md+ */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 p-2 rounded-lg transition-all duration-200 bg-white/5 dark:bg-gray-800/40 text-sm"
+            >
+              <div className="flex-shrink-0 w-8 h-8 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse" />
+              <div className="min-w-0 w-full">
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-1 animate-pulse" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse" />
               </div>
             </div>
-          </div>
-          
-          <div className="relative overflow-hidden bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-800 dark:to-gray-700/50 rounded-2xl p-6 sm:p-8 shadow-xl dark:shadow-2xl border border-gray-100 dark:border-gray-600 mb-6">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 to-emerald-500/5 dark:from-teal-400/10 dark:to-emerald-400/10"></div>
-            
-            <div className="relative z-10 animate-pulse">              
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/50">
-                    <div className="space-y-3">
-                      <div className="w-9 h-9 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-xl"></div>
-                      <div className="space-y-2">
-                        <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded w-2/3"></div>
-                        <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded w-4/5"></div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     );
@@ -214,71 +236,62 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   ];
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto md:max-w-4xl w-full">
-
-        {/* Greeting strip above the summary */}
-        <div className="mb-4">
-          <div className="w-full text-gray-700 dark:text-gray-200 py-3 rounded-lg">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-base mb-1">
-                  Welcome back, {userProfile?.displayName?.split(' ')[0] || 'User'} 👋
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Have a productive day managing your finances
-                </div>
-              </div>
-              <button
-                onClick={refreshData}
-                disabled={refreshing}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Refresh balance and stats"
-                aria-label="Refresh balance and stats"
-              >
-                <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
-            </div>
-          </div>
+    <div className="w-full">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-sm font-semibold">Welcome back, {userProfile?.displayName?.split(' ')[0] || 'User'}</div>
+          <div className="text-xs text-gray-400">Quick snapshot of this month</div>
         </div>
-
-        <div className="relative overflow-hidden bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-800 dark:to-gray-700/50 rounded-2xl p-4 sm:p-8 border border-gray-100 dark:border-gray-600 mb-6">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 to-emerald-500/5 dark:from-teal-400/10 dark:to-emerald-400/10"></div>
-
-          <div className="relative z-10">        
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {summaryCards.map((card, index) => {
-                const IconComponent = card.icon;
-                return (
-                  <div key={index} className="group relative bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 hover:shadow-lg transition-all duration-300 border border-gray-200/50 dark:border-gray-600/50 hover:border-teal-300 dark:hover:border-teal-500">
-                    <div className="flex flex-col space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className={`p-2.5 rounded-xl shadow-sm ${card.bgColor} group-hover:scale-110 transition-transform duration-300`}>
-                          <IconComponent className={`w-5 h-5 ${card.color}`} />
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 block mb-1">
-                          {card.label}
-                        </span>
-                        <p className={`text-lg sm:text-xl font-bold ${card.color} group-hover:scale-105 transition-transform duration-300`}>
-                          {card.value}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Hover glow effect */}
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-teal-400/0 to-emerald-400/0 group-hover:from-teal-400/5 group-hover:to-emerald-400/5 dark:group-hover:from-teal-400/10 dark:group-hover:to-emerald-400/10 transition-all duration-300"></div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={refreshData}
+            disabled={refreshing}
+            className="inline-flex items-center justify-center w-8 h-8 text-sm rounded-md bg-white/5 dark:bg-gray-800/40 hover:bg-white/10 transition-colors disabled:opacity-50"
+            title="Refresh"
+            aria-label="Refresh summary"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-md transition-colors"
+            title="Add Custom Transaction"
+          >
+            <Plus className="w-3 h-3" />
+          </button>
         </div>
-
       </div>
+
+      <div className="flex gap-3">
+        <div className="w-full">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {summaryCards.map((card, index) => {
+              const IconComponent = card.icon;
+              return (
+                <div key={index} className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 ${card.bgColor} ${card.color} text-sm`}> 
+                  <div className={`p-2 rounded-md ${card.bgColor}`}> 
+                    <IconComponent className={`w-5 h-5 ${card.color}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-medium truncate">{card.label}</div>
+                    <div className="text-sm font-semibold truncate">{card.value}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Add Transaction Modal */}
+      <AddTransactionModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={async () => {
+          // Refresh data after successful addition
+          await loadData();
+        }}
+      />
     </div>
   );
 };

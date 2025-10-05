@@ -96,9 +96,31 @@ const EditParsedModal = ({ open, onClose, originalMessage, parsed, onSave }) => 
       if (parsed?.id && typeof transactionService.updateTransaction === 'function') {
         try {
           const updatesWithUser = { ...normalized, userId: parsed.userId };
-          await transactionService.updateTransaction(parsed.id, updatesWithUser);
+          const result = await transactionService.updateTransaction(parsed.id, updatesWithUser);
+          
+          if (!result.success) {
+            // Transaction not found in Firebase - it was likely deleted from main list
+            if (result.error?.includes('Transaction not found') || result.error?.includes('not found')) {
+              console.warn('Transaction not found in Firebase - it may have been deleted from main list:', result.error);
+              throw new Error('Transaction not found');
+            } else {
+              throw new Error(result.error || 'Unknown error updating transaction');
+            }
+          } else {
+            // Dispatch global event for real-time updates
+            try {
+              window.dispatchEvent(new CustomEvent('wallet:transaction-edited', {
+                detail: { transaction: { ...normalized, id: parsed.id } }
+              }));
+              console.log('EditParsedModal: Dispatched transaction-edited event');
+            } catch (error) {
+              console.warn('Failed to dispatch transaction-edited event:', error);
+            }
+          }
         } catch (e) {
-          console.warn('Could not update transaction on server', e);
+          console.warn('Could not update transaction on server:', e);
+          // Re-throw the error so parent component can handle it appropriately
+          throw e;
         }
       }
 

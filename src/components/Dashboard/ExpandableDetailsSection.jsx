@@ -6,11 +6,54 @@ import SpendingAnalytics from './SpendingAnalytics';
 const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   const [activeSection, setActiveSection] = useState(null);
 
-  // Detect mobile and set initial state
+  // Detect small screens and set Transactions as default on mobile so the panel isn't attached
   useEffect(() => {
-    // No initial section is shown on mount. No resize listeners required for this simplified behavior.
+    // If running in a browser environment, check viewport width and default to transactions on small screens
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const mq = window.matchMedia('(max-width: 767px)');
+      // If mobile, default to transactions
+      if (mq.matches) {
+        setActiveSection('transactions');
+        if (onSectionChange) onSectionChange('transactions');
+      }
+
+      // Also listen for changes (e.g., rotate or resize)
+      const handler = (e) => {
+        if (e.matches) {
+          setActiveSection('transactions');
+          if (onSectionChange) onSectionChange('transactions');
+        } else {
+          // when switching to desktop we don't auto-close the section; keep current selection
+        }
+      };
+
+      try {
+        mq.addEventListener ? mq.addEventListener('change', handler) : mq.addListener(handler);
+      } catch (e) {
+        // fallback for older browsers which may throw on addEventListener
+        try {
+          mq.addListener(handler);
+        } catch (innerErr) {
+          // best-effort: log and continue
+          console.warn('Failed to attach media query listener', innerErr, e);
+        }
+      }
+
+      return () => {
+        try {
+          mq.removeEventListener ? mq.removeEventListener('change', handler) : mq.removeListener(handler);
+        } catch (e) {
+          try {
+            mq.removeListener(handler);
+          } catch (innerErr) {
+            console.warn('Failed to remove media query listener', innerErr, e);
+          }
+        }
+      };
+    }
+
     return undefined;
-  }, []);
+  }, [onSectionChange]);
 
   const toggleSection = (section) => {
     // Basic toggle: clicking an already-active section hides it, otherwise show the clicked section
@@ -100,8 +143,8 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto md:max-w-4xl w-full space-y-4 sm:space-y-6">
+    <div className="w-full space-y-4 sm:space-y-6">
+      <div className="w-full">
       {/* Horizontal Button List - Responsive */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center">
         {sections.map((section) => {
@@ -158,7 +201,7 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
         {/* Mobile: Show active section */}
         <div className="md:hidden">
           {activeSection && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mt-3">
               {(() => {
                 const section = sections.find(s => s.id === activeSection);
                 if (!section) return null;

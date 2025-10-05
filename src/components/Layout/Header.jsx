@@ -8,11 +8,22 @@ const Header = ({ isRefreshing = false }) => {
   const { userProfile } = useAuth();
   const [showBalance, setShowBalance] = useState(false);
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-BD', {
+  const formatCurrencyAmount = (amount) => {
+    const currency = userProfile?.currency || 'BDT';
+    const currencyLocales = {
+      BDT: 'en-BD',
+      USD: 'en-US',
+      EUR: 'en-DE',
+      GBP: 'en-GB',
+      INR: 'en-IN'
+    };
+
+    const locale = currencyLocales[currency] || 'en-BD';
+    
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'BDT',
-      minimumFractionDigits: 0
+      currency: currency,
+      minimumFractionDigits: currency === 'BDT' ? 0 : 2
     }).format(amount || 0);
   };
 
@@ -62,7 +73,7 @@ const Header = ({ isRefreshing = false }) => {
                 {isRefreshing ? (
                   <div className="w-20 h-4 rounded bg-gray-200 dark:bg-gray-700/60 ring-1 ring-teal-200/40 dark:ring-teal-800/30 animate-pulse" aria-hidden="true"></div>
                 ) : (
-                  <span className="text-sm">{formatCurrency(userProfile?.balance)}</span>
+                  <span className="text-sm">{formatCurrencyAmount(userProfile?.balance)}</span>
                 )}
               </div>
             </button>
@@ -72,7 +83,7 @@ const Header = ({ isRefreshing = false }) => {
         </div>
       </div>
     </header>
-    <BalanceModal open={showBalance} onClose={() => setShowBalance(false)} balance={userProfile?.balance} />
+    <BalanceModal open={showBalance} onClose={() => setShowBalance(false)} balance={userProfile?.balance} currency={userProfile?.currency} />
     </>
   );
 };

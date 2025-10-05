@@ -979,19 +979,10 @@ const generateSmartDescription = (originalMessage, type, category, amount) => {
   // Capitalize first letter and ensure proper formatting
   description = description.charAt(0).toUpperCase() + description.slice(1);
   
-  // Add contextual information based on amount and timing
-  const now = new Date();
-  const hour = now.getHours();
-  
+  // Add contextual information only if explicitly mentioned
   if (entities.timeExpressions.length > 0) {
     const timeExpr = entities.timeExpressions[0];
     description += ` (${timeExpr})`;
-  } else if (hour < 12) {
-    description += ` (morning)`;
-  } else if (hour < 17) {
-    description += ` (afternoon)`;
-  } else {
-    description += ` (evening)`;
   }
   
   // Amount context
@@ -1019,22 +1010,22 @@ export const formatTransactionMessage = (transaction) => {
     'income': {
       emoji: '💰',
       title: 'Money Received!',
-      message: `Great! I've recorded that you received ${amount} BDT.`
+      message: `Perfect! Successfully recorded income of ${amount} BDT.`
     },
     'expense': {
       emoji: '💸',
       title: 'Expense Recorded!',
-      message: `Got it! I've tracked your ${amount} BDT expense.`
+      message: `Noted! Recorded expense of ${amount} BDT.`
     },
     'credit': {
       emoji: '🤝',
       title: 'Money Lent!',
-      message: `I've recorded that you lent ${amount} BDT to someone. They owe you this amount.`
+      message: `Recorded! You lent ${amount} BDT. Amount is tracked as receivable.`
     },
     'loan': {
-      emoji: '�',
+      emoji: '💳',
       title: 'Loan Taken!',
-      message: `I've noted that you borrowed ${amount} BDT. Remember to pay it back when possible.`
+      message: `Recorded! You borrowed ${amount} BDT. Amount tracked as payable.`
     }
   };
 

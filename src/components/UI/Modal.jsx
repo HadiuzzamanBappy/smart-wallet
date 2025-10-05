@@ -54,7 +54,7 @@ const Modal = ({ isOpen, onClose, title, children, isMobile = false }) => {
           </div>
           
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[60vh]">
+          <div className="p-3 sm:p-6 overflow-y-auto max-h-[60vh]">
             {children}
           </div>
         </div>

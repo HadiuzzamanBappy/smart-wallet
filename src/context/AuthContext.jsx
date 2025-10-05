@@ -10,6 +10,23 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Apply theme to document
+  const applyTheme = (theme) => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (theme === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      // System theme
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (systemDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -18,10 +35,15 @@ export const AuthProvider = ({ children }) => {
         const profileResult = await getUserProfile(user.uid);
         if (profileResult.success) {
           setUserProfile(profileResult.data);
+          // Apply saved theme preference or default to system
+          const savedTheme = profileResult.data.theme || 'system';
+          applyTheme(savedTheme);
         }
       } else {
         setUser(null);
         setUserProfile(null);
+        // Apply system theme for non-authenticated users
+        applyTheme('system');
       }
       setLoading(false);
     });
@@ -37,6 +59,9 @@ export const AuthProvider = ({ children }) => {
       const profileResult = await getUserProfile(user.uid);
       if (profileResult.success) {
         setUserProfile(profileResult.data);
+        // Apply saved theme preference
+        const savedTheme = profileResult.data.theme || 'system';
+        applyTheme(savedTheme);
         return profileResult.data;
       }
     } catch (error) {

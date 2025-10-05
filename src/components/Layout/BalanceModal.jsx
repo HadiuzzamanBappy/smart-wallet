@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { X, ArrowDown, ArrowUp } from 'lucide-react';
 
 // Minimal, animated balance modal - small slide-up panel
-const BalanceModal = ({ open, onClose, balance }) => {
+const BalanceModal = ({ open, onClose, balance, currency = 'BDT' }) => {
   const [value, setValue] = useState(0);
 
   // Read last transactions minimal info
@@ -47,7 +47,23 @@ const BalanceModal = ({ open, onClose, balance }) => {
     };
   }, [open, balance, onClose]);
 
-  const format = (n) => new Intl.NumberFormat('en-BD', { style: 'currency', currency: 'BDT', minimumFractionDigits: 0 }).format(n || 0);
+  const format = (n) => {
+    const currencyLocales = {
+      BDT: 'en-BD',
+      USD: 'en-US',
+      EUR: 'en-DE',
+      GBP: 'en-GB',
+      INR: 'en-IN'
+    };
+
+    const locale = currencyLocales[currency] || 'en-BD';
+    
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: currency === 'BDT' ? 0 : 2
+    }).format(n || 0);
+  };
 
   if (!open) return null;
 

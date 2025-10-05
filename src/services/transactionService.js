@@ -35,7 +35,10 @@ export const addTransaction = async (userId, transactionData) => {
       amount, // Ensure it's stored as number
       userId,
       createdAt: Timestamp.now(),
-      date: Timestamp.fromDate(new Date(transactionData.date))
+      date: Timestamp.fromDate(new Date(transactionData.date)),
+      // Include original user message/prompt if provided
+      originalMessage: transactionData.originalMessage || transactionData.description,
+      source: transactionData.source || 'manual' // Track if created via chat or manual entry
     });
     
     // Update user balance

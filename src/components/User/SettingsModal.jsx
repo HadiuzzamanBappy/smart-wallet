@@ -10,8 +10,6 @@ import {
   Sun, 
   Globe, 
   DollarSign, 
-  Bell,
-  Shield,
   Save,
   Smartphone,
   Palette,
@@ -20,12 +18,10 @@ import {
 } from 'lucide-react';
 
 const SettingsModal = () => {
-  const { user, userProfile, setUserProfile } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const [settings, setSettings] = useState({
     currency: userProfile?.currency || 'BDT',
     language: userProfile?.language || 'en',
-    notifications: userProfile?.notifications !== false,
-    emailNotifications: userProfile?.emailNotifications !== false,
     monthlyBudget: userProfile?.monthlyBudget || '',
     budgetAlerts: userProfile?.budgetAlerts !== false,
     theme: userProfile?.theme || 'system'
@@ -37,9 +33,11 @@ const SettingsModal = () => {
   const [reauthLoading, setReauthLoading] = useState(false);
   const [reauthError, setReauthError] = useState('');
 
-  const handleThemeChange = (theme) => {
-    setSettings(prev => ({ ...prev, theme }));
+  const handleThemeChange = async (theme) => {
+    const newSettings = { ...settings, theme };
+    setSettings(newSettings);
     
+    // Apply theme immediately to DOM
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else if (theme === 'light') {
@@ -53,6 +51,25 @@ const SettingsModal = () => {
         document.documentElement.classList.remove('dark');
       }
     }
+
+    // Save theme preference immediately to prevent reverting on refresh
+    try {
+      const payload = {
+        currency: newSettings.currency,
+        language: newSettings.language,
+        monthlyBudget: newSettings.monthlyBudget ? Number(newSettings.monthlyBudget) : null,
+        budgetAlerts: newSettings.budgetAlerts,
+        theme: newSettings.theme
+      };
+
+      const result = await updateUserProfile(user.uid, payload);
+      if (result.success) {
+        // Refresh user profile to sync with saved data
+        await refreshUserProfile();
+      }
+    } catch (error) {
+      console.error('Error saving theme:', error);
+    }
   };
 
   const handleSettingsChange = (key, value) => {
@@ -60,15 +77,35 @@ const SettingsModal = () => {
       ...prev,
       [key]: value
     }));
+    
+    // Only log the change, don't apply immediately
+    if (key === 'language') {
+      console.log('Language selected:', value, '(will apply when saved)');
+    }
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const result = await updateUserProfile(user.uid, settings);
+      // Sanitize settings payload: only send supported keys to the backend
+      const payload = {
+        currency: settings.currency,
+        language: settings.language,
+        monthlyBudget: settings.monthlyBudget ? Number(settings.monthlyBudget) : null,
+        budgetAlerts: settings.budgetAlerts,
+        theme: settings.theme
+      };
+
+      const result = await updateUserProfile(user.uid, payload);
       if (result.success) {
-        setUserProfile({ ...userProfile, ...settings });
+        // Refresh user profile to sync with saved data
+        await refreshUserProfile();
         setToast({ open: true, message: 'Settings saved successfully!', type: 'info' });
+        
+        // Refresh the page after a short delay to allow toast to show
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       }
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -270,55 +307,7 @@ const SettingsModal = () => {
         </div>
       </div>
 
-      {/* Notification Settings */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-            <Bell className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Push Notifications</span>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Receive notifications about transactions and budgets</p>
-            </div>
-            <button
-              onClick={() => handleSettingsChange('notifications', !settings.notifications)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.notifications ? 'bg-teal-600' : 'bg-gray-200 dark:bg-gray-700'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.notifications ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Notifications</span>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Receive weekly summary emails</p>
-            </div>
-            <button
-              onClick={() => handleSettingsChange('emailNotifications', !settings.emailNotifications)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.emailNotifications ? 'bg-teal-600' : 'bg-gray-200 dark:bg-gray-700'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.emailNotifications ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Notification Settings removed per user request */}
 
       {/* Language Settings */}
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">

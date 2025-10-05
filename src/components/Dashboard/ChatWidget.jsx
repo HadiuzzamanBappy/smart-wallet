@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Send, Bot, User, MessageCircle, X, Trash2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { parseTransaction, formatTransactionMessage, getCategoryEmoji } from '../../utils/transactionParser';
-import { addTransaction } from '../../services/transactionService';
-import EditParsedModal from './EditParsedModal';
+import { addTransaction, getTransactions } from '../../services/transactionService';
+import { checkBudgetAfterTransaction } from '../../services/budgetService';
+
 import ConfirmDialog from '../UI/ConfirmDialog';
 import Toast from '../UI/Toast';
 
@@ -14,11 +15,87 @@ const ChatWidget = ({ onTransactionAdded }) => {
   const [loading, setLoading] = useState(false);
   const { user, userProfile, refreshUserProfile } = useAuth();
   const messagesRef = useRef(null);
-  const [editing, setEditing] = useState({ open: false, original: null, parsed: null, idx: null });
+
   const [savedTransactions, setSavedTransactions] = useState([]);
   const [pendingDeleteSavedKey, setPendingDeleteSavedKey] = useState(null);
   const [pendingClear, setPendingClear] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
+  const [budgetAlert, setBudgetAlert] = useState({ open: false, message: '', type: 'info' });
+
+  // Handle transaction deletion with user choice
+  const handleDeleteTransaction = async (deleteFromDatabase) => {
+    console.log('Deleting transaction:', pendingDeleteSavedKey, 'From DB:', deleteFromDatabase);
+    
+    try {
+      let transactionToDelete = null;
+      
+      // 1. Find the transaction to delete from localStorage
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const key = 'wallet_last_transactions';
+        const raw = localStorage.getItem(key);
+        let arr = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(arr)) {
+          transactionToDelete = arr.find(a => `${a.id ?? a._id}_${a.savedAt ?? ''}` === String(pendingDeleteSavedKey));
+        }
+      }
+
+      // 2. Delete from Firebase if user chose to delete from database
+      if (deleteFromDatabase && transactionToDelete && (transactionToDelete.id || transactionToDelete._id) && user?.uid) {
+        const { deleteTransaction } = await import('../../services/transactionService');
+        const result = await deleteTransaction(user.uid, transactionToDelete.id || transactionToDelete._id, transactionToDelete);
+        
+        if (result.success) {
+          console.log('Successfully deleted from Firebase');
+          // Refresh user profile after successful Firebase deletion  
+          try {
+            await refreshUserProfile();
+          } catch (error) {
+            console.error('Error refreshing user profile after deletion:', error);
+          }
+          // Notify parent component
+          if (onTransactionAdded) onTransactionAdded();
+        } else {
+          throw new Error(result.error || 'Failed to delete from Firebase');
+        }
+      }
+
+      // 3. Remove from localStorage cache (for both chat-only and database deletion)
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const key = 'wallet_last_transactions';
+        const raw = localStorage.getItem(key);
+        let arr = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(arr)) {
+          const filtered = arr.filter(a => `${a.id ?? a._id}_${a.savedAt ?? ''}` !== String(pendingDeleteSavedKey));
+          localStorage.setItem(key, JSON.stringify(filtered));
+          setSavedTransactions(filtered);
+          console.log('Updated localStorage cache');
+        }
+      }
+
+      // 4. Remove from chat messages
+      setMessages(prev => prev.filter(m => m.savedKey !== pendingDeleteSavedKey));
+
+      // 5. Dispatch global event only if deleted from database
+      if (deleteFromDatabase && transactionToDelete && (transactionToDelete.id || transactionToDelete._id)) {
+        try { 
+          window.dispatchEvent(new CustomEvent('wallet:transaction-deleted', { 
+            detail: { transactionId: transactionToDelete.id || transactionToDelete._id } 
+          })); 
+        } catch { 
+          console.warn('Failed to dispatch transaction-deleted event'); 
+        }
+      }
+
+      const message = deleteFromDatabase ? 'Transaction deleted from account' : 'Transaction removed from chat';
+      setToast({ open: true, message, type: 'info' });
+      
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+      setToast({ open: true, message: 'Failed to delete transaction', type: 'error' });
+    }
+    
+    setPendingDeleteSavedKey(null);
+  };
 
   // Load saved transactions (last-10) from localStorage on mount
   useEffect(() => {
@@ -35,9 +112,90 @@ const ChatWidget = ({ onTransactionAdded }) => {
     }
   }, []);
 
+  // Sync localStorage cache with Firebase when chat opens (preserve original messages)
   useEffect(() => {
-    // Add welcome message when chat opens. If we have saved transactions, seed them as bot replies so
-    // users always see their last few parsed transactions in the widget.
+    const syncCacheWithFirebase = async () => {
+      if (!isOpen || !user?.uid) return;
+      
+      try {
+        // Get current cache to preserve originalMessage data
+        let currentCache = [];
+        try {
+          const raw = localStorage.getItem('wallet_last_transactions');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) currentCache = parsed;
+          }
+        } catch (error) {
+          console.warn('Failed to read current cache for sync:', error);
+        }
+
+        // Get fresh data from Firebase - only chat-generated transactions
+        const { getRecentTransactions } = await import('../../services/transactionService');
+        const result = await getRecentTransactions(user.uid, 50); // Get more to filter chat ones
+        
+        if (result.success && result.data) {
+          // Filter for chat-generated transactions only
+          const chatTransactions = result.data.filter(tx => 
+            tx.source === 'chat-widget' || tx.source === 'chat-interface' || tx.originalMessage
+          );
+          
+          console.log(`Found ${result.data.length} total transactions, ${chatTransactions.length} are chat-generated`);
+          
+          const firebaseIds = new Set(chatTransactions.map(tx => tx.id));
+          
+          // Filter out deleted transactions from cache and update existing ones
+          const updatedCache = currentCache
+            .filter(cachedTx => firebaseIds.has(cachedTx.id)) // Remove deleted transactions
+            .map(cachedTx => {
+              // Find matching Firebase transaction and merge data
+              const firebaseTx = chatTransactions.find(tx => tx.id === cachedTx.id);
+              if (firebaseTx) {
+                return {
+                  ...firebaseTx,
+                  // Preserve chat-specific fields
+                  savedAt: cachedTx.savedAt || Date.now(),
+                  originalMessage: cachedTx.originalMessage || firebaseTx.originalMessage || firebaseTx.description
+                };
+              }
+              return cachedTx;
+            });
+
+          // Add new chat transactions not in cache
+          chatTransactions.forEach(firebaseTx => {
+            const existsInCache = updatedCache.some(cached => cached.id === firebaseTx.id);
+            if (!existsInCache) {
+              updatedCache.unshift({
+                ...firebaseTx,
+                savedAt: Date.now(),
+                originalMessage: firebaseTx.originalMessage || firebaseTx.description
+              });
+            }
+          });
+
+          // Keep only recent 10 chat transactions
+          const finalCache = updatedCache.slice(0, 10);
+          
+          if (typeof window !== 'undefined' && window.localStorage) {
+            localStorage.setItem('wallet_last_transactions', JSON.stringify(finalCache));
+            setSavedTransactions(finalCache);
+            console.log(`Synced chat cache with ${finalCache.length} chat-generated transactions (preserved original messages)`);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to sync cache with Firebase:', error);
+      }
+    };
+    
+    // Only sync when chat opens
+    if (isOpen) {
+      syncCacheWithFirebase();
+    }
+  }, [isOpen, user?.uid]); // Only run when chat opens or user changes
+
+  useEffect(() => {
+    // Add welcome message when chat opens. If we have saved chat-generated transactions (max 10), 
+    // seed them as bot replies so users can see their last few chat conversations in the widget.
     if (isOpen && messages.length === 0) {
       const welcome = {
         id: 1,
@@ -76,9 +234,9 @@ const ChatWidget = ({ onTransactionAdded }) => {
     }
   }, [messages]);
 
-  // Listen for edits made elsewhere (TransactionList) and update saved list + messages
+  // Listen for edits and deletions made elsewhere (TransactionList) and update saved list + messages
   useEffect(() => {
-    const handler = (e) => {
+    const handleEdit = (e) => {
       try {
         const updated = e.detail?.transaction;
         if (!updated) return;
@@ -101,8 +259,36 @@ const ChatWidget = ({ onTransactionAdded }) => {
         setToast({ open: true, message: 'Transaction updated', type: 'info' });
       } catch { /* ignore */ }
     };
-    window.addEventListener('wallet:transaction-edited', handler);
-    return () => window.removeEventListener('wallet:transaction-edited', handler);
+
+    const handleDelete = (e) => {
+      try {
+        const transactionId = e.detail?.transactionId;
+        if (!transactionId) return;
+        
+        console.log('Removing deleted transaction from chat cache:', transactionId);
+        
+        // Remove from savedTransactions
+        setSavedTransactions(prev => {
+          const filtered = prev.filter(a => a.id !== transactionId && a._id !== transactionId);
+          try { localStorage.setItem('wallet_last_transactions', JSON.stringify(filtered)); } catch (e) { console.warn('Failed to update cache after deletion', e); }
+          return filtered;
+        });
+
+        // Remove from chat messages
+        setMessages(prev => prev.filter(m => 
+          !m.transaction || (m.transaction.id !== transactionId && m.transaction._id !== transactionId)
+        ));
+
+        console.log('Transaction removed from chat cache');
+      } catch { /* ignore */ }
+    };
+
+    window.addEventListener('wallet:transaction-edited', handleEdit);
+    window.addEventListener('wallet:transaction-deleted', handleDelete);
+    return () => {
+      window.removeEventListener('wallet:transaction-edited', handleEdit);
+      window.removeEventListener('wallet:transaction-deleted', handleDelete);
+    };
   }, []);
 
   const handleSendMessage = async () => {
@@ -122,21 +308,76 @@ const ChatWidget = ({ onTransactionAdded }) => {
     let botResponse;
 
     if (parseResult.success) {
-      const addResult = await addTransaction(user.uid, parseResult.data);
+      // Add original message and source to transaction data for Firebase storage
+      const transactionWithMeta = {
+        ...parseResult.data,
+        originalMessage: message,
+        source: 'chat-widget'
+      };
+      const addResult = await addTransaction(user.uid, transactionWithMeta);
       if (addResult.success) {
         // Refresh user profile to get updated balance
         const updatedProfile = await refreshUserProfile();
         
+        // Check budget after transaction (only for expenses)
+        if (parseResult.data.type === 'expense' && userProfile?.budgetAlerts && userProfile?.monthlyBudget) {
+          try {
+            const transactionsResult = await getTransactions(user.uid);
+            if (transactionsResult.success) {
+              const budgetCheck = checkBudgetAfterTransaction(userProfile, transactionsResult.data, parseResult.data);
+              if (budgetCheck.needsAlert) {
+                setBudgetAlert({ 
+                  open: true, 
+                  message: budgetCheck.alertMessage, 
+                  type: budgetCheck.alertType === 'danger' ? 'error' : budgetCheck.alertType === 'warning' ? 'warning' : 'info' 
+                });
+              }
+            }
+          } catch (error) {
+            console.warn('Budget check failed:', error);
+          }
+        }
+        
         // Call parent callback to refresh other components
         if (onTransactionAdded) onTransactionAdded();
+        
+        // Dispatch global event for real-time updates
+        try {
+          window.dispatchEvent(new CustomEvent('wallet:transaction-added', {
+            detail: { transactionId: addResult.id, transaction: parseResult.data }
+          }));
+          console.log('ChatWidget: Dispatched transaction-added event');
+        } catch (error) {
+          console.warn('Failed to dispatch transaction-added event:', error);
+        }
 
+        // Create transaction object with Firebase ID for proper tracking
+        const transactionWithId = { 
+          ...parseResult.data, 
+          id: addResult.id  // Include Firebase ID from addTransaction result
+        };
+        
+        // Create enhanced transaction message with balance context
+        let balanceInfo = '';
+        if (updatedProfile) {
+          const currency = userProfile?.currency || 'BDT';
+          if (transactionWithId.type === 'income') {
+            balanceInfo = `\n\n💳 Balance Updated: ${updatedProfile.balance} ${currency}\n📈 Income Added: +${transactionWithId.amount} ${currency}`;
+          } else if (transactionWithId.type === 'expense') {
+            balanceInfo = `\n\n💳 Balance Updated: ${updatedProfile.balance} ${currency}\n📉 Expense Deducted: -${transactionWithId.amount} ${currency}`;
+          } else {
+            balanceInfo = `\n\n💳 New Balance: ${updatedProfile.balance} ${currency}`;
+          }
+        }
+        
         botResponse = {
           id: Date.now() + 1,
           type: 'bot',
-          content: formatTransactionMessage(parseResult.data) + (updatedProfile ? `\n\n💳 New Balance: ${updatedProfile.balance} BDT` : ''),
-          transaction: parseResult.data
+          content: formatTransactionMessage(transactionWithId) + balanceInfo,
+          transaction: { ...transactionWithId, originalMessage: message }
         };
-        // Persist this parsed transaction to last-10 saved list in localStorage (safe guards)
+        
+        // Persist this transaction to localStorage with Firebase ID for tracking
         try {
           if (typeof window !== 'undefined' && window.localStorage) {
             const key = 'wallet_last_transactions';
@@ -146,12 +387,18 @@ const ChatWidget = ({ onTransactionAdded }) => {
               arr = JSON.parse(raw);
               if (!Array.isArray(arr)) arr = [];
             }
-            // Prepend new transaction, dedupe by id if present
-            const newItem = { ...parseResult.data, savedAt: Date.now(), originalMessage: message };
+            // Prepend new transaction with Firebase ID, dedupe by id if present
+            const newItem = { 
+              ...transactionWithId, 
+              savedAt: Date.now(), 
+              originalMessage: message,
+              source: 'chat-widget'
+            };
             const deduped = [newItem, ...arr.filter(a => a.id !== newItem.id && a._id !== newItem._id)];
             const sliced = deduped.slice(0, 10);
             localStorage.setItem(key, JSON.stringify(sliced));
             setSavedTransactions(sliced);
+            console.log('Saved transaction with Firebase ID:', newItem.id);
           }
         } catch (e) {
           // non-fatal
@@ -191,7 +438,7 @@ const ChatWidget = ({ onTransactionAdded }) => {
 
   return (
     <div>
-      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 w-80 sm:w-96 h-[72vh] md:h-[540px] z-[120]">
+      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 w-80 sm:w-96 md:w-[400px] lg:w-[420px] h-[72vh] md:h-[540px] z-[120]">
         <div className="h-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden flex flex-col border border-gray-100 dark:border-gray-700">
           {/* Header */}
           <div className="flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-teal-600 to-blue-600 text-white">
@@ -228,10 +475,9 @@ const ChatWidget = ({ onTransactionAdded }) => {
                 <div className={`${msg.type === 'user' ? 'bg-teal-600 text-white rounded-2xl rounded-br-none' : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-2xl rounded-bl-none'} max-w-[85%] p-3 relative`}> 
                   <div className="text-sm whitespace-pre-line leading-relaxed">{msg.content}</div>
                   {msg.transaction && (
-                    <div className="mt-2 text-xs opacity-80 flex items-center gap-2">
+                    <div className="mt-2 text-xs opacity-80 flex items-center gap-2 flex-wrap">
                       <span>{getCategoryEmoji(msg.transaction.category)} {msg.transaction.category}</span>
-                      <button onClick={() => setEditing({ open: true, original: msg.content, parsed: { ...msg.transaction, userId: user?.uid }, idx: msg.id })} className="text-teal-600 text-xs underline">Edit</button>
-                      <button onClick={() => setPendingDeleteSavedKey(msg.savedKey)} className="text-red-500 text-xs underline ml-2">Delete</button>
+                      <button onClick={() => setPendingDeleteSavedKey(msg.savedKey)} className="text-red-500 text-xs underline">Delete</button>
                     </div>
                   )}
                 </div>
@@ -273,106 +519,83 @@ const ChatWidget = ({ onTransactionAdded }) => {
               </button>
             </div>
           </div>
-          <EditParsedModal open={editing.open} onClose={() => setEditing({ open: false, original: null, parsed: null, idx: null })} originalMessage={editing.original} parsed={editing.parsed} onSave={async (updated) => {
-            // EditParsedModal already handles database updates, so we just need to:
-            // 1. Refresh user profile to get updated balance
-            // 2. Notify parent component about the update
-            try {
-              if (editing.parsed?.id && user?.uid) {
-                // Refresh user profile to get updated balance
-                await refreshUserProfile();
+
+          {/* Custom Delete Dialog with Options */}
+          {pendingDeleteSavedKey && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+              <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md p-6 shadow-lg ring-1 ring-black/10 mx-4">
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">Delete Transaction</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                  Choose how you want to delete this transaction:
+                </p>
                 
-                // Notify parent component about the transaction update
-                if (onTransactionAdded) {
-                  onTransactionAdded();
-                }
-              }
-            } catch (error) {
-              console.error('Error refreshing after transaction update:', error);
-            }
-
-            // Update the chat message content and transaction object when user saves edits.
-            setMessages(prev => prev.map(m => {
-              // match by the message id stored in editing.idx (this is the message id, e.g., 'saved-bot-...')
-              if (m.id === editing.idx) {
-                const newTx = m.transaction ? { ...m.transaction, ...updated } : { ...updated };
-                return { ...m, transaction: newTx, content: formatTransactionMessage(newTx) };
-              }
-              // fallback: also match by transaction id if present
-              if (m.transaction && (m.transaction.id === editing.parsed?.id || m.transaction._id === editing.parsed?._id)) {
-                const newTx = { ...m.transaction, ...updated };
-                return { ...m, transaction: newTx, content: formatTransactionMessage(newTx) };
-              }
-              return m;
-            }));
-
-            // Update savedTransactions array and persist to localStorage if this edited item exists there
-            try {
-              if (typeof window !== 'undefined' && window.localStorage) {
-                const key = 'wallet_last_transactions';
-                const raw = localStorage.getItem(key);
-                let arr = raw ? JSON.parse(raw) : [];
-                if (!Array.isArray(arr)) arr = [];
-
-                // derive savedKey from editing.idx when it's a seeded saved-bot id
-                let savedKey = null;
-                if (typeof editing.idx === 'string' && editing.idx.startsWith('saved-bot-')) {
-                  savedKey = editing.idx.replace('saved-bot-', '');
-                }
-
-                const newArr = arr.map(a => {
-                  if ((updated.id && a.id === updated.id) || (a._id && a._id === updated._id) || (savedKey && `${a.id ?? a._id}_${a.savedAt ?? ''}` === savedKey)) {
-                    return { ...a, ...updated };
-                  }
-                  return a;
-                });
-                localStorage.setItem(key, JSON.stringify(newArr));
-                setSavedTransactions(newArr);
-              }
-            } catch (e) {
-              console.warn('Failed to update savedTransactions after edit', e);
-            }
-
-            // Show success message if this was a database update
-            if (editing.parsed?.id && user?.uid) {
-              setToast({ open: true, message: 'Transaction updated successfully!', type: 'info' });
-            }
+                <div className="space-y-3 mb-6">
+                  <button
+                    onClick={async () => {
+                      await handleDeleteTransaction(true); // Delete from database
+                    }}
+                    className="w-full p-3 text-left border border-red-200 rounded-lg hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <div className="font-medium text-red-700 dark:text-red-400">Delete from Account</div>
+                    <div className="text-xs text-red-600 dark:text-red-500 mt-1">
+                      Permanently remove from your transaction history and update balance
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      await handleDeleteTransaction(false); // Delete only from chat
+                    }}
+                    className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <div className="font-medium text-gray-700 dark:text-gray-300">Remove from Chat Only</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-500 mt-1">
+                      Keep transaction in your account, just hide from this chat
+                    </div>
+                  </button>
+                </div>
+                
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setPendingDeleteSavedKey(null)}
+                    className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <ConfirmDialog open={!!pendingClear} title="Clear all recent replies" description="This will remove all saved recent replies from chat only. Transactions remain in your main list unless deleted individually." onConfirm={async () => {
+            console.log('Clearing all recent chat replies');
             
-            setEditing({ open: false, original: null, parsed: null, idx: null });
-          }} />
-          <ConfirmDialog open={!!pendingDeleteSavedKey} title="Delete saved reply" description="This will remove the saved bot reply and its original prompt. This action cannot be undone." onConfirm={() => {
-            // perform delete
             try {
-              if (typeof window !== 'undefined' && window.localStorage) {
-                const key = 'wallet_last_transactions';
-                const raw = localStorage.getItem(key);
-                let arr = raw ? JSON.parse(raw) : [];
-                if (!Array.isArray(arr)) arr = [];
-                const filtered = arr.filter(a => `${a.id ?? a._id}_${a.savedAt ?? ''}` !== String(pendingDeleteSavedKey));
-                localStorage.setItem(key, JSON.stringify(filtered));
-                setSavedTransactions(filtered);
-                setMessages(prev => prev.filter(m => m.savedKey !== pendingDeleteSavedKey));
-              }
-            } catch (e) {
-              console.warn('Failed to delete saved reply', e);
-            }
-            setPendingDeleteSavedKey(null);
-            setToast({ open: true, message: 'Saved reply deleted', type: 'info' });
-          }} onCancel={() => setPendingDeleteSavedKey(null)} />
-          <ConfirmDialog open={!!pendingClear} title="Clear all recent replies" description="This will remove all saved recent replies. This action cannot be undone." onConfirm={() => {
-            try {
+              // Note: This only clears the chat widget's saved replies, not the actual transactions from Firebase
+              // Users can still see their transactions in the main transaction list
+              // To delete from Firebase, they need to use individual delete buttons
+              
               if (typeof window !== 'undefined' && window.localStorage) {
                 localStorage.removeItem('wallet_last_transactions');
                 setSavedTransactions([]);
                 setMessages(prev => prev.filter(m => !String(m.id).startsWith('saved-')));
+                console.log('Cleared localStorage saved transactions');
               }
+
+              // Dispatch event to notify other components that chat cache was cleared
+              window.dispatchEvent(new CustomEvent('wallet:chat-cache-cleared'));
+
+              setToast({ open: true, message: 'Cleared recent chat replies', type: 'info' });
+              
             } catch (e) {
-              console.warn('Failed to clear saved transactions', e);
+              console.error('Failed to clear saved transactions:', e);
+              setToast({ open: true, message: 'Failed to clear replies', type: 'error' });
             }
+            
             setPendingClear(false);
-            setToast({ open: true, message: 'Cleared recent replies', type: 'info' });
           }} onCancel={() => setPendingClear(false)} />
           <Toast open={toast.open} message={toast.message} type={toast.type} onClose={() => setToast({ open: false, message: '', type: 'info' })} />
+          <Toast open={budgetAlert.open} message={budgetAlert.message} type={budgetAlert.type} onClose={() => setBudgetAlert({ open: false, message: '', type: 'info' })} />
         </div>
       </div>
     </div>
