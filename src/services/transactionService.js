@@ -12,6 +12,7 @@ import {
   getDocs,
   getDoc,
   Timestamp,
+  runTransaction,
   limit
 } from 'firebase/firestore';
 import { 
@@ -211,25 +212,41 @@ export const getRecentTransactions = async (userId, limitCount = 10) => {
 
 export const deleteTransaction = async (userId, transactionId, transactionData) => {
   try {
-    // Delete transaction
     const transactionRef = doc(db, `users/${userId}/transactions/${transactionId}`);
-    await deleteDoc(transactionRef);
-    
-    // Reverse the balance update by subtracting the original transaction effect
     const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
-    
-    if (userDoc.exists()) {
-      // Decrypt user data first
-      const encryptedUserData = userDoc.data();
+
+    // Holder so we can emit a reliable event after the transaction commits
+    let deletedTransactionInfo = null;
+
+    await runTransaction(db, async (tx) => {
+      // Read transaction inside the transaction to ensure consistency
+      const txSnap = await tx.get(transactionRef);
+      if (!txSnap.exists()) {
+        throw new Error('Transaction not found');
+      }
+
+      // Decrypt the transaction to discover its true amount and type
+      const encryptedTx = { id: txSnap.id, ...txSnap.data() };
+      const [decryptedTx] = await decryptTransactions([encryptedTx]);
+
+      const transactionAmount = Number((transactionData && transactionData.amount) ?? decryptedTx.amount) || 0;
+      const transactionType = (transactionData && transactionData.type) ?? decryptedTx.type;
+
+      // Read user profile inside transaction
+      const userSnap = await tx.get(userRef);
+      if (!userSnap.exists()) {
+        throw new Error('User not found');
+      }
+
+      const encryptedUserData = userSnap.data();
       const userData = await decryptUserProfile(encryptedUserData);
-      
+
       const currentBalance = Number(userData.balance) || 0;
       const totalIncome = Number(userData.totalIncome) || 0;
       const totalExpense = Number(userData.totalExpense) || 0;
       const totalCreditGiven = Number(userData.totalCreditGiven) || 0;
       const totalLoanTaken = Number(userData.totalLoanTaken) || 0;
-      
+
       // Reverse the transaction effect
       let newBalance = currentBalance;
       let newTotalIncome = totalIncome;
@@ -237,27 +254,20 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
       let newTotalCreditGiven = totalCreditGiven;
       let newTotalLoanTaken = totalLoanTaken;
 
-      const transactionAmount = Number(transactionData.amount) || 0;
-
-      if (transactionData.type === 'income') {
-        // Remove income: subtract from balance and totalIncome
+      if (transactionType === 'income') {
         newBalance = currentBalance - transactionAmount;
         newTotalIncome = totalIncome - transactionAmount;
-      } else if (transactionData.type === 'expense') {
-        // Remove expense: add back to balance and subtract from totalExpense
+      } else if (transactionType === 'expense') {
         newBalance = currentBalance + transactionAmount;
         newTotalExpense = totalExpense - transactionAmount;
-      } else if (transactionData.type === 'credit') {
-        // Reversing a credit given: add back to balance and reduce totalCreditGiven
+      } else if (transactionType === 'credit') {
         newBalance = currentBalance + transactionAmount;
         newTotalCreditGiven = totalCreditGiven - transactionAmount;
-      } else if (transactionData.type === 'loan') {
-        // Reversing a loan taken: subtract from balance and reduce totalLoanTaken
+      } else if (transactionType === 'loan') {
         newBalance = currentBalance - transactionAmount;
         newTotalLoanTaken = totalLoanTaken - transactionAmount;
       }
 
-      // Encrypt updated data before storing
       const updatedData = {
         balance: newBalance,
         totalIncome: newTotalIncome,
@@ -266,24 +276,29 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
         totalLoanTaken: newTotalLoanTaken,
         updatedAt: Timestamp.now()
       };
-      
+
       const encryptedUpdatedData = await encryptUserProfile(updatedData);
-      await updateDoc(userRef, encryptedUpdatedData);
-    }
-    
-    // Emit event to notify other components about the deletion
+
+      // Schedule delete and update inside the same transaction
+      tx.delete(transactionRef);
+      tx.update(userRef, encryptedUpdatedData);
+
+      deletedTransactionInfo = {
+        transactionId,
+        transactionData: transactionData || decryptedTx,
+        isRepayment: (transactionData && transactionData.isRepayment) || decryptedTx.isRepayment || false
+      };
+    });
+
+    // Emit event to notify other components about the deletion (after commit)
     const event = new CustomEvent('wallet:transaction-deleted', {
-      detail: { 
-        transactionId, 
-        transactionData,
-        isRepayment: transactionData.isRepayment || false
-      }
+      detail: deletedTransactionInfo
     });
     window.dispatchEvent(event);
-    
+
     return { success: true };
   } catch (error) {
-    console.error("Error deleting transaction:", error);
+    console.error('Error deleting transaction:', error);
     return { success: false, error: error.message };
   }
 };
@@ -327,30 +342,99 @@ export const updateTransaction = async (transactionId, updates) => {
       throw new Error('Transaction not found');
     }
 
-    const old = txDoc.data();
-    
-    // Prepare updates with timestamp
-    const updatesWithTimestamp = { 
-      ...rest, 
+    const encryptedOld = { id: txDoc.id, ...txDoc.data() };
+    // Decrypt the old transaction to read amount and type
+    const [oldDecrypted] = await decryptTransactions([encryptedOld]);
+
+    const oldAmount = Number(oldDecrypted.amount || 0);
+    const oldType = oldDecrypted.type || 'expense';
+
+    // Prepare updates with timestamp. Convert date strings to Timestamp when provided.
+    const updatesWithTimestamp = {
+      ...rest,
       updatedAt: Timestamp.now()
     };
-    
-    // Encrypt the updates if they contain sensitive data
-    const encryptedUpdates = await encryptTransactionData(updatesWithTimestamp);
-    
-    // Update transaction fields
-    await updateDoc(transactionRef, encryptedUpdates);
 
-    // If type or amount changed, adjust user summary totals
-    if ((rest.type && rest.type !== old.type) || (rest.amount && Number(rest.amount) !== Number(old.amount))) {
-      // Recalculate by reversing old and applying new
-      const numOld = Number(old.amount || 0);
-      const numNew = Number(rest.amount || old.amount || 0);
-      // Reverse old transaction
-      await updateUserBalance(userId, invertTypeForReverse(old.type), numOld);
-      // Apply new transaction
-      await updateUserBalance(userId, rest.type || old.type, numNew);
+    if (rest.date && typeof rest.date === 'string') {
+      try {
+        updatesWithTimestamp.date = Timestamp.fromDate(new Date(rest.date));
+      } catch {
+        // keep original if conversion fails
+      }
     }
+
+    // Ensure amount is a number if provided
+    const newAmount = rest.amount !== undefined ? Number(rest.amount) : oldAmount;
+    const newType = rest.type || oldType;
+
+  // Encrypt the updates if they contain sensitive data
+  const encryptedUpdates = await encryptTransactionData({ ...updatesWithTimestamp, amount: newAmount });
+
+  // Compute effect helper
+    const computeEffects = (type, amount) => {
+      const a = Number(amount || 0);
+      switch (type) {
+        case 'income':
+          return { balance: a, totalIncome: a, totalExpense: 0, totalCreditGiven: 0, totalLoanTaken: 0 };
+        case 'expense':
+          return { balance: -a, totalIncome: 0, totalExpense: a, totalCreditGiven: 0, totalLoanTaken: 0 };
+        case 'credit':
+          return { balance: -a, totalIncome: 0, totalExpense: 0, totalCreditGiven: a, totalLoanTaken: 0 };
+        case 'loan':
+          return { balance: a, totalIncome: 0, totalExpense: 0, totalCreditGiven: 0, totalLoanTaken: a };
+        default:
+          return { balance: -a, totalIncome: 0, totalExpense: a, totalCreditGiven: 0, totalLoanTaken: 0 };
+      }
+    };
+
+    const oldEffects = computeEffects(oldType, oldAmount);
+    const newEffects = computeEffects(newType, newAmount);
+
+    // Delta to apply to user profile
+    const delta = {
+      balance: newEffects.balance - oldEffects.balance,
+      totalIncome: (newEffects.totalIncome || 0) - (oldEffects.totalIncome || 0),
+      totalExpense: (newEffects.totalExpense || 0) - (oldEffects.totalExpense || 0),
+      totalCreditGiven: (newEffects.totalCreditGiven || 0) - (oldEffects.totalCreditGiven || 0),
+      totalLoanTaken: (newEffects.totalLoanTaken || 0) - (oldEffects.totalLoanTaken || 0)
+    };
+
+    // Prepare encrypted updated user profile data by reading and decrypting current profile
+    const userRef = doc(db, 'users', userId);
+    const userDocSnapshot = await getDoc(userRef);
+    if (!userDocSnapshot.exists()) {
+      throw new Error('User not found');
+    }
+
+    const encryptedUserData = userDocSnapshot.data();
+    const userData = await decryptUserProfile(encryptedUserData);
+
+    const currentBalance = Number(userData.balance) || 0;
+    const totalIncome = Number(userData.totalIncome) || 0;
+    const totalExpense = Number(userData.totalExpense) || 0;
+    const totalCreditGiven = Number(userData.totalCreditGiven) || 0;
+    const totalLoanTaken = Number(userData.totalLoanTaken) || 0;
+
+    const updatedProfilePlain = {
+      balance: currentBalance + delta.balance,
+      totalIncome: totalIncome + delta.totalIncome,
+      totalExpense: totalExpense + delta.totalExpense,
+      totalCreditGiven: totalCreditGiven + delta.totalCreditGiven,
+      totalLoanTaken: totalLoanTaken + delta.totalLoanTaken,
+      updatedAt: Timestamp.now()
+    };
+
+    const encryptedUpdatedProfile = await encryptUserProfile(updatedProfilePlain);
+
+    // Apply both transaction update and profile update atomically
+    await runTransaction(db, async (tx) => {
+      tx.update(transactionRef, encryptedUpdates);
+      tx.update(userRef, encryptedUpdatedProfile);
+    });
+
+    // Emit event so UI can refresh
+    const event = new CustomEvent('wallet:transaction-edited', { detail: { transactionId, updates: rest } });
+    window.dispatchEvent(event);
 
     return { success: true };
   } catch (error) {
@@ -359,17 +443,7 @@ export const updateTransaction = async (transactionId, updates) => {
   }
 };
 
-// Helper to invert type when reversing a transaction to update balances
-const invertTypeForReverse = (type) => {
-  // When reversing an effect we swap income<->expense and credit<->loan
-  switch (type) {
-    case 'income': return 'expense';
-    case 'expense': return 'income';
-    case 'credit': return 'loan';
-    case 'loan': return 'credit';
-    default: return 'expense';
-  }
-};
+// (previous helper removed — update logic now applies computed deltas directly)
 
 /**
  * Export combined user data (profile + all transactions) as a JS object.

@@ -1,254 +1,358 @@
-# 💰 Wallet Tracker - Smart Personal Finance Manager
+# 💰 Wallet Tracker# 💰 Wallet Tracker
 
-A comprehensive React-based personal finance application with intelligent transaction parsing and real-time balance tracking. Built with modern web technologies and Firebase backend.
 
-## ✨ Features
 
-- 🤖 **Smart Chat Interface** - Natural language transaction input with intelligent parsing
-- � **Real-time Balance Updates** - Dynamic balance calculation with transaction edits
-- 📊 **Interactive Dashboard** - Comprehensive spending analytics and transaction history
-- 🏷️ **Intelligent Categorization** - Automatic expense/income detection with emoji icons
-- ✏️ **Live Transaction Editing** - Edit transactions with automatic balance recalculation
-- 🎨 **Modern UI/UX** - Beautiful gradient design with dark/light theme support
-- 🔐 **Secure Authentication** - Email/Password and Google Sign-in with Firebase Auth
-- 📱 **Responsive Design** - Optimized for desktop, tablet, and mobile devices
-- 🗂️ **User Management** - Complete profile management with settings and preferences
-- 🔒 **Account Security** - Re-authentication for sensitive operations like account deletion
-- 📤 **Data Export** - Export all your financial data in JSON format
-- 🗃️ **Transaction Management** - Full CRUD operations with transaction history
+A simple, secure personal finance tracker with client-side encryption**A simple, secure personal finance tracker with client-side encryption**
 
-## 🚀 Quick Start
 
-### Prerequisites
 
-- Node.js (v18 or higher)
-- Firebase Account (free)
+> 🔒 All your financial data is encrypted on your device before being stored> 🔒 All your financial data is encrypted on your device before being stored
 
-### Installation
 
-1. **Clone and Install**
 
-   ```bash
-   git clone <your-repo>
-   cd wallet-app
-   npm install
-   ```
+## 🚀 Quick Start## � Quick Start
 
-2. **Firebase Setup**
-   - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Create a new project
-   - Enable Authentication (Email/Password + Google)
-   - Create Firestore Database
-   - Copy your Firebase config
 
-3. **Environment Setup**
-   - Rename `.env.example` to `.env`
-   - Add your Firebase configuration:
 
-   ```env
-   VITE_FIREBASE_API_KEY=your_api_key
-   VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-   VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
-   ```
+```bash```bash
 
-4. **Run the App**
+git clone https://github.com/HadiuzzamanBappy/Wallet-Tracker.git# Install and run
 
-   ```bash
-   npm run dev
-   ```
+cd Wallet-Trackergit clone https://github.com/HadiuzzamanBappy/Wallet-Tracker.git
 
-## 🎯 How to Use
+npm installcd Wallet-Tracker
 
-### Smart Chat Interface
+npm run devnpm install
 
-The intelligent chat interface parses natural language for transaction entry. Simply describe your transaction in plain English:
-
-**💸 Expense Examples:**
-
-- "I bought groceries for 500 taka today"
-- "Paid electricity bill 2000 BDT"
-- "Movie tickets cost 350 last night"
-- "Ordered pizza for 800"
-- "Uber ride 200 BDT"
-
-**💰 Income Examples:**
-
-- "Received salary 50000"
-- "Got paid 3000 for freelance work"
-- "Earned bonus 5000"
-- "Sold old phone for 15000"
-
-### Key Features
-
-- **Real-time Balance Updates**: Your balance updates instantly when you add, edit, or delete transactions
-- **Transaction Editing**: Click any transaction to edit amount, category, or description
-- **Smart Categorization**: Automatically detects and categorizes expenses (Food, Transport, Bills, etc.)
-- **Account Management**: Complete user profile with settings, data export, and secure account deletion
-- **Re-authentication Security**: Sensitive operations require password confirmation for security
-
-### Categories
-
-The app automatically categorizes transactions:
-
-- 🍔 Food (groceries, restaurant, meals)
-- 🚗 Transport (uber, taxi, fuel)
-- 🎬 Entertainment (movies, games)
-- 🛍️ Shopping (clothes, online purchases)
-- 📄 Bills (electricity, internet, rent)
-- 🏥 Health (doctor, medicine)
-- 📚 Education (books, courses)
-- 💼 Salary & 💻 Freelance (income)
-
-## 🛠️ Tech Stack
-
-- **Frontend:** React 18 + Vite
-- **Styling:** Tailwind CSS with custom gradients
-- **Icons:** Lucide React for modern iconography
-- **Backend:** Firebase (Authentication + Firestore Database)
-- **State Management:** React Context API with custom hooks
-- **UI Components:** Custom modal system with toast notifications
-- **Transaction Parsing:** Intelligent regex-based natural language processing
-- **Security:** Firebase Auth with re-authentication for sensitive operations
-- **Real-time Updates:** Firestore listeners with automatic balance calculation
-
-## 📁 Project Structure
+```npm run dev
 
 ```
-src/
-├── components/
-│   ├── Auth/           # Authentication components
-│   │   └── Login.jsx
-│   ├── Chat/           # Interactive chat interface
-│   │   └── ChatWidget.jsx
-│   ├── Dashboard/      # Main dashboard components
-│   │   ├── Dashboard.jsx
-│   │   └── TransactionList.jsx
-│   └── User/           # User management components
-│       └── SettingsModal.jsx
-├── config/
-│   └── firebase.js     # Firebase configuration
-├── context/
-│   └── AuthContext.jsx # Authentication context with user state
-├── hooks/
-│   └── useAuth.js      # Custom authentication hook
-├── services/
-│   ├── authService.js      # Authentication & user management
-│   └── transactionService.js # Transaction CRUD operations
-├── utils/
-│   ├── transactionParser.js # Natural language transaction parsing
-│   └── helpers.js           # Utility functions
-├── App.jsx             # Main application component
-└── main.jsx            # Application entry point
+
+Create `.env.local` with your Firebase config:
+
+Create `.env.local` with your Firebase config:
+
+```env```env
+
+VITE_FIREBASE_API_KEY=your_keyVITE_FIREBASE_API_KEY=your_key
+
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com  VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com  
+
+VITE_FIREBASE_PROJECT_ID=your_project_idVITE_FIREBASE_PROJECT_ID=your_project_id
+
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.comVITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+
+VITE_FIREBASE_APP_ID=your_app_idVITE_FIREBASE_APP_ID=your_app_id
+
+VITE_OPENROUTER_API_KEY=your_openrouter_keyVITE_OPENROUTER_API_KEY=your_openrouter_key (optional)
+
+``````
+
+
+
+## ✨ What It Does## ✨ What It Does
+
+
+
+- **Track Money**: Income, expenses, loans, credits- **Track Money**: Income, expenses, loans, credits
+
+- **AI Chat**: "Spent $50 on groceries" → automatically categorized  - **AI Chat**: "Spent $50 on groceries" → automatically categorized  
+
+- **Budgets**: Set limits, see progress bars- **Budgets**: Set limits, see progress bars
+
+- **Analytics**: Monthly spending insights- **Analytics**: Monthly spending insights
+
+- **Privacy**: Everything encrypted on your device- **Privacy**: Everything encrypted on your device
+
+- **Sync**: Works across all your devices- **Sync**: Works across all your devices
+
+
+
+## 🛠️ Tech Stack## �️ Tech Stack
+
+
+
+- **Frontend**: React + Vite + Tailwind CSS- **Frontend**: React + Vite + Tailwind CSS
+
+- **Backend**: Firebase (Auth + Firestore)- **Backend**: Firebase (Auth + Firestore)
+
+- **Security**: Client-side AES-256 encryption- **Security**: Client-side AES-256 encryption
+
+- **AI**: OpenRouter API for transaction parsing- **AI**: OpenRouter API for transaction parsing
+
+
+
+## 📁 Project Structure## 📁 Project Structure
+
+
+
+``````
+
+src/src/
+
+├── components/     # UI components├── components/     # UI components
+
+├── services/       # Business logic (auth, transactions, budget)├── services/       # Business logic (auth, transactions, budget)
+
+├── hooks/          # Custom React hooks  ├── hooks/          # Custom React hooks  
+
+├── context/        # State management├── context/        # State management
+
+├── utils/          # Encryption, AI parsing, helpers├── utils/          # Encryption, AI parsing, helpers
+
+└── config/         # Firebase setup└── config/         # Firebase setup
+
+``````
+
+
+
+## 🔧 Development## 🔧 Development
+
+npm run dev
+
+```bash```
+
+npm run dev         # Start dev server
+
+npm run build       # Build for production  ### Firebase Setup
+
+npm run lint        # Check code quality
+
+npm run deploy      # Deploy to Firebase1. Go to [Firebase Console](https://console.firebase.google.com/) → Create Project
+
+```2. **Authentication**: Enable Email/Password + Google Sign-in
+
+3. **Firestore**: Create database in production mode
+
+## 📖 Documentation4. **Settings**: Copy config to `.env` file
+
+
+
+- **[CONTRIBUTING.md](doc/CONTRIBUTING.md)** - How to contribute```env
+
+- **[DEPLOYMENT.md](doc/DEPLOYMENT.md)** - Deploy to production  VITE_FIREBASE_API_KEY=your_firebase_api_key
+
+- **[API_REFERENCE.md](doc/API_REFERENCE.md)** - Developer APIsVITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+
+VITE_FIREBASE_PROJECT_ID=your-project-id
+
+## 🚀 DeployVITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+
+**Firebase Hosting:**VITE_FIREBASE_APP_ID=1:123456789:web:abc123def456
+
 ```
 
-## 🔐 Firebase Security Rules
+```bash
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Allow users to read/write their own profile and transactions
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // Allow users to read/write their own transactions
-      match /transactions/{transactionId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-    }
+npm run build> 📖 **Need help?** See [DEPLOYMENT.md](doc/DEPLOYMENT.md) for detailed production setup.
+
+npm run deploy  
+
+```## 🎯 How It Works
+
+
+
+**Other platforms:** Upload the `dist/` folder to any static host (Vercel, Netlify, etc.)### AI-Powered Transaction Entry
+
+
+
+## 🤝 ContributingSimply chat with your wallet! Type natural language descriptions:
+
+
+
+1. Fork the repo**Examples:**
+
+2. Create a feature branch  - *"I bought groceries for 500 taka today"* → 🍔 Food expense, 500 BDT
+
+3. Make your changes- *"Received salary 50000"* → � Income, 50,000 BDT  
+
+4. Submit a pull request- *"Lent 2000 to my friend"* → 📤 Credit given, 2,000 BDT
+
+- *"Borrowed 5000 from brother"* → 📥 Loan taken, 5,000 BDT
+
+See [CONTRIBUTING.md](doc/CONTRIBUTING.md) for details.
+
+### Key Capabilities
+
+## 📄 License
+
+| Feature | Description |
+
+MIT License - see [LICENSE](LICENSE) file.|---------|-------------|
+
+| **🤖 Smart Parsing** | Understands English & Bengali, amounts, dates, and context |
+
+---| **⚡ Real-time Updates** | Balance recalculates instantly with every change |
+
+| **🔐 Secure by Design** | Client-side encryption, no plaintext in database |
+
+**Questions?** [Open an issue](https://github.com/HadiuzzamanBappy/Wallet-Tracker/issues)| **📊 Rich Analytics** | Spending patterns, budget tracking, export capabilities |
+| **🎨 Modern UI** | Responsive design with dark/light theme support |
+
+### Transaction Categories
+
+Auto-categorized with visual indicators:
+- 🍔 **Food** (groceries, restaurants) • 🚗 **Transport** (uber, fuel)
+- 🎬 **Entertainment** (movies, games) • 🛍️ **Shopping** (clothes, online)  
+- 📄 **Bills** (utilities, rent) • 🏥 **Health** (medical, pharmacy)
+- 📚 **Education** (courses, books) • 💼 **Income** (salary, freelance)
+
+> � **Want to learn more?** Check out [USER_GUIDE.md](doc/USER_GUIDE.md) for detailed usage instructions.
+
+## 🛠️ Technology Stack
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Frontend** | React 18 + Vite | Modern UI framework with fast dev server |
+| **Styling** | Tailwind CSS | Utility-first CSS with custom gradients |
+| **Icons** | Lucide React | Consistent, modern iconography |
+| **Backend** | Firebase | Authentication + Firestore NoSQL database |
+| **State** | React Context + Hooks | Centralized state management |
+| **Security** | Client-side Encryption | AES encryption before database storage |
+| **AI Parsing** | OpenRouter API | Natural language transaction processing |
+| **Build** | Vite | Fast bundling and hot module replacement |
+
+## 🏗️ Architecture Overview
+
+```mermaid
+graph TB
+    A[User Input] --> B[Chat Widget]
+    B --> C[AI Parser]
+    C --> D[Transaction Service]
+    D --> E[Encryption Layer]
+    E --> F[Firestore]
     
-    // Alternative structure for transactions at root level
-    match /transactions/{transactionId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
-    }
+    G[Auth Service] --> H[Firebase Auth]
+    I[Context Providers] --> J[Component Tree]
+    
+    F --> K[Real-time Listeners]
+    K --> L[Dashboard Updates]
+```
+
+### Key Directories
+
+```text
+src/
+├── 📁 components/     # React UI components
+│   ├── Dashboard/     # Main app interface
+│   ├── Transaction/   # CRUD operations
+│   ├── User/          # Profile & settings
+│   └── UI/            # Reusable components
+├── 📁 services/       # Business logic
+│   ├── authService.js        # User authentication
+│   ├── transactionService.js # Data operations
+│   └── budgetService.js      # Budget calculations
+├── 📁 context/        # State management
+├── 📁 hooks/          # Custom React hooks
+└── 📁 utils/          # Utilities & encryption
+```
+
+> 🏛️ **Architecture deep-dive**: See [ARCHITECTURE.md](doc/ARCHITECTURE.md) for detailed technical documentation.
+
+## 🔐 Security & Privacy
+
+### Data Protection
+- **🔒 Client-side Encryption**: All sensitive data encrypted before storage
+- **🛡️ Firebase Security Rules**: User-scoped data access only  
+- **🔐 Re-authentication**: Required for sensitive operations
+- **📤 Data Portability**: Export your data anytime
+
+### Security Rules Preview
+```javascript
+// Users can only access their own data
+match /users/{userId} {
+  allow read, write: if request.auth.uid == userId;
+  
+  match /transactions/{transactionId} {
+    allow read, write: if request.auth.uid == userId;
   }
 }
 ```
 
-## 🎨 Customization
+> 🔐 **Complete security guide**: See [SECURITY.md](doc/SECURITY.md) for full details.
 
-### Adding New Categories
+## 🛠️ Development
 
-Edit `src/utils/transactionParser.js`:
+### Available Scripts
 
-```javascript
-const categoryKeywords = {
-  yourCategory: ['keyword1', 'keyword2', 'keyword3'],
-  // ... existing categories
-};
+```bash
+npm run dev        # Start development server
+npm run build      # Build for production  
+npm run lint       # Run ESLint
+npm run preview    # Preview production build
+npm run deploy     # Deploy to Firebase Hosting
 ```
 
-### Styling
+### Quick Development Setup
 
-The app uses Tailwind CSS. Customize colors and themes in `tailwind.config.js`.
+```bash
+# Install dependencies
+npm install
+
+# Start with hot reload
+npm run dev
+
+# Run linting
+npm run lint
+
+# Test build
+npm run build && npm run preview
+```
+
+> 👥 **Want to contribute?** Check out [CONTRIBUTING.md](doc/CONTRIBUTING.md) for guidelines.
 
 ## 🐛 Troubleshooting
 
-1. **Firebase Authentication Issues**
-   - Verify Firebase config in `src/config/firebase.js`
-   - Check Firebase console for enabled auth providers
-   - Ensure Firestore security rules are properly configured
+| Issue | Solution | Reference |
+|-------|----------|-----------|
+| **Firebase Auth Errors** | Check `.env` config and Firebase console | [USER_GUIDE.md](doc/USER_GUIDE.md#troubleshooting) |
+| **Balance Not Updating** | Verify console logs, check event listeners | [ARCHITECTURE.md](doc/ARCHITECTURE.md#event-system) |
+| **Parsing Failures** | Test with `scripts/test_simple_ai_parser.mjs` | [API_REFERENCE.md](doc/API_REFERENCE.md#ai-parser) |
+| **Build Issues** | Run `npm run lint` and check dependencies | [CONTRIBUTING.md](doc/CONTRIBUTING.md#development) |
 
-2. **Balance Not Updating**
-   - Check browser console for transaction service errors
-   - Verify user profile refresh is working correctly
-   - Ensure proper userId is passed to transaction operations
+> � **Need more help?** Check our comprehensive [troubleshooting guide](doc/USER_GUIDE.md#troubleshooting-and-common-issues).
 
-3. **Transaction Parsing Issues**
-   - Check `transactionParser.js` for keyword matches
-   - Verify regex patterns are working for your input format
-   - Browser console will show parsing results for debugging
+## 📊 Project Status
 
-4. **Account Deletion Problems**
-   - Recent login required for account deletion (Firebase security)
-   - Use re-authentication dialog if prompted
-   - Check Firebase Auth error messages in console
+### ✅ Production Ready
+- ✅ User authentication & profile management
+- ✅ Real-time transaction management  
+- ✅ AI-powered chat interface
+- ✅ Client-side encryption & security
+- ✅ Responsive UI design
+- ✅ Data export capabilities
 
-## 📄 License
-
-MIT License - feel free to use this project for personal or commercial purposes.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
----
-
-## 📊 Current Status
-
-✅ **Fully Functional Features:**
-
-- User authentication (email/password, Google sign-in)
-- Real-time transaction management with live balance updates
-- Interactive chat interface for transaction entry
-- Transaction editing with automatic balance recalculation
-- Secure account management with re-authentication
-- Data export functionality
-- Responsive UI with modern design
-
-## 🔗 Links
-
-- **Repository**: [GitHub Repository](https://github.com/HadiuzzamanBappy/Wallet-Tracker)
-- **Demo**: Deploy to see it in action!
-
-## 💡 Future Enhancements
-
-- [ ] Dark/Light theme toggle
-- [ ] Transaction analytics and charts
-- [ ] Budget planning and alerts
+### 🚧 Roadmap
+- [ ] Advanced analytics dashboard
+- [ ] Budget planning & alerts
+- [ ] Multi-currency support  
 - [ ] Receipt photo uploads
-- [ ] Multi-currency support
-- [ ] Export to CSV/PDF formats
+- [ ] Mobile app (React Native)
+- [ ] Advanced reporting & charts
+
+## 🤝 Community & Support
+
+### Links
+- 📂 **Repository**: [GitHub](https://github.com/HadiuzzamanBappy/Wallet-Tracker)
+- 🐛 **Bug Reports**: [Issues](https://github.com/HadiuzzamanBappy/Wallet-Tracker/issues)
+- 💡 **Feature Requests**: [Discussions](https://github.com/HadiuzzamanBappy/Wallet-Tracker/discussions)
+
+### Contributing
+1. Fork the repository
+2. Read [CONTRIBUTING.md](doc/CONTRIBUTING.md)  
+3. Create a feature branch
+4. Follow the development guidelines
+5. Submit a pull request
+
+### License
+**MIT License** - Free to use for personal and commercial projects.
 
 ---
 
-Made using React, Firebase, and intelligent transaction parsing
+**Made with ❤️ using React, Firebase, and AI-powered transaction parsing**
+
+*Ready to take control of your finances? [Get started now](#-quick-start)!*

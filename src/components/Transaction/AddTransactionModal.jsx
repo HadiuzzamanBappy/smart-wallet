@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Plus, MessageSquare } from 'lucide-react';
 import Modal from '../UI/Modal';
 import { addTransaction } from '../../services/transactionService';
@@ -14,6 +14,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   // Chat mode state
   const [chatMessage, setChatMessage] = useState('');
   const [parsedTransactions, setParsedTransactions] = useState([]);
+  const chatTextareaRef = useRef(null);
   
   // Manual mode state
   const [manualData, setManualData] = useState({
@@ -169,12 +170,52 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                 Describe your transaction
               </label>
               <textarea
+                ref={chatTextareaRef}
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 placeholder="e.g., I bought groceries for 500 taka today"
                 className="input-field min-h-[100px]"
                 rows="3"
               />
+            </div>
+
+            {/* Quick suggestion templates */}
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              <p className="font-medium mb-2">Try these templates (tap to use):</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
+                  <div className="flex-1 pr-2">
+                    <div className="font-medium">Natural</div>
+                    <div className="text-[11px] text-gray-600 dark:text-gray-300">Bought groceries for 500 BDT today</div>
+                  </div>
+                  <button
+                    onClick={() => { setChatMessage('Bought groceries for 500 BDT today'); chatTextareaRef.current?.focus(); }}
+                    className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
+                  >Use</button>
+                </div>
+
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
+                  <div className="flex-1 pr-2">
+                    <div className="font-medium">Tokenized</div>
+                    <div className="text-[11px] text-gray-600 dark:text-gray-300">type:expense amount:250 currency:BDT category:food note:Lunch</div>
+                  </div>
+                  <button
+                    onClick={() => { setChatMessage('type:expense amount:250 currency:BDT category:food note:Lunch'); chatTextareaRef.current?.focus(); }}
+                    className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
+                  >Use</button>
+                </div>
+
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
+                  <div className="flex-1 pr-2">
+                    <div className="font-medium">Multi-line</div>
+                    <div className="text-[11px] text-gray-600 dark:text-gray-300">Lunch 250\nTaxi 120\nSalary 50000 2025-10-01</div>
+                  </div>
+                  <button
+                    onClick={() => { setChatMessage('Lunch 250\nTaxi 120\nSalary 50000 2025-10-01'); chatTextareaRef.current?.focus(); }}
+                    className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
+                  >Use</button>
+                </div>
+              </div>
             </div>
 
             <button

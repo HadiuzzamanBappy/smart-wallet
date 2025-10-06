@@ -236,7 +236,7 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
                     </button>
                   </div>
                 </div>
-                <div className="max-h-96 overflow-y-auto">
+                <div>
                   {renderSectionContent(activeSection)}
                 </div>
               </div>

@@ -22,7 +22,7 @@ import { ToastContainer } from './components/UI/Toast';
 import './App.css';
 
 const AppContent = () => {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const { refreshTransactions } = useTransactions();
   const [currentLanguage, setCurrentLanguage] = React.useState('en');
   
@@ -51,6 +51,20 @@ const AppContent = () => {
       }
     } catch (error) {
       console.error('Error refreshing data:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Profile-only refresh (used by header balance button)
+  const handleProfileRefresh = async () => {
+    if (isRefreshing) return;
+
+    setIsRefreshing(true);
+    try {
+      await refreshUserProfile();
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
     } finally {
       setIsRefreshing(false);
     }
@@ -125,7 +139,7 @@ const AppContent = () => {
           currentLanguage={currentLanguage}
           onLanguageToggle={handleLanguageToggle}
           isRefreshing={isRefreshing}
-          onRefresh={handleRefresh}
+          onRefresh={handleProfileRefresh}
         />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
