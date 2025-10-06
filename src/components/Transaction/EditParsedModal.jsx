@@ -48,11 +48,16 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
     
     setLoading(true);
     try {
-      const result = await updateTransaction(transaction.id, {
+      // Create update data with proper date handling
+      const updateData = {
         ...editData,
         amount: Number(editData.amount),
-        userId: user.uid
-      });
+        date: new Date(editData.date), // Convert string to Date object for Firestore
+        userId: user.uid,
+        updatedAt: new Date() // Add timestamp for when this edit happened
+      };
+      
+      const result = await updateTransaction(transaction.id, updateData);
       
       if (result.success) {
         await refreshUserProfile();

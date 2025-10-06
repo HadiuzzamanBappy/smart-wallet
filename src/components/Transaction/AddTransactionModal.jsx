@@ -94,6 +94,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
       const result = await addTransaction(user.uid, {
         ...manualData,
         amount: Number(manualData.amount),
+        date: new Date(manualData.date), // Ensure date is properly formatted
         source: 'manual'
       });
       

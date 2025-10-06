@@ -61,6 +61,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
       for (const transaction of parsedTransactions) {
         const addResult = await addTransaction(user.uid, {
           ...transaction,
+          // Ensure date is properly formatted as Date object
+          date: transaction.date ? new Date(transaction.date) : new Date(),
           originalMessage_encrypted: messageData.originalMessage_encrypted,
           source: 'chat'
         });

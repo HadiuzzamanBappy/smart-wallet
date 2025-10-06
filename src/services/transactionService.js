@@ -59,7 +59,11 @@ export const addTransaction = async (userId, transactionData) => {
       amount, // Ensure it's stored as number
       userId,
       createdAt: Timestamp.now(),
-      date: Timestamp.fromDate(new Date(transactionData.date)),
+      date: transactionData.date 
+        ? (transactionData.date instanceof Date 
+           ? Timestamp.fromDate(transactionData.date) 
+           : Timestamp.fromDate(new Date(transactionData.date)))
+        : Timestamp.now(), // Default to now if no date provided
       // Include original user message/prompt if provided
       originalMessage: transactionData.originalMessage || transactionData.description,
       source: transactionData.source || 'manual' // Track if created via chat or manual entry
@@ -349,15 +353,20 @@ export const updateTransaction = async (transactionId, updates) => {
     const oldAmount = Number(oldDecrypted.amount || 0);
     const oldType = oldDecrypted.type || 'expense';
 
-    // Prepare updates with timestamp. Convert date strings to Timestamp when provided.
+    // Prepare updates with timestamp. Convert date strings/Date objects to Timestamp when provided.
     const updatesWithTimestamp = {
       ...rest,
       updatedAt: Timestamp.now()
     };
 
-    if (rest.date && typeof rest.date === 'string') {
+    if (rest.date) {
       try {
-        updatesWithTimestamp.date = Timestamp.fromDate(new Date(rest.date));
+        if (typeof rest.date === 'string') {
+          updatesWithTimestamp.date = Timestamp.fromDate(new Date(rest.date));
+        } else if (rest.date instanceof Date) {
+          updatesWithTimestamp.date = Timestamp.fromDate(rest.date);
+        }
+        // If it's already a Timestamp, keep it as is
       } catch {
         // keep original if conversion fails
       }

@@ -9,6 +9,7 @@ import dynamicTranslator from './services/dynamicTranslation';
 import { db } from './config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import Login from './components/User/Login';
+import LandingPage from './components/Landing/LandingPage';
 import Header from './components/Layout/Header';
 import CompactSummary from './components/Dashboard/CompactSummary';
 import BudgetProgress from './components/Dashboard/BudgetProgress';
@@ -25,6 +26,9 @@ const AppContent = () => {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const { refreshTransactions } = useTransactions();
   const [currentLanguage, setCurrentLanguage] = React.useState('en');
+  
+  // Page navigation states
+  const [showLogin, setShowLogin] = useState(false);
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -125,8 +129,12 @@ const AppContent = () => {
     success('Transaction added successfully!');
   };
 
+  // Handle authentication flow
   if (!user) {
-    return <Login />;
+    if (showLogin) {
+      return <Login onBack={() => setShowLogin(false)} />;
+    }
+    return <LandingPage onGetStarted={() => setShowLogin(true)} />;
   }
 
   return (

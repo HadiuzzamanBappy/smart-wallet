@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { registerUser, loginUser, loginWithGoogle } from '../../services/authService';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from 'lucide-react';
 
-const Login = () => {
+const Login = ({ onBack }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -103,6 +103,18 @@ const Login = () => {
 
         {/* Right: Form */}
         <div className="bg-white/5 backdrop-blur-sm border border-white/6 rounded-2xl p-6 md:p-10 shadow-xl">
+          {/* Back button */}
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors mb-4"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Back to Home</span>
+            </button>
+          )}
+          
           <div className="mb-6 text-center">
             <h2 className="text-2xl font-bold text-white mb-1">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
             <p className="text-sm text-gray-300">{isLogin ? 'Sign in to continue to your wallet' : 'Create your account to start tracking'}</p>
