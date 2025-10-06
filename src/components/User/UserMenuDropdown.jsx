@@ -16,9 +16,7 @@ import { logoutUser } from '../../services/authService';
 
 const UserMenuDropdown = ({ 
   onOpenProfile, 
-  onOpenSettings, 
-  currentLanguage,
-  onLanguageToggle 
+  onOpenSettings,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { userProfile } = useAuth();
@@ -48,20 +46,6 @@ const UserMenuDropdown = ({
       icon: isDark ? Sun : Moon,
       label: isDark ? 'Light Mode' : 'Dark Mode',
       onClick: toggleTheme
-    },
-    {
-      icon: Globe,
-      label: `Switch to ${currentLanguage === 'en' ? 'Bengali' : 'English'}`,
-      onClick: onLanguageToggle
-    },
-    {
-      icon: Download,
-      label: 'Export Data',
-      onClick: () => {
-        // Will implement this when we add export functionality
-        console.log('Export data clicked');
-        setIsOpen(false);
-      }
     },
     {
       icon: LogOut,

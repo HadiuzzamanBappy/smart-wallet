@@ -3,6 +3,7 @@ import { MessageSquare, Send, Loader2 } from 'lucide-react';
 import { parseTransaction } from '../../utils/aiTransactionParser';
 import { addTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
+import { encryptMessageData } from '../../utils/encryption';
 
 const ChatWidget = ({ onTransactionAdded, className = '' }) => {
   const { user, refreshUserProfile } = useAuth();
@@ -24,9 +25,12 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
       if (parseResult.success) {
         // Add transactions to database
         for (const transaction of parseResult.data) {
+          // Encrypt the original message for security
+          const messageData = await encryptMessageData({ originalMessage: message });
+          
           const addResult = await addTransaction(user.uid, {
             ...transaction,
-            originalMessage: message,
+            originalMessage_encrypted: messageData.originalMessage_encrypted,
             source: 'chat'
           });
           
@@ -150,8 +154,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="e.g., 'I bought groceries for 500 taka today'"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent resize-none"
-                  rows="2"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent resize-y"
+                  rows="3"
                   disabled={loading}
                 />
               </div>

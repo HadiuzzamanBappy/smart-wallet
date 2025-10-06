@@ -12,23 +12,29 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import { encryptUserProfile } from '../utils/encryption';
 
 export const registerUser = async (email, password, displayName) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Create user profile in Firestore
-    await setDoc(doc(db, 'users', user.uid), {
+    // Create user profile in Firestore with encryption
+    const profileData = {
       email: user.email,
       displayName: displayName || 'User',
       currency: 'BDT',
       balance: 0,
       totalIncome: 0,
       totalExpense: 0,
+      totalCreditGiven: 0,
+      totalLoanTaken: 0,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
-    });
+    };
+    
+    const encryptedProfile = await encryptUserProfile(profileData);
+    await setDoc(doc(db, 'users', user.uid), encryptedProfile);
     
     return { success: true, user };
   } catch (error) {
@@ -60,17 +66,22 @@ export const loginWithGoogle = async () => {
     const userDoc = await getDoc(doc(db, 'users', user.uid));
 
     if (!userDoc.exists()) {
-      // Create new user profile
-      await setDoc(doc(db, 'users', user.uid), {
+      // Create new user profile with encryption
+      const profileData = {
         email: user.email,
         displayName: user.displayName || 'User',
         currency: 'BDT',
         balance: 0,
         totalIncome: 0,
         totalExpense: 0,
+        totalCreditGiven: 0,
+        totalLoanTaken: 0,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
-      });
+      };
+      
+      const encryptedProfile = await encryptUserProfile(profileData);
+      await setDoc(doc(db, 'users', user.uid), encryptedProfile);
     }
 
     return { success: true, user };
@@ -100,15 +111,19 @@ export const loginWithGoogle = async () => {
 export const updateUserProfile = async (userId, profileData) => {
   try {
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
+    
+    // Encrypt sensitive profile data before updating
+    const dataToUpdate = {
       ...profileData,
       updatedAt: Timestamp.now()
-    });
+    };
+    
+    const encryptedData = await encryptUserProfile(dataToUpdate);
+    await updateDoc(userRef, encryptedData);
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }
-
 };
 
 export const logoutUser = async () => {

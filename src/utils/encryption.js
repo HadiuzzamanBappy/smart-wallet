@@ -111,15 +111,15 @@ export const decryptData = async (encryptedData) => {
 export const encryptTransactionData = async (transactionData) => {
   const encrypted = { ...transactionData };
   
-  // Encrypt sensitive fields
+  // Encrypt sensitive fields and remove originals for privacy
   if (encrypted.amount !== undefined) {
     encrypted.amount_encrypted = await encryptData(encrypted.amount);
-    encrypted.amount = 0; // Store dummy value
+    delete encrypted.amount; // Remove original field completely
   }
   
   if (encrypted.description) {
     encrypted.description_encrypted = await encryptData(encrypted.description);
-    encrypted.description = 'Transaction'; // Store dummy value
+    delete encrypted.description; // Remove original field completely
   }
 
   return encrypted;
@@ -133,13 +133,17 @@ export const encryptTransactionData = async (transactionData) => {
 export const decryptTransactionData = async (transactionData) => {
   const decrypted = { ...transactionData };
   
-  // Decrypt sensitive fields
+  // Decrypt sensitive fields or provide defaults
   if (decrypted.amount_encrypted) {
     decrypted.amount = parseFloat(await decryptData(decrypted.amount_encrypted));
+  } else if (decrypted.amount === undefined) {
+    decrypted.amount = 0; // Default for missing amount
   }
   
   if (decrypted.description_encrypted) {
     decrypted.description = await decryptData(decrypted.description_encrypted);
+  } else if (decrypted.description === undefined) {
+    decrypted.description = 'Transaction'; // Default for missing description
   }
 
   return decrypted;
@@ -152,4 +156,138 @@ export const decryptTransactionData = async (transactionData) => {
  */
 export const decryptTransactions = async (transactions) => {
   return Promise.all(transactions.map(decryptTransactionData));
+};
+
+/**
+ * Encrypt user profile data before storing
+ * @param {Object} profileData - User profile object
+ * @returns {Promise<Object>} Profile with encrypted sensitive fields
+ */
+export const encryptUserProfile = async (profileData) => {
+  const encrypted = { ...profileData };
+  
+  // Encrypt numeric/sensitive fields and remove original fields for privacy
+  if (encrypted.balance !== undefined && encrypted.balance !== null) {
+    encrypted.balance_encrypted = await encryptData(encrypted.balance);
+    delete encrypted.balance; // Remove original field completely
+  }
+  
+  if (encrypted.totalIncome !== undefined && encrypted.totalIncome !== null) {
+    encrypted.totalIncome_encrypted = await encryptData(encrypted.totalIncome);
+    delete encrypted.totalIncome; // Remove original field completely
+  }
+  
+  if (encrypted.totalExpense !== undefined && encrypted.totalExpense !== null) {
+    encrypted.totalExpense_encrypted = await encryptData(encrypted.totalExpense);
+    delete encrypted.totalExpense; // Remove original field completely
+  }
+  
+  if (encrypted.monthlyBudget !== undefined && encrypted.monthlyBudget !== null) {
+    encrypted.monthlyBudget_encrypted = await encryptData(encrypted.monthlyBudget);
+    delete encrypted.monthlyBudget; // Remove original field completely
+  }
+  
+  // Also encrypt other numeric fields that might be present
+  if (encrypted.totalCreditGiven !== undefined && encrypted.totalCreditGiven !== null) {
+    encrypted.totalCreditGiven_encrypted = await encryptData(encrypted.totalCreditGiven);
+    delete encrypted.totalCreditGiven; // Remove original field completely
+  }
+  
+  if (encrypted.totalLoanTaken !== undefined && encrypted.totalLoanTaken !== null) {
+    encrypted.totalLoanTaken_encrypted = await encryptData(encrypted.totalLoanTaken);
+    delete encrypted.totalLoanTaken; // Remove original field completely
+  }
+
+  return encrypted;
+};
+
+/**
+ * Decrypt user profile data after retrieving
+ * @param {Object} profileData - User profile object with encrypted fields
+ * @returns {Promise<Object>} Profile with decrypted sensitive fields
+ */
+export const decryptUserProfile = async (profileData) => {
+  const decrypted = { ...profileData };
+  
+  // Decrypt numeric fields or provide defaults
+  if (decrypted.balance_encrypted) {
+    decrypted.balance = parseFloat(await decryptData(decrypted.balance_encrypted)) || 0;
+  } else if (decrypted.balance === undefined) {
+    decrypted.balance = 0; // Default for new fields
+  }
+  
+  if (decrypted.totalIncome_encrypted) {
+    decrypted.totalIncome = parseFloat(await decryptData(decrypted.totalIncome_encrypted)) || 0;
+  } else if (decrypted.totalIncome === undefined) {
+    decrypted.totalIncome = 0; // Default for new fields
+  }
+  
+  if (decrypted.totalExpense_encrypted) {
+    decrypted.totalExpense = parseFloat(await decryptData(decrypted.totalExpense_encrypted)) || 0;
+  } else if (decrypted.totalExpense === undefined) {
+    decrypted.totalExpense = 0; // Default for new fields
+  }
+  
+  if (decrypted.monthlyBudget_encrypted) {
+    decrypted.monthlyBudget = parseFloat(await decryptData(decrypted.monthlyBudget_encrypted)) || 0;
+  } else if (decrypted.monthlyBudget === undefined) {
+    decrypted.monthlyBudget = 0; // Default for new fields
+  }
+  
+  // Decrypt additional numeric fields if present
+  if (decrypted.totalCreditGiven_encrypted) {
+    decrypted.totalCreditGiven = parseFloat(await decryptData(decrypted.totalCreditGiven_encrypted)) || 0;
+  } else if (decrypted.totalCreditGiven === undefined) {
+    decrypted.totalCreditGiven = 0; // Default for new fields
+  }
+  
+  if (decrypted.totalLoanTaken_encrypted) {
+    decrypted.totalLoanTaken = parseFloat(await decryptData(decrypted.totalLoanTaken_encrypted)) || 0;
+  } else if (decrypted.totalLoanTaken === undefined) {
+    decrypted.totalLoanTaken = 0; // Default for new fields
+  }
+
+  return decrypted;
+};
+
+/**
+ * Encrypt chat/message data before storing
+ * @param {Object} messageData - Message object
+ * @returns {Promise<Object>} Message with encrypted content
+ */
+export const encryptMessageData = async (messageData) => {
+  const encrypted = { ...messageData };
+  
+  // Encrypt message content
+  if (encrypted.message) {
+    encrypted.message_encrypted = await encryptData(encrypted.message);
+    delete encrypted.message; // Remove original field completely for privacy
+  }
+  
+  if (encrypted.originalMessage) {
+    encrypted.originalMessage_encrypted = await encryptData(encrypted.originalMessage);
+    delete encrypted.originalMessage; // Remove original field completely for privacy
+  }
+
+  return encrypted;
+};
+
+/**
+ * Decrypt chat/message data after retrieving
+ * @param {Object} messageData - Message object with encrypted fields
+ * @returns {Promise<Object>} Message with decrypted content
+ */
+export const decryptMessageData = async (messageData) => {
+  const decrypted = { ...messageData };
+  
+  // Decrypt message content
+  if (decrypted.message_encrypted) {
+    decrypted.message = await decryptData(decrypted.message_encrypted);
+  }
+  
+  if (decrypted.originalMessage_encrypted) {
+    decrypted.originalMessage = await decryptData(decrypted.originalMessage_encrypted);
+  }
+
+  return decrypted;
 };

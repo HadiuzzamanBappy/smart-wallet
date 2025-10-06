@@ -2,6 +2,7 @@ import { db } from '../config/firebase';
 import { 
   collection, 
   addDoc, 
+  setDoc,
   updateDoc, 
   deleteDoc, 
   doc, 
@@ -13,7 +14,29 @@ import {
   Timestamp,
   limit
 } from 'firebase/firestore';
-import { encryptTransactionData, decryptTransactions } from '../utils/encryption';
+import { 
+  encryptTransactionData, 
+  decryptTransactions, 
+  encryptUserProfile, 
+  decryptUserProfile
+} from '../utils/encryption';
+
+// Compute deterministic fingerprint for a transaction (used for export/import dedupe)
+const normalizeStringForFingerprint = (s) => (String(s || '')).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+const computeTransactionFingerprint = async (t) => {
+  try {
+    const type = String(t.type || '').toLowerCase();
+    const amount = Number(t.amount || 0);
+    const date = (t.date && typeof t.date === 'string') ? t.date : (t.date && t.date.toDate ? t.date.toDate().toISOString().split('T')[0] : '');
+    const desc = normalizeStringForFingerprint(t.description || t.desc || t.note || '');
+    const src = `${type}|${amount}|${date}|${desc}`;
+    const enc = new TextEncoder().encode(src);
+    const hash = await (crypto.subtle || window.crypto.subtle).digest('SHA-256', enc);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    return null;
+  }
+};
 
 export const addTransaction = async (userId, transactionData) => {
   try {
@@ -40,6 +63,14 @@ export const addTransaction = async (userId, transactionData) => {
       originalMessage: transactionData.originalMessage || transactionData.description,
       source: transactionData.source || 'manual' // Track if created via chat or manual entry
     };
+
+    // Compute import fingerprint (store as plaintext to allow future dedupe)
+    try {
+      const fp = await computeTransactionFingerprint(transactionToStore);
+      if (fp) transactionToStore.importFingerprint = fp;
+    } catch {
+      // ignore fingerprint errors
+    }
 
     // Encrypt sensitive transaction data
     const encryptedTransaction = await encryptTransactionData(transactionToStore);
@@ -75,7 +106,10 @@ export const updateUserBalance = async (userId, type, amount) => {
     const userDoc = await getDoc(userRef);
     
     if (userDoc.exists()) {
-      const userData = userDoc.data();
+      // Decrypt user data first
+      const encryptedUserData = userDoc.data();
+      const userData = await decryptUserProfile(encryptedUserData);
+      
       const currentBalance = Number(userData.balance) || 0;
       const totalIncome = Number(userData.totalIncome) || 0;
       const totalExpense = Number(userData.totalExpense) || 0;
@@ -112,14 +146,18 @@ export const updateUserBalance = async (userId, type, amount) => {
           break;
       }
       
-      await updateDoc(userRef, {
+      // Encrypt updated data before storing
+      const updatedData = {
         balance: newBalance,
         totalIncome: newTotalIncome,
         totalExpense: newTotalExpense,
         totalCreditGiven: newTotalCreditGiven,
         totalLoanTaken: newTotalLoanTaken,
         updatedAt: Timestamp.now()
-      });
+      };
+      
+      const encryptedUpdatedData = await encryptUserProfile(updatedData);
+      await updateDoc(userRef, encryptedUpdatedData);
       
       return { success: true };
     } else {
@@ -182,45 +220,66 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
     const userDoc = await getDoc(userRef);
     
     if (userDoc.exists()) {
-      const userData = userDoc.data();
-      const currentBalance = userData.balance || 0;
-      const totalIncome = userData.totalIncome || 0;
-      const totalExpense = userData.totalExpense || 0;
+      // Decrypt user data first
+      const encryptedUserData = userDoc.data();
+      const userData = await decryptUserProfile(encryptedUserData);
+      
+      const currentBalance = Number(userData.balance) || 0;
+      const totalIncome = Number(userData.totalIncome) || 0;
+      const totalExpense = Number(userData.totalExpense) || 0;
+      const totalCreditGiven = Number(userData.totalCreditGiven) || 0;
+      const totalLoanTaken = Number(userData.totalLoanTaken) || 0;
       
       // Reverse the transaction effect
       let newBalance = currentBalance;
       let newTotalIncome = totalIncome;
       let newTotalExpense = totalExpense;
-      let newTotalCreditGiven = userData.totalCreditGiven || 0;
-      let newTotalLoanTaken = userData.totalLoanTaken || 0;
+      let newTotalCreditGiven = totalCreditGiven;
+      let newTotalLoanTaken = totalLoanTaken;
+
+      const transactionAmount = Number(transactionData.amount) || 0;
 
       if (transactionData.type === 'income') {
         // Remove income: subtract from balance and totalIncome
-        newBalance = currentBalance - transactionData.amount;
-        newTotalIncome = totalIncome - transactionData.amount;
+        newBalance = currentBalance - transactionAmount;
+        newTotalIncome = totalIncome - transactionAmount;
       } else if (transactionData.type === 'expense') {
         // Remove expense: add back to balance and subtract from totalExpense
-        newBalance = currentBalance + transactionData.amount;
-        newTotalExpense = totalExpense - transactionData.amount;
+        newBalance = currentBalance + transactionAmount;
+        newTotalExpense = totalExpense - transactionAmount;
       } else if (transactionData.type === 'credit') {
         // Reversing a credit given: add back to balance and reduce totalCreditGiven
-        newBalance = currentBalance + transactionData.amount;
-        newTotalCreditGiven = newTotalCreditGiven - transactionData.amount;
+        newBalance = currentBalance + transactionAmount;
+        newTotalCreditGiven = totalCreditGiven - transactionAmount;
       } else if (transactionData.type === 'loan') {
         // Reversing a loan taken: subtract from balance and reduce totalLoanTaken
-        newBalance = currentBalance - transactionData.amount;
-        newTotalLoanTaken = newTotalLoanTaken - transactionData.amount;
+        newBalance = currentBalance - transactionAmount;
+        newTotalLoanTaken = totalLoanTaken - transactionAmount;
       }
 
-      await updateDoc(userRef, {
+      // Encrypt updated data before storing
+      const updatedData = {
         balance: newBalance,
         totalIncome: newTotalIncome,
         totalExpense: newTotalExpense,
         totalCreditGiven: newTotalCreditGiven,
         totalLoanTaken: newTotalLoanTaken,
         updatedAt: Timestamp.now()
-      });
+      };
+      
+      const encryptedUpdatedData = await encryptUserProfile(updatedData);
+      await updateDoc(userRef, encryptedUpdatedData);
     }
+    
+    // Emit event to notify other components about the deletion
+    const event = new CustomEvent('wallet:transaction-deleted', {
+      detail: { 
+        transactionId, 
+        transactionData,
+        isRepayment: transactionData.isRepayment || false
+      }
+    });
+    window.dispatchEvent(event);
     
     return { success: true };
   } catch (error) {
@@ -235,7 +294,10 @@ export const getUserProfile = async (userId) => {
     const userDoc = await getDoc(userRef);
     
     if (userDoc.exists()) {
-      return { success: true, data: userDoc.data() };
+      // Decrypt sensitive profile data
+      const encryptedData = userDoc.data();
+      const decryptedData = await decryptUserProfile(encryptedData);
+      return { success: true, data: decryptedData };
     } else {
       return { success: false, error: "User not found" };
     }
@@ -320,11 +382,53 @@ export const exportUserData = async (userId) => {
     if (!profileRes.success) throw new Error(profileRes.error || 'Failed to fetch profile');
     if (!txRes.success) throw new Error(txRes.error || 'Failed to fetch transactions');
 
+    // Prepare a JSON-friendly export: convert Date objects to ISO strings and compute an export fingerprint
+    const sanitizedProfile = { ...profileRes.data };
+    // Convert Timestamp-like fields to ISO strings if necessary
+    if (sanitizedProfile.updatedAt && sanitizedProfile.updatedAt.toDate) {
+      sanitizedProfile.updatedAt = sanitizedProfile.updatedAt.toDate().toISOString();
+    } else if (sanitizedProfile.updatedAt instanceof Date) {
+      sanitizedProfile.updatedAt = sanitizedProfile.updatedAt.toISOString();
+    }
+
+    const transactions = txRes.data || [];
+    const sanitizedTransactions = [];
+    for (const tx of transactions) {
+      const exportTx = {
+        id: tx.id,
+        type: tx.type,
+        amount: tx.amount,
+        description: tx.description,
+        category: tx.category,
+        date: tx.date instanceof Date ? tx.date.toISOString().split('T')[0] : String(tx.date || ''),
+        createdAt: tx.createdAt instanceof Date ? tx.createdAt.toISOString() : String(tx.createdAt || ''),
+        updatedAt: tx.updatedAt instanceof Date ? tx.updatedAt.toISOString() : (tx.updatedAt ? String(tx.updatedAt) : undefined),
+        originalId: tx.originalId || undefined,
+        importFingerprint: tx.importFingerprint || undefined,
+        source: tx.source || undefined,
+        paidAmount: tx.paidAmount || undefined,
+        isFullyPaid: tx.isFullyPaid || undefined,
+        linkedTransactionId: tx.linkedTransactionId || undefined,
+        // include any extra metadata fields the app may use
+        notes: tx.notes || tx.note || undefined
+      };
+
+      // Compute a deterministic export fingerprint to help imports dedupe even if originalId is missing
+      try {
+        const fp = await computeTransactionFingerprint(tx);
+        if (fp) exportTx.exportFingerprint = fp;
+      } catch {
+        // ignore fingerprint failures
+      }
+
+      sanitizedTransactions.push(exportTx);
+    }
+
     return {
       success: true,
       data: {
-        profile: profileRes.data,
-        transactions: txRes.data
+        profile: sanitizedProfile,
+        transactions: sanitizedTransactions
       }
     };
   } catch (error) {
@@ -571,6 +675,254 @@ export const markCreditAsCollected = async (userId, creditId, collectionAmount, 
     return result;
   } catch (error) {
     console.error('Error marking credit as collected:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Import user data previously exported by exportUserData.
+ * Expects `data` to have shape: { profile: {...}, transactions: [...] }
+ * This function will write transactions back into `users/{userId}/transactions`
+ * and replace the user profile document fields present in the exported profile.
+ * NOTE: This intentionally writes the transactions as-is (encrypted) and writes profile totals
+ * to avoid double-applying balance updates. Use with caution.
+ */
+export const importUserData = async (userId, data, options = { preserveIds: false, dedupe: true }) => {
+  try {
+    if (!data) throw new Error('No data provided');
+    const { profile, transactions } = data;
+
+    // Validate transactions array
+    if (!Array.isArray(transactions)) {
+      throw new Error('Invalid transactions payload');
+    }
+
+    const transactionsRef = collection(db, `users/${userId}/transactions`);
+
+    const importTag = `import-${new Date().toISOString()}`;
+
+    const result = {
+      success: true,
+      total: transactions.length,
+      imported: 0,
+      skipped: 0,
+      failed: 0,
+      errors: [],
+      overwritten: [],
+      createdIds: []
+    };
+
+    // Simple schema validation helper
+    const validTypes = ['income', 'expense', 'credit', 'loan'];
+    const isValidTx = (tx) => {
+      if (!tx) return false;
+      if (!tx.type || !validTypes.includes(tx.type)) return false;
+      const num = Number(tx.amount);
+      if (isNaN(num) || num <= 0) return false;
+      if (!tx.date) return false;
+      return true;
+    };
+
+    // Helper: compute a deterministic fingerprint for a transaction
+    const normalizeString = (s) => (String(s || '')).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+    const computeFingerprint = async (t) => {
+      try {
+        const type = String(t.type || '').toLowerCase();
+        const amount = Number(t.amount || 0);
+        const date = (t.date && typeof t.date === 'string') ? t.date : (t.date && t.date.toDate ? t.date.toDate().toISOString().split('T')[0] : '');
+        const desc = normalizeString(t.description || t.desc || t.note || '');
+        const src = `${type}|${amount}|${date}|${desc}`;
+        const enc = new TextEncoder().encode(src);
+        const hash = await (crypto.subtle || window.crypto.subtle).digest('SHA-256', enc);
+        // convert to hex
+        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch {
+        return null;
+      }
+    };
+
+    for (const tx of transactions) {
+      try {
+        // Validate transaction schema
+        if (!isValidTx(tx)) {
+          result.skipped += 1;
+          result.errors.push({ id: tx?.id || null, error: 'Invalid transaction schema' });
+          continue;
+        }
+
+        const originalId = tx.id || tx.originalId || null;
+
+        // Compute fingerprint
+        const fingerprint = await computeFingerprint(tx);
+
+        // Check for existing doc by originalId first, then by fingerprint
+        let existingDoc = null;
+        if (originalId) {
+          const q = query(transactionsRef, where('originalId', '==', originalId), limit(1));
+          const snap = await getDocs(q);
+          if (!snap.empty) existingDoc = snap.docs[0];
+        }
+
+        if (!existingDoc && fingerprint) {
+          const q2 = query(transactionsRef, where('importFingerprint', '==', fingerprint), limit(1));
+          const snap2 = await getDocs(q2);
+          if (!snap2.empty) existingDoc = snap2.docs[0];
+        }
+
+        // Prepare tx to store and preserve timestamps
+        const txToStore = {
+          ...tx,
+          userId,
+          originalId: originalId || undefined,
+          importFingerprint: fingerprint || undefined,
+          source: importTag,
+          createdAt: tx.createdAt ? Timestamp.fromDate(new Date(tx.createdAt)) : Timestamp.now(),
+          date: tx.date ? Timestamp.fromDate(new Date(tx.date)) : Timestamp.now(),
+          updatedAt: tx.updatedAt ? Timestamp.fromDate(new Date(tx.updatedAt)) : undefined
+        };
+
+        // Remove id field so we don't accidentally try to write it into the document body
+        delete txToStore.id;
+
+        const encrypted = await encryptTransactionData(txToStore);
+
+        if (existingDoc) {
+          // There is an existing document that matches originalId or fingerprint
+          const existingId = existingDoc.id;
+          if (options.preserveIds && originalId) {
+            // User requested to preserve original IDs. If the existing doc has a different id,
+            // write the data to the originalId path and remove the old conflicting doc to avoid duplicates.
+            const targetRef = doc(db, `users/${userId}/transactions`, originalId);
+            await setDoc(targetRef, encrypted);
+            result.overwritten.push(originalId);
+            // If existing doc had a different id, remove it
+            if (existingId !== originalId) {
+              try {
+                const oldRef = doc(db, `users/${userId}/transactions`, existingId);
+                await deleteDoc(oldRef);
+              } catch (deleteErr) {
+                // non-fatal: if delete fails, continue but report
+                result.errors.push({ id: existingId, error: 'Failed to delete duplicate doc after overwrite: ' + (deleteErr?.message || String(deleteErr)) });
+              }
+            }
+          } else if (options.dedupe) {
+            // Skip importing duplicate
+            result.skipped += 1;
+          } else {
+            // Not preserving ids and not deduping: update the existing doc with new data
+            const existingRef = doc(db, `users/${userId}/transactions`, existingId);
+            await setDoc(existingRef, encrypted, { merge: true });
+            result.overwritten.push(existingId);
+          }
+        } else {
+          // No existing doc found
+          if (options.preserveIds && originalId) {
+            const targetRef = doc(db, `users/${userId}/transactions`, originalId);
+            await setDoc(targetRef, encrypted);
+            result.createdIds.push(originalId);
+          } else {
+            const newRef = await addDoc(transactionsRef, encrypted);
+            result.createdIds.push(newRef.id);
+          }
+          result.imported += 1;
+        }
+      } catch (e) {
+        result.failed += 1;
+        result.errors.push({ id: tx?.id || null, error: e?.message });
+      }
+    }
+
+    // Replace user profile fields from exported profile (only specific safe fields)
+    if (profile && typeof profile === 'object') {
+      const userRef = doc(db, 'users', userId);
+      const updatable = {
+        displayName: profile.displayName,
+        email: profile.email,
+        balance: Number(profile.balance) || 0,
+        totalIncome: Number(profile.totalIncome) || 0,
+        totalExpense: Number(profile.totalExpense) || 0,
+        totalCreditGiven: Number(profile.totalCreditGiven) || 0,
+        totalLoanTaken: Number(profile.totalLoanTaken) || 0,
+        language: profile.language,
+        theme: profile.theme,
+        notifications: profile.notifications,
+        budgetAlerts: profile.budgetAlerts,
+        updatedAt: Timestamp.now()
+      };
+
+      // Remove undefined keys so updateDoc doesn't set them
+      Object.keys(updatable).forEach(k => updatable[k] === undefined && delete updatable[k]);
+
+      await updateDoc(userRef, updatable);
+    }
+
+    // Attach importSourceTag to result so caller can undo later if needed
+    result.importSourceTag = importTag;
+
+    // If the account already had transactions before import, run a reconciliation to ensure totals are accurate
+    try {
+      const existingCheck = await getTransactions(userId, { limit: 1 });
+      if (existingCheck.success && existingCheck.data && existingCheck.data.length > 0) {
+        // run reconciliation
+        const recon = await reconcileUserTotals(userId);
+        result.reconciled = !!recon.success;
+        result.totals = recon.totals || null;
+      }
+    } catch (e) {
+      console.warn('Reconciliation after import failed:', e?.message);
+      result.reconciled = false;
+      result.reconciliationError = e?.message;
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error importing user data:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Recalculate user totals from transactions and update the user profile document.
+ * Returns { success: true, totals: { balance, totalIncome, totalExpense, totalCreditGiven, totalLoanTaken } }
+ */
+export const reconcileUserTotals = async (userId) => {
+  try {
+    const txRes = await getTransactions(userId);
+    if (!txRes.success) throw new Error(txRes.error || 'Failed to fetch transactions for reconciliation');
+
+    const transactions = txRes.data || [];
+    let totalIncome = 0;
+    let totalExpense = 0;
+    let totalCreditGiven = 0;
+    let totalLoanTaken = 0;
+
+    transactions.forEach(tx => {
+      const amt = Number(tx.amount || 0);
+      if (tx.type === 'income') totalIncome += amt;
+      else if (tx.type === 'expense') totalExpense += amt;
+      else if (tx.type === 'credit') totalCreditGiven += amt;
+      else if (tx.type === 'loan') totalLoanTaken += amt;
+    });
+
+    const balance = totalIncome - totalExpense - totalCreditGiven + totalLoanTaken;
+
+    // Encrypt the updated totals before storing
+    const updatedTotals = {
+      balance,
+      totalIncome,
+      totalExpense,
+      totalCreditGiven,
+      totalLoanTaken,
+      updatedAt: Timestamp.now()
+    };
+
+    const encryptedTotals = await encryptUserProfile(updatedTotals);
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, encryptedTotals);
+
+    return { success: true, totals: { balance, totalIncome, totalExpense, totalCreditGiven, totalLoanTaken } };
+  } catch (error) {
+    console.error('Error reconciling totals:', error);
     return { success: false, error: error.message };
   }
 };

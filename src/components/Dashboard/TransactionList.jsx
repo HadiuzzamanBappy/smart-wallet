@@ -16,6 +16,7 @@ import { getCategoryEmoji, getCategoryColor } from '../../utils/aiTransactionPar
 import EditParsedModal from '../Transaction/EditParsedModal';
 import ConfirmDialog from '../UI/ConfirmDialog';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import { TransactionListSkeleton } from '../UI/SkeletonLoader';
 
 const TransactionList = ({ onTransactionUpdate }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -145,13 +146,7 @@ const TransactionList = ({ onTransactionUpdate }) => {
   };
 
   if (transactionLoading) {
-    return (
-      <div className="card p-6">
-        <div className="flex items-center justify-center h-32">
-          <LoadingSpinner size="lg" />
-        </div>
-      </div>
-    );
+    return <TransactionListSkeleton />;
   }
 
   return (

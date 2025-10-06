@@ -5,9 +5,10 @@ import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus, Eye } fr
 import { isCreditCategory, isLoanCategory } from '../../utils/aiTransactionParser';
 import AddTransactionModal from '../Transaction/AddTransactionModal';
 import LoanCreditModal from '../Transaction/LoanCreditModal';
+import { CompactSummarySkeleton } from '../UI/SkeletonLoader';
 
 const CompactSummary = ({ refreshTrigger, onRefresh }) => {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const { 
     transactions,
     currentMonthIncome,
@@ -47,19 +48,23 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
 
   const refreshData = async () => {
     if (refreshing) return;
-    
-    if (onRefresh) {
-      // Use the parent's refresh handler to sync header loading state
-      await onRefresh();
-    } else {
-      // Fallback to local refresh
-      setRefreshing(true);
-      try {
+
+    // Show the local skeleton while parent performs refresh so header and summary
+    // both display loading state consistently.
+    setRefreshing(true);
+    try {
+      if (onRefresh) {
+        // Use the parent's refresh handler to sync header loading state
+        await onRefresh();
+        // Parent may have refreshed transactions; reload local summary data
+        await loadData();
+      } else {
+        // Fallback to local refresh
         await refreshTransactions();
         await loadData();
-      } finally {
-        setRefreshing(false);
       }
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -169,58 +174,43 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     }
   }, [userProfile, stats.balance]);
 
+  // Create stable reference for refreshUserProfile
+  const stableRefreshUserProfile = useCallback(refreshUserProfile, [refreshUserProfile]);
+
   // Listen for transaction updates from other components
   useEffect(() => {
-    const handleTransactionUpdate = () => {
+    const handleTransactionUpdate = async (event) => {
       console.log('CompactSummary: Refreshing due to transaction update');
-      loadData();
+      
+      // If this is a repayment/collection event, also refresh user profile
+      // to get updated balance since loan/credit repayments affect balance
+      if (event?.detail?.isRepayment) {
+        try {
+          await stableRefreshUserProfile();
+        } catch (error) {
+          console.warn('Failed to refresh user profile after repayment:', error);
+        }
+      }
+      
+      await loadData();
     };
 
     // Add event listeners
     window.addEventListener('wallet:transaction-added', handleTransactionUpdate);
     window.addEventListener('wallet:transaction-edited', handleTransactionUpdate);
     window.addEventListener('wallet:transaction-deleted', handleTransactionUpdate);
+    window.addEventListener('wallet:transactions-updated', handleTransactionUpdate);
 
     return () => {
       window.removeEventListener('wallet:transaction-added', handleTransactionUpdate);
       window.removeEventListener('wallet:transaction-edited', handleTransactionUpdate);
       window.removeEventListener('wallet:transaction-deleted', handleTransactionUpdate);
+      window.removeEventListener('wallet:transactions-updated', handleTransactionUpdate);
     };
-  }, [loadData]);
+  }, [loadData, stableRefreshUserProfile]);
 
   if (loading || refreshing) {
-    return (
-      <div className="w-full">
-        {/* header skeleton: greeting + small action */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex-1">
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40 animate-pulse" />
-            <div className="mt-1 h-3 bg-gray-200 dark:bg-gray-700 rounded w-28 animate-pulse" />
-          </div>
-          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-        </div>
-
-        {/* compact grid skeleton: 2 cols on mobile, 4 on md+ */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="relative flex items-center gap-2 p-2 rounded-lg transition-all duration-200 bg-white/5 dark:bg-gray-800/40 text-sm"
-            >
-              <div className="flex-shrink-0 w-8 h-8 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse" />
-              <div className="min-w-0 flex-1 pr-6">
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-1 animate-pulse" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse" />
-              </div>
-              {/* Skeleton for action button on cards with actions */}
-              {(i === 2 || i === 3) && (
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <CompactSummarySkeleton />;
   }
 
   const summaryCards = [
@@ -279,7 +269,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     <div className="w-full">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="text-sm font-semibold">Welcome back, {userProfile?.displayName?.split(' ')[0] || 'User'}</div>
+          <div className="text-sm font-semibold">Welcome back, {userProfile?.displayName?.split(' ')[2] || 'Buddy'}</div>
           <div className="text-xs text-gray-400">Quick snapshot of this month</div>
         </div>
         <div className="flex items-center gap-2">
@@ -301,7 +291,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
             {summaryCards.map((card, index) => {
               const IconComponent = card.icon;
               return (
-                <div key={index} className={`relative flex items-center gap-2 p-2 rounded-lg transition-all duration-200 ${card.bgColor} ${card.color} text-sm`}> 
+                <div key={index} className={`relative flex items-center gap-2 p-2 sm:p-4 rounded-lg transition-all duration-200 ${card.bgColor} ${card.color} text-sm`}> 
                   <div className={`p-1.5 rounded-md ${card.bgColor}`}> 
                     <IconComponent className={`w-4 h-4 ${card.color}`} />
                   </div>

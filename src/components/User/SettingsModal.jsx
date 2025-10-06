@@ -20,10 +20,12 @@ import {
   isGoogleUser,
   confirmEmailForDeletion 
 } from '../../services/authService';
-import { exportUserData, deleteAllUserData } from '../../services/transactionService';
+import { exportUserData, deleteAllUserData, importUserData } from '../../services/transactionService';
+import { useTransactions } from '../../hooks/useTransactions';
 
-const SettingsModal = ({ isOpen, onClose }) => {
+const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
+  const { refreshTransactions } = useTransactions();
   // Theme will be handled through settings state
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -107,6 +109,94 @@ const SettingsModal = ({ isOpen, onClose }) => {
       }
     } catch (error) {
       console.error('Export failed:', error);
+    }
+  };
+
+  // Import data from JSON file exported earlier
+  const [importLoading, setImportLoading] = useState(false);
+  const fileInputRef = React.useRef(null);
+  const [importPayload, setImportPayload] = useState(null);
+  const [importPreview, setImportPreview] = useState(null); // { profile, transactions }
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [preserveIds, setPreserveIds] = useState(false);
+  const [dedupe, setDedupe] = useState(true);
+  const [importResult, setImportResult] = useState(null);
+
+  const onFileSelect = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      // Basic validation
+      if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.transactions)) {
+        console.error('Invalid import file');
+        alert('Invalid import file format');
+        return;
+      }
+
+      // Build a small preview (counts + sample)
+      const preview = {
+        profile: parsed.profile || {},
+        totalTransactions: parsed.transactions.length,
+        sample: parsed.transactions.slice(0, 5)
+      };
+
+      setImportPreview(preview);
+      setImportPayload(parsed);
+      setShowImportModal(true);
+    } catch (error) {
+      console.error('Error reading import file:', error);
+      alert('Failed to read import file');
+    } finally {
+      // Reset input so same file can be reselected
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const triggerImport = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+  // Import immediately using the parsed payload stored in state when the file was selected
+  const startImport = async () => {
+    if (!importPayload) return;
+    setImportLoading(true);
+    setImportResult(null);
+    try {
+      const res = await importUserData(user.uid, importPayload, { preserveIds, dedupe });
+      setImportResult(res);
+      if (res.success) {
+        // Refresh profile and transactions so the UI updates immediately
+        if (refreshUserProfile) await refreshUserProfile();
+        try {
+          if (refreshTransactions) await refreshTransactions();
+        } catch (err) {
+          console.warn('Failed to refresh transactions after import:', err?.message || err);
+        }
+
+        // Dispatch a global event so components listening for transaction updates refresh their views
+        try {
+          window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { importResult: res } }));
+        } catch {
+          // ignore
+        }
+      }
+    } catch (error) {
+      console.error('Import failed:', error);
+      setImportResult({ success: false, error: error.message });
+    } finally {
+      setImportLoading(false);
+      setShowImportModal(false);
+      setImportPayload(null);
+      setImportPreview(null);
+      // Auto-clear the import result after a short delay to avoid clutter
+      if (resultClearMs > 0) {
+        setTimeout(() => {
+          setImportResult(null);
+        }, resultClearMs);
+      }
     }
   };
 
@@ -291,6 +381,149 @@ const SettingsModal = ({ isOpen, onClose }) => {
                 </div>
               </button>
               
+                <div className="relative">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/json"
+                  onChange={onFileSelect}
+                  className="hidden"
+                />
+
+                <button
+                  onClick={triggerImport}
+                  className="w-full mt-2 flex items-center space-x-3 p-3 text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                >
+                  <Download className="w-5 h-5 text-green-500" />
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">Import Data</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Select a previously exported JSON to restore data</div>
+                  </div>
+                  {importLoading && (
+                    <div className="absolute right-3 top-3 w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                  )}
+                </button>
+              </div>
+              
+              {/* Import Modal */}
+              {showImportModal && (
+                <Modal isOpen={showImportModal} onClose={() => setShowImportModal(false)} title="Import Data" size="md">
+                  <div className="space-y-4">
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      Preview: {importPreview?.totalTransactions || 0} transactions. Sample (up to 5):
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded space-y-2 max-h-40 overflow-auto">
+                      {importPreview?.sample?.map((s, i) => (
+                        <div key={i} className="text-xs">
+                          <strong>{s.type}</strong> • {s.amount} • {s.description || s.category}
+                        </div>
+                      ))}
+                    </div>
+
+                        <div className="flex flex-col gap-3">
+                          {/* Preserve IDs toggle */}
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={preserveIds}
+                                onChange={(e) => setPreserveIds(e.target.checked)}
+                                className="sr-only"
+                                aria-label="Preserve original IDs"
+                              />
+                              <div
+                                onClick={() => setPreserveIds(p => !p)}
+                                className={`w-10 h-6 rounded-full transition-colors ${preserveIds ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                              />
+                              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${preserveIds ? 'translate-x-4' : ''}`} />
+                            </div>
+                            <span className="text-sm">Preserve original document IDs (overwrite if exists)</span>
+                          </label>
+
+                          {/* Dedupe toggle */}
+                          <label className="flex items-center space-x-3 cursor-pointer">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={dedupe}
+                                onChange={(e) => setDedupe(e.target.checked)}
+                                className="sr-only"
+                                aria-label="Skip duplicates"
+                              />
+                              <div
+                                onClick={() => setDedupe(d => !d)}
+                                className={`w-10 h-6 rounded-full transition-colors ${dedupe ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                              />
+                              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${dedupe ? 'translate-x-4' : ''}`} />
+                            </div>
+                            <span className="text-sm">Skip already-imported transactions (dedupe by originalId)</span>
+                          </label>
+                        </div>
+
+                    <div className="flex justify-end space-x-3">
+                      <button onClick={() => setShowImportModal(false)} className="px-3 py-2 rounded border">Cancel</button>
+                      <button onClick={startImport} disabled={importLoading} className="px-3 py-2 bg-teal-500 text-white rounded disabled:opacity-50 flex items-center gap-2">
+                        {importLoading && (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        )}
+                        Start Import
+                      </button>
+                    </div>
+                  </div>
+                </Modal>
+              )}
+
+              {/* Note: we only use a single file input (preview). Start Import uses the parsed payload in memory. */}
+
+              {/* Import result summary */}
+              {importResult && (
+                <div className="mt-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm">
+                  {importResult.success ? (
+                    <div className="text-green-600 dark:text-green-400">Imported {importResult.imported} of {importResult.total} transactions. Skipped: {importResult.skipped}. Failed: {importResult.failed}.</div>
+                  ) : (
+                    <div className="text-red-600 dark:text-red-400">Import failed: {importResult.error}</div>
+                  )}
+                  {importResult.reconciled !== undefined && (
+                    <div className="mt-2 text-xs">
+                      {importResult.reconciled ? (
+                        <div className="text-green-500">Reconciliation completed. New totals: {importResult.totals ? `Balance: ${importResult.totals.balance}, Income: ${importResult.totals.totalIncome}, Expense: ${importResult.totals.totalExpense}` : 'n/a'}</div>
+                      ) : (
+                        <div className="text-yellow-500">Reconciliation was not performed or failed.</div>
+                      )}
+                    </div>
+                  )}
+                  {importResult.errors && importResult.errors.length > 0 && (
+                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                      <div className="font-medium">Errors:</div>
+                      <ul className="list-disc list-inside max-h-24 overflow-auto">
+                        {importResult.errors.slice(0, 10).map((err, i) => (
+                          <li key={i}>{err.id ? `id:${err.id} — ` : ''}{err.error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {(importResult.overwritten && importResult.overwritten.length > 0) && (
+                    <div className="mt-2 text-xs text-gray-700 dark:text-gray-300">
+                      <div className="font-medium">Overwritten:</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{importResult.overwritten.length} document(s) overwritten.</div>
+                      <ul className="list-disc list-inside max-h-28 overflow-auto text-xs text-gray-600 dark:text-gray-400">
+                        {importResult.overwritten.slice(0, 10).map((id, i) => (<li key={i}>{id}</li>))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {(importResult.createdIds && importResult.createdIds.length > 0) && (
+                    <div className="mt-2 text-xs text-gray-700 dark:text-gray-300">
+                      <div className="font-medium">Created:</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{importResult.createdIds.length} document(s) created.</div>
+                      <ul className="list-disc list-inside max-h-28 overflow-auto text-xs text-gray-600 dark:text-gray-400">
+                        {importResult.createdIds.slice(0, 10).map((id, i) => (<li key={i}>{id}</li>))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <button
                 onClick={handleDeleteAccount}
                 className="w-full flex items-center space-x-3 p-3 text-left border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
@@ -326,6 +559,9 @@ const SettingsModal = ({ isOpen, onClose }) => {
           </div>
         </div>
       </Modal>
+
+  {/* Clear importResult when modal closes to ensure a fresh state next open */}
+  { !isOpen && importResult && setImportResult(null) }
 
       {/* Delete Confirmation */}
       <ConfirmDialog
@@ -408,7 +644,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
               {deleteLoading && (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               )}
-              {isUserGoogleAuth ? 'Confirm & Authenticate' : 'Delete Account'}
+              {isUserGoogleAuth ? 'Authenticate' : 'Delete Account'}
             </button>
           </div>
         </div>
