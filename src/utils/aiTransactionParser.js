@@ -21,13 +21,19 @@ Rules:
 - If input contains exactly one transaction, return a single-element array containing that object.
 - Do NOT include any non-JSON text.
 
+Important semantics (be explicit):
+- "income": money received by the user (salary, refund, payment received).
+- "expense": money spent by the user for goods/services.
+- "credit": the user GAVE money to someone (lent money / credit given). This is an OUTFLOW from the user's balance.
+- "loan": the user TOOK money from someone (borrowed / loan taken). This is an INFLOW to the user's balance.
+
 Each transaction object schema:
 {
   "type": "income|expense|credit|loan",
   "amount": number,
   "description": "short clean description",
   "category": "food|transport|entertainment|shopping|bills|health|education|salary|freelance|investment|other",
-  "date": "YYYY-MM-DD" // optional
+  "date": "YYYY-MM-DD" // optional; prefer exact YYYY-MM-DD when available
 }
 
 Support English and Bengali. Normalize amounts to BDT (numbers only).`;
@@ -126,12 +132,57 @@ export const parseTransaction = async (message) => {
 
   // normalize entries
   const now = new Date().toISOString().split('T')[0];
+  // Helper: infer credit vs loan from description if parser returns a generic income/expense
+  const inferTypeFromDescription = (desc, givenType) => {
+    const s = (desc || '').toLowerCase();
+    // phrases indicating the user GAVE money to someone => credit (credit given)
+    const gaveLoanKeywords = ['lent', 'loaned', 'lend to', 'lent to', 'gave loan', 'gave loan to', 'loan given'];
+    // phrases indicating the user BORROWED money => loan (loan taken)
+    const tookLoanKeywords = ['borrow', 'borrowed', 'took loan', 'took a loan', 'loan from', 'took loan from', 'borrow from'];
+
+    const hasGave = gaveLoanKeywords.some(k => s.includes(k));
+    const hasTook = tookLoanKeywords.some(k => s.includes(k));
+
+    if (hasTook) return 'loan';
+    if (hasGave) return 'credit';
+
+    // If parser already provided a clear type, keep it
+    if (givenType && ['income', 'expense', 'credit', 'loan'].includes(givenType)) return givenType;
+
+    // Default to expense when uncertain
+    return 'expense';
+  };
+
   const normalized = parsed.map((obj) => {
-    const type = obj?.type ? String(obj.type).toLowerCase() : 'expense';
+    let type = obj?.type ? String(obj.type).toLowerCase() : null;
     const amount = sanitizeAmount(obj?.amount ?? obj?.value ?? obj?.amt ?? obj?.total);
     const category = obj?.category ? String(obj.category).toLowerCase() : 'other';
     const description = obj?.description ? String(obj.description).trim() : (obj?.desc ? String(obj.desc).trim() : '');
-    const date = obj?.date ? String(obj.date) : now;
+
+    // Normalize date: accept various human-readable forms but always return YYYY-MM-DD
+    let date = now;
+    if (obj?.date) {
+      try {
+        const raw = String(obj.date).trim();
+        // If already ISO-like YYYY-MM-DD, keep it
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          date = raw;
+        } else {
+          const parsedDate = new Date(raw);
+          if (!Number.isNaN(parsedDate.getTime())) {
+            date = parsedDate.toISOString().split('T')[0];
+          } else {
+            date = now;
+          }
+        }
+      } catch {
+        date = now;
+      }
+    }
+
+    // Infer type from description when parser returns a generic one or mislabels
+    type = inferTypeFromDescription(description, type);
+
     return { type, amount, category, description, date, confidence: obj?.confidence ?? 'high' };
   }).filter(x => x && Number.isFinite(x.amount) && x.amount > 0 && x.description.length > 0);
 
