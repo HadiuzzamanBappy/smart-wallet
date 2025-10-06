@@ -14,29 +14,48 @@ const getModel = () => {
   return 'meta-llama/llama-3-8b-instruct';
 };
 
-const SYSTEM_PROMPT = `You are a strict transaction parser. ALWAYS reply with VALID JSON ONLY and NOTHING ELSE.
+const SYSTEM_PROMPT = `You are a strict financial transaction parser. You MUST return VALID JSON ONLY.
 
-Rules:
-- If input contains more than one transaction, RETURN A JSON ARRAY of transaction objects.
-- If input contains exactly one transaction, return a single-element array containing that object.
-- Do NOT include any non-JSON text.
+CRITICAL VALIDATION RULES:
+1. If NO EXPLICIT AMOUNT is found in the input, return: [{"error": "missing_amount", "message": "Please specify the amount"}]
+2. An amount must be a NUMBER, currency symbol, or amount word (fifty, hundred, etc.)
+3. DO NOT guess or assume amounts from context clues
+4. DO NOT invent amounts based on typical costs
 
-Important semantics (be explicit):
-- "income": money received by the user (salary, refund, payment received).
-- "expense": money spent by the user for goods/services.
-- "credit": the user GAVE money to someone (lent money / credit given). This is an OUTFLOW from the user's balance.
-- "loan": the user TOOK money from someone (borrowed / loan taken). This is an INFLOW to the user's balance.
+RESPONSE FORMAT:
+- Multiple transactions: JSON array of transaction objects
+- Single transaction: JSON array with one transaction object  
+- Missing amount: JSON array with one error object
+- NEVER return plain objects, always arrays
 
-Each transaction object schema:
+TRANSACTION TYPES (be precise):
+- "income": Money received BY user (salary, refund, payment received, gift received)
+- "expense": Money spent BY user (purchases, bills, services consumed)
+- "credit": Money GIVEN BY user to others (lending, loan given to someone)
+- "loan": Money BORROWED BY user from others (loan taken, borrowed money)
+
+VALID AMOUNT INDICATORS:
+✓ Numbers: "50", "250.50", "1,500"
+✓ Currency: "$50", "৳250", "50 BDT", "100 taka"  
+✓ Words: "fifty taka", "two hundred", "5k", "1 lakh"
+✗ Context only: "lunch" (without amount)
+✗ Descriptions: "expensive meal" (without amount)
+
+TRANSACTION OBJECT SCHEMA:
 {
   "type": "income|expense|credit|loan",
-  "amount": number,
-  "description": "short clean description",
+  "amount": number (positive, no currency symbols),
+  "description": "clear description of transaction",
   "category": "food|transport|entertainment|shopping|bills|health|education|salary|freelance|investment|other",
-  "date": "YYYY-MM-DD" // optional; prefer exact YYYY-MM-DD when available
+  "date": "YYYY-MM-DD" (optional, default to today)
 }
 
-Support English and Bengali. Normalize amounts to BDT (numbers only).`;
+EXAMPLES:
+Input: "bought lunch for 250" → [{"type":"expense","amount":250,"description":"bought lunch","category":"food","date":"2025-10-07"}]
+Input: "type:expense category:food note:lunch" → [{"error":"missing_amount","message":"Please specify the amount"}]
+Input: "salary 50000 received today" → [{"type":"income","amount":50000,"description":"salary received","category":"salary","date":"2025-10-07"}]
+
+Support English and Bengali. Convert Bengali numerals to English. NEVER invent amounts.`;
 
 // Convert Bengali numerals to Latin digits
 const convertBengali = s => typeof s === 'string' ? s.replace(/[০১২৩৪৫৬৭৮৯]/g, ch => '০১২৩৪৫৬৭৮৯'.indexOf(ch)) : s;
@@ -77,6 +96,13 @@ const extractJSON = (text) => {
 
 export const parseTransaction = async (message) => {
   if (!message || typeof message !== 'string') return { success: false, error: 'Empty message' };
+  
+  // Pre-check: Look for any amount indication in the message
+  const hasAmountPattern = /(?:\d+(?:\.\d+)?|\d{1,3}(?:,\d{3})*(?:\.\d{2})?|৳|taka|tk|bdt|টাকা|\$|hundred|thousand|lakh|লক্ষ|crore|কোটি|k\b)/i;
+  if (!hasAmountPattern.test(convertBengali(message))) {
+    return { success: false, error: 'Please specify the amount for this transaction (e.g., "50", "$50", "৳100")' };
+  }
+  
   const apiKey = getAPIKey();
   if (!apiKey) return { success: false, error: 'API key missing' };
   const model = getModel();
@@ -129,6 +155,11 @@ export const parseTransaction = async (message) => {
   }
 
   if (!parsed || !Array.isArray(parsed) || parsed.length === 0) return { success: false, error: 'Could not parse transactions' };
+
+  // Check if AI returned an error object for missing amount
+  if (parsed.length === 1 && parsed[0].error === 'missing_amount') {
+    return { success: false, error: parsed[0].message || 'Please specify the amount for this transaction' };
+  }
 
   // normalize entries
   const now = new Date().toISOString().split('T')[0];
@@ -184,10 +215,19 @@ export const parseTransaction = async (message) => {
     type = inferTypeFromDescription(description, type);
 
     return { type, amount, category, description, date, confidence: obj?.confidence ?? 'high' };
-  }).filter(x => x && Number.isFinite(x.amount) && x.amount > 0 && x.description.length > 0);
+  });
 
-  if (normalized.length === 0) return { success: false, error: 'No valid transactions after normalization' };
-  return { success: true, data: normalized };
+  // Check for missing or invalid amounts before filtering
+  const invalidTransactions = normalized.filter(x => !x || !Number.isFinite(x.amount) || x.amount <= 0);
+  if (invalidTransactions.length > 0) {
+    return { success: false, error: 'Please specify a valid amount for this transaction (e.g., "bought lunch for 250")' };
+  }
+
+  // Filter for valid transactions
+  const validTransactions = normalized.filter(x => x && Number.isFinite(x.amount) && x.amount > 0 && x.description.length > 0);
+
+  if (validTransactions.length === 0) return { success: false, error: 'Please include both amount and description for the transaction' };
+  return { success: true, data: validTransactions };
 };
 
 export const learnFromCorrection = (originalMessage, aiResult, userCorrection) => {
