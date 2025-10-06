@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, DollarSign, Calendar, Tag, FileText } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { addTransaction } from '../../services/transactionService';
-import { getCategoryEmoji } from '../../utils/transactionParser';
+import { getCategoryEmoji } from '../../utils/aiTransactionParser';
 
 const AddTransactionModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
@@ -120,10 +120,12 @@ const AddTransactionModal = ({ open, onClose, onSuccess }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+    // On small screens show a full-screen bottom sheet style modal.
+    // On larger screens keep centered dialog with max width.
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+  <div className="bg-white dark:bg-gray-800 rounded-none sm:rounded-lg w-full sm:max-w-md shadow-xl h-screen sm:h-[calc(100vh-4rem)] max-h-screen overflow-hidden flex flex-col min-h-0">
+        {/* Header (fixed height) */}
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex items-center gap-2">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -142,8 +144,9 @@ const AddTransactionModal = ({ open, onClose, onSuccess }) => {
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+  {/* Scrollable form area */}
+  <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
           {/* Transaction Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -303,6 +306,7 @@ const AddTransactionModal = ({ open, onClose, onSuccess }) => {
           </div>
         </form>
       </div>
+    </div>
     </div>
   );
 };

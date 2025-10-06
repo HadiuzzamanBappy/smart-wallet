@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Send, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { parseTransaction, formatTransactionMessage, getCategoryEmoji } from '../../utils/transactionParser';
+import { parseTransaction, formatTransactionMessage } from '../../utils/aiTransactionParser';
 import { addTransaction, getUserProfile, getTransactions } from '../../services/transactionService';
 import { checkBudgetAfterTransaction } from '../../services/budgetService';
-import EditParsedModal from './EditParsedModal';
 import Toast from '../UI/Toast';
 
 const MinimalChatInterface = ({ onTransactionAdded }) => {
@@ -12,9 +11,40 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState(null);
-  const [editing, setEditing] = useState({ open: false, original: null, parsed: null });
   const [budgetAlert, setBudgetAlert] = useState({ open: false, message: '', type: 'info' });
-  const { user, userProfile, setUserProfile, refreshUserProfile } = useAuth();
+  const { user, userProfile, setUserProfile } = useAuth();
+
+  // Persist a user/bot chat pair to localStorage (wallet_chat_history), keep max 10
+  const persistChatPair = (userPrompt, botReply) => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      const key = 'wallet_chat_history';
+      const raw = localStorage.getItem(key);
+      let arr = [];
+      if (raw) {
+        arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) arr = [];
+      }
+
+      const item = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2,9)}`,
+        savedAt: Date.now(),
+        user: userPrompt,
+        bot: botReply
+      };
+
+      const combined = [item, ...arr];
+      // Dedupe exact pairs (keep newest)
+      const deduped = combined.filter((it, idx, self) =>
+        idx === self.findIndex(x => x.user === it.user && x.bot === it.bot)
+      );
+      const sliced = deduped.slice(0, 10);
+      localStorage.setItem(key, JSON.stringify(sliced));
+      console.log('MinimalChatInterface: persisted chat pair', item);
+    } catch (e) {
+      console.warn('MinimalChatInterface: failed to persist chat pair', e);
+    }
+  };
 
   // Remove predefined suggestions - let users express freely
 
@@ -26,38 +56,69 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
     setFeedback(null);
 
     try {
-      // Parse the transaction
-      const parseResult = parseTransaction(message);
+      // Parse the transaction with await since it's async
+      const parseResult = await parseTransaction(message);
       
       if (parseResult.success) {
-        // Add original message and source to transaction data for Firebase storage
-        const transactionWithMeta = {
-          ...parseResult.data,
-          originalMessage: message,
-          source: 'chat-interface'
-        };
-        // Try to add transaction to Firebase
-        const addResult = await addTransaction(user.uid, transactionWithMeta);
+        // Handle array of transactions from AI parser
+        const transactions = Array.isArray(parseResult.data) ? parseResult.data : [parseResult.data];
         
-        if (addResult.success) {
+        // Save all transactions to Firebase
+        const savedTransactions = [];
+        let allSuccessful = true;
+        let firstError = null;
+        
+        for (const transaction of transactions) {
+          try {
+            // Add original message and source to transaction data for Firebase storage
+            const transactionWithMeta = {
+              ...transaction,
+              originalMessage: message,
+              source: 'chat-interface'
+            };
+            // Try to add transaction to Firebase
+            const addResult = await addTransaction(user.uid, transactionWithMeta);
+        
+            if (addResult.success) {
+              savedTransactions.push({
+                ...transaction,
+                id: addResult.id,
+                originalMessage: message,
+                userId: user.uid
+              });
+            } else {
+              allSuccessful = false;
+              if (!firstError) firstError = addResult.error;
+            }
+          } catch (error) {
+            allSuccessful = false;
+            if (!firstError) firstError = error.message;
+          }
+        }
+        
+        if (allSuccessful && savedTransactions.length > 0) {
           // Refresh user profile to get updated balance
           const profileResult = await getUserProfile(user.uid);
           if (profileResult.success) {
             setUserProfile(profileResult.data);
           }
 
-          // Check budget after transaction (only for expenses)
-          if (parseResult.data.type === 'expense' && userProfile?.budgetAlerts && userProfile?.monthlyBudget) {
+          // Check budget after transactions (only for expenses)
+          const expenseTransactions = savedTransactions.filter(tx => tx.type === 'expense');
+          if (expenseTransactions.length > 0 && userProfile?.budgetAlerts && userProfile?.monthlyBudget) {
             try {
               const transactionsResult = await getTransactions(user.uid);
               if (transactionsResult.success) {
-                const budgetCheck = checkBudgetAfterTransaction(userProfile, transactionsResult.data, parseResult.data);
-                if (budgetCheck.needsAlert) {
-                  setBudgetAlert({ 
-                    open: true, 
-                    message: budgetCheck.alertMessage, 
-                    type: budgetCheck.alertType === 'danger' ? 'error' : budgetCheck.alertType === 'warning' ? 'warning' : 'info' 
-                  });
+                for (const expenseTx of expenseTransactions) {
+                  const budgetCheck = checkBudgetAfterTransaction(userProfile, transactionsResult.data, expenseTx);
+                  if (budgetCheck.needsAlert) {
+                    setBudgetAlert({ 
+                      open: true, 
+                      message: budgetCheck.alertMessage, 
+                      type: budgetCheck.alertType === 'danger' ? 'error' : budgetCheck.alertType === 'warning' ? 'warning' : 'info' 
+                    });
+                    break; // Show only first budget alert
+                  }
                 }
               }
             } catch (error) {
@@ -65,14 +126,39 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
             }
           }
 
-          // Show success feedback
+          // Show success feedback for multiple transactions
+          let feedbackMessage = '';
+          let primaryTransaction = savedTransactions[0];
+          
+          if (savedTransactions.length === 1) {
+            // Single transaction - use existing format
+            feedbackMessage = formatTransactionMessage(savedTransactions[0]);
+          } else {
+            // Multiple transactions - create summary
+            feedbackMessage = `✅ Added ${savedTransactions.length} transactions:\n\n`;
+            savedTransactions.forEach((tx, i) => {
+              const emoji = tx.type === 'income' ? '💰' : '💸';
+              feedbackMessage += `${i + 1}. ${emoji} ${tx.type === 'income' ? 'Income' : 'Expense'}: ${tx.amount} BDT\n`;
+              feedbackMessage += `   📝 ${tx.description}\n`;
+              feedbackMessage += `   🏷️ ${tx.category}\n\n`;
+            });
+          }
+
           setFeedback({
             type: 'success',
-            message: formatTransactionMessage(parseResult.data),
-            transaction: { ...parseResult.data, id: addResult.id, userId: user.uid }
+            message: feedbackMessage,
+            transaction: primaryTransaction,
+            transactions: savedTransactions // Store all transactions
           });
 
-          // Persist to shared last-10 saved transactions so ChatWidget and others can show it
+          // Persist the chat pair (user prompt + bot reply) to local storage so ChatWidget can show it
+          try {
+            persistChatPair(message, feedbackMessage);
+          } catch (e) {
+            console.warn('MinimalChatInterface: persistChatPair failed', e);
+          }
+
+          // Persist all transactions to shared localStorage
           try {
             if (typeof window !== 'undefined' && window.localStorage) {
               const key = 'wallet_last_transactions';
@@ -82,14 +168,27 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
                 arr = JSON.parse(raw);
                 if (!Array.isArray(arr)) arr = [];
               }
-              const newItem = { ...parseResult.data, id: addResult.id, userId: user.uid, savedAt: Date.now(), originalMessage: message, source: 'chat-interface' };
-              const deduped = [newItem, ...arr.filter(a => a.id !== newItem.id && a._id !== newItem._id)];
+              
+              // Add all saved transactions to localStorage
+              const newItems = savedTransactions.map(tx => ({
+                ...tx,
+                savedAt: Date.now(),
+                originalMessage: message,
+                source: 'chat-interface'
+              }));
+              
+              // Prepend new transactions and dedupe
+              const combined = [...newItems, ...arr];
+              const deduped = combined.filter((item, index, self) => 
+                index === self.findIndex(t => t.id === item.id)
+              );
               const sliced = deduped.slice(0, 10);
+              
               localStorage.setItem(key, JSON.stringify(sliced));
+              console.log(`MinimalChatInterface: Saved ${savedTransactions.length} transactions to localStorage`);
             }
           } catch (e) {
-            // non-fatal
-            console.warn('Failed to persist saved transaction from MinimalChatInterface', e);
+            console.warn('Failed to persist saved transactions from MinimalChatInterface', e);
           }
 
           // Call parent callback if provided
@@ -97,19 +196,21 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
             onTransactionAdded();
           }
           
-          // Dispatch global event for real-time updates
+          // Dispatch global events for all saved transactions
           try {
-            window.dispatchEvent(new CustomEvent('wallet:transaction-added', {
-              detail: { transactionId: addResult.id, transaction: parseResult.data }
-            }));
-            console.log('MinimalChatInterface: Dispatched transaction-added event');
+            savedTransactions.forEach(tx => {
+              window.dispatchEvent(new CustomEvent('wallet:transaction-added', {
+                detail: { transactionId: tx.id, transaction: tx }
+              }));
+            });
+            console.log(`MinimalChatInterface: Dispatched ${savedTransactions.length} transaction-added events`);
           } catch (error) {
-            console.warn('Failed to dispatch transaction-added event:', error);
+            console.warn('Failed to dispatch transaction-added events:', error);
           }
         } else {
           setFeedback({
             type: 'error',
-            message: `Failed to save transaction: ${addResult.error}`
+            message: `Failed to save ${savedTransactions.length > 0 ? 'some' : 'all'} transactions: ${firstError}`
           });
         }
       } else {
@@ -138,12 +239,27 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
     <div className="w-full hidden md:block">
       {/* Feedback Message */}
       {feedback && (
-        <div className={`mb-4 p-4 rounded-lg border ${
+        <div className={`mb-4 p-4 rounded-lg border relative ${
           feedback.type === 'success' 
             ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
             : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
         } animate-in fade-in duration-300`}>
-          <div className="flex items-start gap-3">
+          {/* Close Button */}
+          <button
+            onClick={() => setFeedback(null)}
+            className={`absolute top-3 right-3 p-1 rounded-full hover:bg-opacity-20 transition-colors ${
+              feedback.type === 'success'
+                ? 'text-green-600 dark:text-green-400 hover:bg-green-600'
+                : 'text-red-600 dark:text-red-400 hover:bg-red-600'
+            }`}
+            aria-label="Close feedback"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div className="flex items-start gap-3 pr-8">
             {feedback.type === 'success' ? (
               <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
             ) : (
@@ -157,15 +273,6 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
               }`}>
                 {feedback.message}
               </div>
-              {feedback.transaction && (
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200">
-                    {getCategoryEmoji(feedback.transaction.category)} {feedback.transaction.category}
-                  </span>
-                  <button onClick={() => setEditing({ open: true, original: feedback.message, parsed: { ...feedback.transaction, userId: user?.uid } })} className="ml-2 text-sm underline text-teal-600">Edit</button>
-                  <button onClick={() => setFeedback(null)} className="ml-2 text-sm text-gray-500 hover:text-gray-700">Dismiss</button>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -200,22 +307,7 @@ const MinimalChatInterface = ({ onTransactionAdded }) => {
         </div>
       </form>
 
-      <EditParsedModal open={editing.open} onClose={() => setEditing({ open: false, original: null, parsed: null })} originalMessage={editing.original} parsed={editing.parsed} onSave={async (updated) => {
-        // Update feedback transaction locally to reflect corrections
-        setFeedback(prev => prev ? { ...prev, transaction: { ...prev.transaction, ...updated }, message: formatTransactionMessage({ ...prev.transaction, ...updated }) } : prev);
-        
-        // Refresh user profile to update balance if this was a saved transaction
-        if (editing.parsed?.id && user?.uid) {
-          try {
-            await refreshUserProfile();
-            if (onTransactionAdded) {
-              onTransactionAdded();
-            }
-          } catch (error) {
-            console.error('Error refreshing user profile after transaction update:', error);
-          }
-        }
-      }} />
+
 
       {/* Smart AI Help - Only show helpful context */}
       {showSuggestions && !feedback && (

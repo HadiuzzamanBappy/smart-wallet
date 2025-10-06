@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { getTransactions } from '../../services/transactionService';
 import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus } from 'lucide-react';
-import { isCreditCategory, isLoanCategory } from '../../utils/transactionParser';
-import AddTransactionModal from './AddTransactionModal';
+import { isCreditCategory, isLoanCategory } from '../../utils/aiTransactionParser';
+import AddTransactionModal from '../Transaction/AddTransactionModal';
 
 const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();

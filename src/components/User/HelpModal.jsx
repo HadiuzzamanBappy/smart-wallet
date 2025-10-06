@@ -73,7 +73,7 @@ const HelpModal = () => {
       </div>
 
       {/* Feature Overview */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg py-2">
         <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <HelpCircle className="w-5 h-5 text-teal-600 dark:text-teal-400" />
           Key Features
@@ -123,7 +123,7 @@ const HelpModal = () => {
       </div>
 
       {/* FAQ Section */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg py-2">
         <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
           Frequently Asked Questions
         </h3>

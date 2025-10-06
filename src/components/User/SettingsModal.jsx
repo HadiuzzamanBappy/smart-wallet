@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { updateUserProfile, deleteAuthUser, reauthenticateUser } from '../../services/authService';
+import { updateUserProfile, deleteAuthUser, logoutUser } from '../../services/authService';
 import { exportUserData, deleteAllUserData } from '../../services/transactionService';
 import Toast from '../UI/Toast';
 import ConfirmDialog from '../UI/ConfirmDialog';
-import ReAuthDialog from '../UI/ReAuthDialog';
+// ReAuthDialog removed - reauthentication flow is disabled for account deletion
 import { 
   Moon, 
   Sun, 
@@ -29,9 +29,7 @@ const SettingsModal = () => {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [reauthOpen, setReauthOpen] = useState(false);
-  const [reauthLoading, setReauthLoading] = useState(false);
-  const [reauthError, setReauthError] = useState('');
+  
 
   const handleThemeChange = async (theme) => {
     const newSettings = { ...settings, theme };
@@ -152,15 +150,31 @@ const SettingsModal = () => {
 
       const authRes = await deleteAuthUser();
       if (!authRes.success) {
-        // If the error indicates recent login required, prompt for password and retry
-        if (authRes.code === 'auth/requires-recent-login') {
-          setReauthError('Please re-enter your password to confirm.');
-          setReauthOpen(true);
+        // If the backend indicates the user must re-authenticate (Firebase recent login requirement),
+        // inform the user how to proceed since we removed inline re-auth flow.
+        const code = authRes.code || authRes.errorCode || '';
+        const msg = authRes.error || authRes.message || '';
+        if (code === 'auth/requires-recent-login' || /recent/i.test(msg)) {
+          setToast({
+            open: true,
+            message: 'Account deletion requires recent authentication. Please sign out and sign in again, then try deleting your account.',
+            type: 'error'
+          });
         } else {
-          setToast({ open: true, message: 'Account data removed. Sign-out required to remove authentication.', type: 'info' });
+          setToast({ open: true, message: `Account deletion failed: ${authRes.error || authRes.message || 'Unknown error'}`, type: 'error' });
         }
       } else {
         setToast({ open: true, message: 'Account deleted successfully', type: 'info' });
+        // Ensure auth state is cleared and reload app to reflect signed-out state
+        try {
+          await logoutUser();
+        } catch (err) {
+          console.warn('Failed to sign out after account deletion:', err);
+        }
+        // Give the toast a moment to render, then reload
+        setTimeout(() => {
+          window.location.reload();
+        }, 700);
       }
     } catch (error) {
       console.error('Delete account failed:', error);
@@ -170,31 +184,7 @@ const SettingsModal = () => {
     }
   };
 
-  const handleReauthConfirm = async (password) => {
-    setReauthLoading(true);
-    setReauthError('');
-    try {
-      const r = await reauthenticateUser(password);
-      if (!r.success) {
-        setReauthError(r.error || 'Reauthentication failed');
-        return;
-      }
-
-      // Retry auth deletion
-      const authRes2 = await deleteAuthUser();
-      if (!authRes2.success) {
-        setToast({ open: true, message: `Account deletion failed: ${authRes2.error || authRes2.message}`, type: 'error' });
-      } else {
-        setToast({ open: true, message: 'Account deleted successfully', type: 'info' });
-      }
-      setReauthOpen(false);
-    } catch (err) {
-      console.error('Reauth flow failed:', err);
-      setReauthError(err.message || String(err));
-    } finally {
-      setReauthLoading(false);
-    }
-  };
+  
 
   return (
     <div className="space-y-6">
@@ -406,13 +396,7 @@ const SettingsModal = () => {
         onCancel={() => setDeleteConfirmOpen(false)}
       />
 
-      <ReAuthDialog 
-        open={reauthOpen} 
-        onCancel={() => setReauthOpen(false)} 
-        onConfirm={handleReauthConfirm} 
-        loading={reauthLoading} 
-        errorMessage={reauthError} 
-      />
+      {/* Re-auth removed: direct deletion flow (no password prompt) */}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
-import { learnFromCorrection } from '../../utils/transactionParser';
+import { learnFromCorrection } from '../../utils/aiTransactionParser';
 import * as transactionService from '../../services/transactionService';
 
 const EditParsedModal = ({ open, onClose, originalMessage, parsed, onSave }) => {

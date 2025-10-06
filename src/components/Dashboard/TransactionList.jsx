@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { getRecentTransactions, deleteTransaction } from '../../services/transactionService';
-import { getCategoryEmoji } from '../../utils/transactionParser';
+import { getCategoryEmoji } from '../../utils/aiTransactionParser';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import { Trash2, Calendar, Tag, DollarSign } from 'lucide-react';
 import LoadingSpinner from '../UI/LoadingSpinner';
-import EditParsedModal from './EditParsedModal';
+import EditParsedModal from '../Transaction/EditParsedModal';
 import ConfirmDialog from '../UI/ConfirmDialog';
 
 const TransactionList = ({ onTransactionChange }) => {
