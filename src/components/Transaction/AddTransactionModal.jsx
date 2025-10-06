@@ -1,313 +1,339 @@
 import React, { useState } from 'react';
-import { X, Plus, DollarSign, Calendar, Tag, FileText } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { Plus, MessageSquare } from 'lucide-react';
+import Modal from '../UI/Modal';
 import { addTransaction } from '../../services/transactionService';
-import { getCategoryEmoji } from '../../utils/aiTransactionParser';
+import { parseTransaction } from '../../utils/aiTransactionParser';
+import { useAuth } from '../../hooks/useAuth';
 
-const AddTransactionModal = ({ open, onClose, onSuccess }) => {
-  const { user } = useAuth();
-  const [formData, setFormData] = useState({
+const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
+  const { user, refreshUserProfile } = useAuth();
+  const [mode, setMode] = useState('chat'); // 'chat' or 'manual'
+  const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  
+  // Chat mode state
+  const [chatMessage, setChatMessage] = useState('');
+  const [parsedTransactions, setParsedTransactions] = useState([]);
+  
+  // Manual mode state
+  const [manualData, setManualData] = useState({
     type: 'expense',
     amount: '',
     description: '',
     category: 'other',
     date: new Date().toISOString().split('T')[0]
   });
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
 
-  const categories = {
-    expense: [
-      'food', 'transport', 'entertainment', 'shopping', 'health', 
-      'education', 'bills', 'utilities', 'rent', 'other'
-    ],
-    income: [
-      'salary', 'business', 'freelance', 'investment', 'bonus', 
-      'gift', 'refund', 'other'
-    ],
-    credit: [
-      'loan_given', 'advance_given', 'credit_given', 'other'
-    ],
-    loan: [
-      'loan_taken', 'advance_taken', 'credit_taken', 'borrowed', 'other'
-    ]
-  };
+  const categories = [
+    { value: 'food', label: 'Food & Dining', emoji: '🍔' },
+    { value: 'transport', label: 'Transportation', emoji: '🚗' },
+    { value: 'entertainment', label: 'Entertainment', emoji: '🎬' },
+    { value: 'shopping', label: 'Shopping', emoji: '🛍️' },
+    { value: 'bills', label: 'Bills & Utilities', emoji: '📄' },
+    { value: 'health', label: 'Healthcare', emoji: '🏥' },
+    { value: 'education', label: 'Education', emoji: '📚' },
+    { value: 'salary', label: 'Salary', emoji: '💼' },
+    { value: 'freelance', label: 'Freelance', emoji: '💻' },
+    { value: 'investment', label: 'Investment', emoji: '📈' },
+    { value: 'other', label: 'Other', emoji: '📦' }
+  ];
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.amount || isNaN(formData.amount) || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'Please enter a valid amount greater than 0';
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'Please enter a description';
-    }
-
-    if (!formData.date) {
-      newErrors.date = 'Please select a date';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleChatParse = async () => {
+    if (!chatMessage.trim()) return;
     
-    if (!validateForm()) return;
-    if (!user?.uid) return;
-
-    setLoading(true);
+    setAiLoading(true);
     try {
-      const transactionData = {
-        ...formData,
-        amount: parseFloat(formData.amount),
-        date: new Date(formData.date),
-        source: 'manual',
-        originalMessage: `Manual: ${formData.description}`
-      };
-
-      const result = await addTransaction(user.uid, transactionData);
-      
+      const result = await parseTransaction(chatMessage);
       if (result.success) {
-        // Dispatch global event for real-time updates
-        try {
-          window.dispatchEvent(new CustomEvent('wallet:transaction-added', {
-            detail: { transactionId: result.id, transaction: transactionData }
-          }));
-        } catch (error) {
-          console.warn('Failed to dispatch transaction-added event:', error);
-        }
-
-        // Reset form
-        setFormData({
-          type: 'expense',
-          amount: '',
-          description: '',
-          category: 'other',
-          date: new Date().toISOString().split('T')[0]
-        });
-        setErrors({});
-        
-        if (onSuccess) onSuccess(result);
-        onClose();
+        setParsedTransactions(result.data);
       } else {
-        setErrors({ submit: result.error || 'Failed to add transaction' });
+        console.error('Parsing failed:', result.error);
       }
     } catch (error) {
-      console.error('Error adding transaction:', error);
-      setErrors({ submit: 'An unexpected error occurred' });
+      console.error('Parse error:', error);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleAddParsedTransactions = async () => {
+    if (parsedTransactions.length === 0) return;
+    
+    setLoading(true);
+    try {
+      for (const transaction of parsedTransactions) {
+        const result = await addTransaction(user.uid, {
+          ...transaction,
+          originalMessage: chatMessage,
+          source: 'chat'
+        });
+        
+        if (!result.success) {
+          console.error('Transaction add failed:', result.error);
+        }
+      }
+      
+      await refreshUserProfile();
+      onSuccess?.();
+      onClose();
+      resetForm();
+    } catch (error) {
+      console.error('Error adding transactions:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
+    if (!manualData.amount || !manualData.description) return;
     
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-
-    // Reset category when type changes
-    if (field === 'type') {
-      setFormData(prev => ({ ...prev, category: 'other' }));
+    setLoading(true);
+    try {
+      const result = await addTransaction(user.uid, {
+        ...manualData,
+        amount: Number(manualData.amount),
+        source: 'manual'
+      });
+      
+      if (result.success) {
+        await refreshUserProfile();
+        onSuccess?.();
+        onClose();
+        resetForm();
+      } else {
+        console.error('Transaction add failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!open) return null;
+  const resetForm = () => {
+    setChatMessage('');
+    setParsedTransactions([]);
+    setManualData({
+      type: 'expense',
+      amount: '',
+      description: '',
+      category: 'other',
+      date: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const getCategoryEmoji = (category) => {
+    return categories.find(cat => cat.value === category)?.emoji || '📦';
+  };
 
   return (
-    // On small screens show a full-screen bottom sheet style modal.
-    // On larger screens keep centered dialog with max width.
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
-  <div className="bg-white dark:bg-gray-800 rounded-none sm:rounded-lg w-full sm:max-w-md shadow-xl h-screen sm:h-[calc(100vh-4rem)] max-h-screen overflow-hidden flex flex-col min-h-0">
-        {/* Header (fixed height) */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Add Custom Transaction
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Manually create a new transaction entry
-              </p>
-            </div>
-          </div>
+    <Modal isOpen={isOpen} onClose={handleClose} title="Add Transaction" size="lg">
+      <div className="space-y-6">
+        {/* Mode Toggle */}
+        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
           <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            onClick={() => setMode('chat')}
+            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md transition-colors ${
+              mode === 'chat'
+                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400'
+            }`}
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <MessageSquare className="w-4 h-4" />
+            <span>Smart Chat</span>
+          </button>
+          <button
+            onClick={() => setMode('manual')}
+            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md transition-colors ${
+              mode === 'manual'
+                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            <Plus className="w-4 h-4" />
+            <span>Manual Entry</span>
           </button>
         </div>
 
-  {/* Scrollable form area */}
-  <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6">
-    <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Transaction Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Transaction Type
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { value: 'income', label: 'Income', emoji: '💰', color: 'green' },
-                { value: 'expense', label: 'Expense', emoji: '💸', color: 'red' },
-                { value: 'credit', label: 'Credit Given', emoji: '🤝', color: 'blue' },
-                { value: 'loan', label: 'Loan Taken', emoji: '💳', color: 'purple' }
-              ].map((type) => (
-                <button
-                  key={type.value}
-                  type="button"
-                  onClick={() => handleInputChange('type', type.value)}
-                  className={`p-3 rounded-lg border text-left transition-colors ${
-                    formData.type === type.value
-                      ? `bg-${type.color}-50 dark:bg-${type.color}-900/20 border-${type.color}-300 dark:border-${type.color}-700`
-                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{type.emoji}</span>
-                    <div>
-                      <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
-                        {type.label}
+        {mode === 'chat' ? (
+          // Chat Mode
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Describe your transaction
+              </label>
+              <textarea
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
+                placeholder="e.g., I bought groceries for 500 taka today"
+                className="input-field min-h-[100px]"
+                rows="3"
+              />
+            </div>
+
+            <button
+              onClick={handleChatParse}
+              disabled={!chatMessage.trim() || aiLoading}
+              className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {aiLoading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              Parse with AI
+            </button>
+
+            {/* Parsed Results */}
+            {parsedTransactions.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Parsed Transactions ({parsedTransactions.length})
+                </h4>
+                {parsedTransactions.map((transaction, index) => (
+                  <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{getCategoryEmoji(transaction.category)}</span>
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white text-sm">
+                            {transaction.description}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {transaction.category} • {transaction.type}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`font-semibold ${
+                        transaction.type === 'income' || transaction.type === 'loan'
+                          ? 'text-green-600 dark:text-green-400'
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
+                        {transaction.amount} BDT
                       </div>
                     </div>
                   </div>
+                ))}
+                
+                <button
+                  onClick={handleAddParsedTransactions}
+                  disabled={loading}
+                  className="w-full px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loading && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  Add {parsedTransactions.length} Transaction{parsedTransactions.length > 1 ? 's' : ''}
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Amount */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Amount
-            </label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.amount}
-                onChange={(e) => handleInputChange('amount', e.target.value)}
-                placeholder="Enter amount"
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 ${
-                  errors.amount ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
-                }`}
-              />
-            </div>
-            {errors.amount && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.amount}</p>
+              </div>
             )}
           </div>
+        ) : (
+          // Manual Mode
+          <form onSubmit={handleManualSubmit} className="space-y-4">
+            {/* Transaction Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Type
+              </label>
+              <select
+                value={manualData.type}
+                onChange={(e) => setManualData(prev => ({ ...prev, type: e.target.value }))}
+                className="input-field"
+              >
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+                <option value="credit">Credit Given</option>
+                <option value="loan">Loan Taken</option>
+              </select>
+            </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description
-            </label>
-            <div className="relative">
-              <FileText className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Amount */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Amount (BDT)
+                </label>
+                <input
+                  type="number"
+                  value={manualData.amount}
+                  onChange={(e) => setManualData(prev => ({ ...prev, amount: e.target.value }))}
+                  className="input-field"
+                  placeholder="0"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
+
+              {/* Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={manualData.date}
+                  onChange={(e) => setManualData(prev => ({ ...prev, date: e.target.value }))}
+                  className="input-field"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Description
+              </label>
               <input
                 type="text"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Enter description (e.g., Lunch at restaurant)"
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 ${
-                  errors.description ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
-                }`}
+                value={manualData.description}
+                onChange={(e) => setManualData(prev => ({ ...prev, description: e.target.value }))}
+                className="input-field"
+                placeholder="What was this transaction for?"
+                required
               />
             </div>
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</p>
-            )}
-          </div>
 
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Category
-            </label>
-            <div className="relative">
-              <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Category
+              </label>
               <select
-                value={formData.category}
-                onChange={(e) => handleInputChange('category', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 appearance-none"
+                value={manualData.category}
+                onChange={(e) => setManualData(prev => ({ ...prev, category: e.target.value }))}
+                className="input-field"
               >
-                {categories[formData.type].map((cat) => (
-                  <option key={cat} value={cat}>
-                    {getCategoryEmoji(cat)} {cat.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {categories.map(category => (
+                  <option key={category.value} value={category.value}>
+                    {category.emoji} {category.label}
                   </option>
                 ))}
               </select>
             </div>
-          </div>
 
-          {/* Date */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Date
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => handleInputChange('date', e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 ${
-                  errors.date ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
-                }`}
-              />
-            </div>
-            {errors.date && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.date}</p>
-            )}
-          </div>
-
-          {/* Submit Error */}
-          {errors.submit && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-600 dark:text-red-400">{errors.submit}</p>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
+            {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
-              className="flex-1 px-4 py-3 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center justify-center gap-2"
+              disabled={loading || !manualData.amount || !manualData.description}
+              className="w-full px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  Add
-                </>
+              {loading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               )}
+              Add Transaction
             </button>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
-    </div>
-    </div>
+    </Modal>
   );
 };
 

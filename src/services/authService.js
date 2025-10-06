@@ -6,6 +6,7 @@ import {
   signInWithPopup,
   signInWithRedirect,
   reauthenticateWithCredential,
+  reauthenticateWithPopup,
   EmailAuthProvider,
   deleteUser as firebaseDeleteUser
 } from 'firebase/auth';
@@ -137,7 +138,7 @@ export const deleteAuthUser = async () => {
 };
 
 /**
- * Reauthenticate the current user with their password.
+ * Reauthenticate the current user with their password (for email/password users).
  * Useful to refresh credentials before sensitive actions (delete).
  */
 export const reauthenticateUser = async (password) => {
@@ -152,5 +153,55 @@ export const reauthenticateUser = async (password) => {
   } catch (error) {
     console.error('Reauthentication failed:', error);
     return { success: false, error: error.message, code: error.code };
+  }
+};
+
+/**
+ * Reauthenticate Google users using popup.
+ * For Google users who don't have a password in our system.
+ */
+export const reauthenticateWithGoogle = async () => {
+  try {
+    const u = auth.currentUser;
+    if (!u) throw new Error('No authenticated user');
+
+    const provider = new GoogleAuthProvider();
+    await reauthenticateWithPopup(u, provider);
+    return { success: true };
+  } catch (error) {
+    console.error('Google reauthentication failed:', error);
+    return { success: false, error: error.message, code: error.code };
+  }
+};
+
+/**
+ * Check if current user signed in with Google
+ */
+export const isGoogleUser = () => {
+  const u = auth.currentUser;
+  if (!u) return false;
+  
+  // Check if user has Google provider in their providerData
+  return u.providerData.some(provider => provider.providerId === 'google.com');
+};
+
+/**
+ * Reauthenticate with email confirmation for extra security.
+ * This requires the user to type their email address to confirm deletion.
+ */
+export const confirmEmailForDeletion = async (emailInput) => {
+  try {
+    const u = auth.currentUser;
+    if (!u) throw new Error('No authenticated user');
+    if (!u.email) throw new Error('User has no email');
+    
+    // Simple email confirmation check
+    if (emailInput.toLowerCase().trim() !== u.email.toLowerCase().trim()) {
+      throw new Error('Email does not match your account email');
+    }
+    
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 };

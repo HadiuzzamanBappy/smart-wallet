@@ -3,7 +3,6 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { getUserProfile } from '../services/transactionService';
 import { AuthContext } from './createAuthContext';
-import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -38,6 +37,15 @@ export const AuthProvider = ({ children }) => {
           // Apply saved theme preference or default to system
           const savedTheme = profileResult.data.theme || 'system';
           applyTheme(savedTheme);
+        } else {
+          // Create a basic profile if none exists
+          setUserProfile({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || 'User',
+            theme: 'system'
+          });
+          applyTheme('system');
         }
       } else {
         setUser(null);
@@ -81,11 +89,12 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {loading ? (
-        <LoadingSpinner 
-          message="Loading your wallet..." 
-          size="lg" 
-          fullScreen={true}
-        />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading your wallet...</p>
+          </div>
+        </div>
       ) : (
         children
       )}

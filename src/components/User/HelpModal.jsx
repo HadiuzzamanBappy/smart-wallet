@@ -1,189 +1,125 @@
-import React, { useState } from 'react';
-import { 
-  MessageCircle, 
-  Book, 
-  Mail, 
-  Phone, 
-  ExternalLink,
-  ChevronDown,
-  ChevronRight,
-  HelpCircle,
-  CreditCard,
-  PieChart,
-  Shield
-} from 'lucide-react';
+import React from 'react';
+import { HelpCircle, MessageCircle, Zap, BarChart3, Shield } from 'lucide-react';
+import Modal from '../UI/Modal';
 
-const HelpModal = () => {
-  const [expandedFaq, setExpandedFaq] = useState(null);
-
-  const faqs = [
+const HelpModal = ({ isOpen, onClose }) => {
+  const features = [
     {
-      id: 1,
-      question: "How do I add a transaction?",
-      answer: "You can add transactions by typing natural language in the chat input, like 'I spent $50 on groceries' or 'I received $1000 salary'. The AI will automatically parse and categorize your transaction."
+      icon: MessageCircle,
+      title: 'Smart Chat Interface',
+      description: 'Simply describe your transaction in natural language like "I bought groceries for 500 taka" and the AI will automatically categorize it.'
     },
     {
-      id: 2,
-      question: "How does the budget tracking work?",
-      answer: "Set your monthly budget in Settings. The app will track your expenses against this budget and show you progress. You'll get alerts when you exceed 80% of your budget."
+      icon: Zap,
+      title: 'Real-time Balance',
+      description: 'Your balance updates instantly when you add, edit, or delete transactions. All calculations happen automatically.'
     },
     {
-      id: 3,
-      question: "Can I edit or delete transactions?",
-      answer: "Yes! Go to the Recent Transactions section, find the transaction you want to modify, and use the edit or delete buttons. Changes are saved automatically."
+      icon: BarChart3,
+      title: 'Smart Analytics',
+      description: 'View spending patterns, budget alerts, and detailed transaction history with interactive charts.'
     },
     {
-      id: 4,
-      question: "How do I change my currency?",
-      answer: "Go to Settings > Currency & Budget and select your preferred currency. All transactions will be displayed in the selected currency."
-    },
-    {
-      id: 5,
-      question: "Is my financial data secure?",
-      answer: "Yes, all your data is encrypted and stored securely using Firebase. We follow industry-standard security practices and never share your personal financial information."
-    },
-    {
-      id: 6,
-      question: "How do I export my data?",
-      answer: "You can export your transaction history as CSV or PDF from the Analytics section. This feature helps you with tax preparation or personal record keeping."
+      icon: Shield,
+      title: 'Secure & Private',
+      description: 'All your data is securely stored with Firebase and only accessible to you. Export your data anytime.'
     }
   ];
 
-  const toggleFaq = (id) => {
-    setExpandedFaq(expandedFaq === id ? null : id);
-  };
+  const tips = [
+    'Use natural language: "Paid 200 for lunch" works just as well as structured input',
+    'Set a monthly budget in your profile to get spending alerts',
+    'The balance includes income, expenses, credits given, and loans taken',
+    'Edit any transaction by clicking on it in your transaction list',
+    'Export your data anytime from the settings menu',
+    'Switch between English and Bengali with the language toggle'
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 gap-4">
-        <a
-          href="mailto:support@wallettracker.com"
-          className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-lg transition-all"
-        >
-          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-            <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-blue-900 dark:text-blue-100">Email Support</h3>
-            <p className="text-sm text-blue-600 dark:text-blue-300">Get help via email</p>
-          </div>
-          <ExternalLink className="w-4 h-4 text-blue-400 ml-auto" />
-        </a>
-      </div>
-
-      {/* Feature Overview */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg py-2">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <HelpCircle className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-          Key Features
-        </h3>
-        
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-              <MessageCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">Natural Language Input</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Add transactions by simply describing them in plain English</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
-              <CreditCard className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">Smart Categorization</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Automatic categorization of expenses and income</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-              <PieChart className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">Analytics & Insights</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Visual charts and spending analysis</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-              <Shield className="w-4 h-4 text-red-600 dark:text-red-400" />
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">Secure & Private</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Your financial data is encrypted and secure</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* FAQ Section */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg py-2">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
-          Frequently Asked Questions
-        </h3>
-        
-        <div className="space-y-2">
-          {faqs.map((faq) => (
-            <div key={faq.id} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-              <button
-                onClick={() => toggleFaq(faq.id)}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <span className="font-medium text-gray-900 dark:text-white pr-4">
-                  {faq.question}
-                </span>
-                {expandedFaq === faq.id ? (
-                  <ChevronDown className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                )}
-              </button>
-              
-              {expandedFaq === faq.id && (
-                <div className="px-4 pb-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {faq.answer}
-                  </p>
+    <Modal isOpen={isOpen} onClose={onClose} title="Help & Tips" size="lg">
+      <div className="space-y-8">
+        {/* Features */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <HelpCircle className="w-5 h-5 mr-2" />
+            Key Features
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <Icon className="w-6 h-6 text-teal-500 flex-shrink-0 mt-1" />
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white text-sm">
+                        {feature.title}
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              )}
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Quick Tips */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Quick Tips
+          </h3>
+          <div className="space-y-2">
+            {tips.map((tip, index) => (
+              <div key={index} className="flex items-start space-x-2">
+                <div className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0" />
+                <p className="text-sm text-gray-600 dark:text-gray-300">{tip}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Transaction Types */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Transaction Types
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <h4 className="font-medium text-green-800 dark:text-green-200 text-sm">Income</h4>
+              <p className="text-xs text-green-600 dark:text-green-300 mt-1">
+                Money you receive (salary, freelance, refunds)
+              </p>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Contact Information */}
-      <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 rounded-lg p-4 border border-teal-200 dark:border-teal-700">
-        <h3 className="font-semibold text-teal-900 dark:text-teal-100 mb-3">
-          Need More Help?
-        </h3>
-        <p className="text-sm text-teal-700 dark:text-teal-300 mb-3">
-          Our support team is here to help you get the most out of Wallet Tracker.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-2 text-sm">
-          <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
-            <Mail className="w-4 h-4" />
-            hbappy79@gmail.com
-          </div>
-          <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
-            <Phone className="w-4 h-4" />
-            +880-1521-318670
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <h4 className="font-medium text-red-800 dark:text-red-200 text-sm">Expense</h4>
+              <p className="text-xs text-red-600 dark:text-red-300 mt-1">
+                Money you spend (food, transport, bills)
+              </p>
+            </div>
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <h4 className="font-medium text-blue-800 dark:text-blue-200 text-sm">Credit Given</h4>
+              <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                Money you lend to others
+              </p>
+            </div>
+            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <h4 className="font-medium text-purple-800 dark:text-purple-200 text-sm">Loan Taken</h4>
+              <p className="text-xs text-purple-600 dark:text-purple-300 mt-1">
+                Money you borrow from others
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Version Info */}
-      <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-700">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Wallet Tracker v1.0.0
-        </p>
+        {/* Contact */}
+        <div className="text-center text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
+          Need more help? Check the documentation or contact support.
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

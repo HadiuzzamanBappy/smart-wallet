@@ -5,10 +5,32 @@ import SpendingAnalytics from './SpendingAnalytics';
 
 const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   const [activeSection, setActiveSection] = useState(null);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
-  // No auto-open behavior: sections open only on explicit user interaction
+  // Auto-activate first tab on tablet and desktop when component mounts
+  React.useEffect(() => {
+    const checkScreenSize = () => {
+      const isLargeScreen = window.innerWidth >= 768; // md breakpoint
+      if (isLargeScreen && activeSection === null && !hasUserInteracted) {
+        setActiveSection('transactions'); // Set first tab as active
+        if (onSectionChange) onSectionChange('transactions');
+      } else if (!isLargeScreen && activeSection === 'transactions' && !hasUserInteracted) {
+        setActiveSection(null); // Clear active state on mobile
+        if (onSectionChange) onSectionChange(null);
+      }
+    };
+    
+    // Check on mount and add listener
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, [activeSection, onSectionChange, hasUserInteracted]);
 
   const toggleSection = (section) => {
+    // Mark that user has interacted, so auto-behavior stops
+    setHasUserInteracted(true);
+    
     // Basic toggle: clicking an already-active section hides it, otherwise show the clicked section
     if (activeSection === section) {
       setActiveSection(null);
@@ -182,43 +204,45 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
           )}
         </div>
 
-        {/* Desktop/Tablet: Expandable sections */}
-        {activeSection && (
-          <div className="hidden md:block animate-in slide-in-from-top duration-300">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="bg-gradient-to-r from-teal-500 to-blue-500 dark:from-teal-600 dark:to-blue-600 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {(() => {
-                      const section = sections.find(s => s.id === activeSection);
-                      const IconComponent = section.icon;
-                      return (
-                        <>
-                          <div className="p-2 bg-white/20 rounded-xl">
-                            <IconComponent className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <h2 className="text-xl font-bold text-white">{section.title}</h2>
-                            <p className="text-white/80 text-sm">{section.description}</p>
-                          </div>
-                        </>
-                      );
-                    })()}
+        {/* Desktop/Tablet: Show active section */}
+        <div className="hidden md:block">
+          {activeSection && (
+            <div className="animate-in slide-in-from-top duration-300">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="bg-gradient-to-r from-teal-500 to-blue-500 dark:from-teal-600 dark:to-blue-600 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {(() => {
+                        const section = sections.find(s => s.id === activeSection);
+                        const IconComponent = section.icon;
+                        return (
+                          <>
+                            <div className="p-2 bg-white/20 rounded-xl">
+                              <IconComponent className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h2 className="text-xl font-bold text-white">{section.title}</h2>
+                              <p className="text-white/80 text-sm">{section.description}</p>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                    <button
+                      onClick={() => toggleSection(activeSection)}
+                      className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+                    >
+                      <ChevronUp className="w-5 h-5 text-white" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => toggleSection(activeSection)}
-                    className="p-2 hover:bg-white/20 rounded-xl transition-colors"
-                  >
-                    <ChevronUp className="w-5 h-5 text-white" />
-                  </button>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {renderSectionContent(activeSection)}
                 </div>
               </div>
-              <div className="max-h-96 overflow-y-auto">
-                {renderSectionContent(activeSection)}
-              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       </div>
     </div>

@@ -1,168 +1,132 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
+import { 
+  User, 
+  Settings, 
+  LogOut, 
+  Download, 
+  Trash2, 
+  Moon, 
+  Sun, 
+  Globe,
+  ChevronDown
+} from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 import { logoutUser } from '../../services/authService';
-import { User, Settings, Key, LogOut, ChevronDown, HelpCircle } from 'lucide-react';
-import ProfileModal from './ProfileModal';
-import SettingsModal from './SettingsModal';
-import HelpModal from './HelpModal';
-import Modal from '../UI/Modal';
 
-const UserMenuDropdown = () => {
-  const { user, userProfile } = useAuth();
+const UserMenuDropdown = ({ 
+  onOpenProfile, 
+  onOpenSettings, 
+  currentLanguage,
+  onLanguageToggle 
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Detect mobile screen size
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // md breakpoint
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const { userProfile } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
-    await logoutUser();
-    setIsOpen(false);
-  };
-
-  const handleEditProfile = () => {
-    setCurrentPage('profile');
-    setIsOpen(false);
-  };
-
-  const handleSettings = () => {
-    setCurrentPage('settings');
-    setIsOpen(false);
-  };
-
-  const handleHelp = () => {
-    setCurrentPage('help');
-    setIsOpen(false);
-  };
-
-  // reset password functionality removed per request
-
-  const handleBackToMain = () => {
-    setCurrentPage(null);
-  };
-
-  if (!user) return null;
-
-  const getPageTitle = () => {
-    switch (currentPage) {
-      case 'profile': return 'Profile';
-      case 'settings': return 'Settings';
-      case 'help': return 'Help & Support';
-      default: return '';
+    try {
+      await logoutUser();
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
   };
 
-  const renderPageContent = () => {
-    switch (currentPage) {
-      case 'profile': return <ProfileModal />;
-      case 'settings': return <SettingsModal />;
-      case 'help': return <HelpModal />;
-      default: return null;
+  const menuItems = [
+    {
+      icon: User,
+      label: 'Profile',
+      onClick: onOpenProfile
+    },
+    {
+      icon: Settings,
+      label: 'Settings',
+      onClick: onOpenSettings
+    },
+    {
+      icon: isDark ? Sun : Moon,
+      label: isDark ? 'Light Mode' : 'Dark Mode',
+      onClick: toggleTheme
+    },
+    {
+      icon: Globe,
+      label: `Switch to ${currentLanguage === 'en' ? 'Bengali' : 'English'}`,
+      onClick: onLanguageToggle
+    },
+    {
+      icon: Download,
+      label: 'Export Data',
+      onClick: () => {
+        // Will implement this when we add export functionality
+        console.log('Export data clicked');
+        setIsOpen(false);
+      }
+    },
+    {
+      icon: LogOut,
+      label: 'Sign Out',
+      onClick: handleLogout,
+      className: 'text-red-600 dark:text-red-400'
     }
-  };
-
-  const displayName = userProfile?.displayName || user?.email || 'User';
-  const userInitial = displayName.charAt(0).toUpperCase();
+  ];
 
   return (
-    <>
-      <div className="relative" ref={dropdownRef}>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 sm:px-3 sm:py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        >
-          <div className="w-8 h-8 bg-teal-500 dark:bg-teal-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-            {userInitial}
-          </div>
-          <span className="hidden md:block text-sm font-medium max-w-32 truncate">
-            {displayName}
-          </span>
-          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </button>
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center space-x-2 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+      >
+        <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+          {userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+        </div>
+        {/* <span className="text-gray-700 dark:text-gray-300 font-medium hidden sm:block">
+          {userProfile?.displayName || 'User'}
+        </span> */}
+        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
-          <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              {displayName}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {user?.email}
-            </p>
+        <>
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20 animate-in fade-in slide-in-from-top">
+            <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {userProfile?.displayName || 'User'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {userProfile?.email}
+              </p>
+            </div>
+            <div className="py-2">
+              {menuItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      item.onClick();
+                      if (item.label !== 'Sign Out') {
+                        setIsOpen(false);
+                      }
+                    }}
+                    className={`w-full flex items-center space-x-3 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                      item.className || 'text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-
-          <button
-            onClick={handleEditProfile}
-            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <User className="w-4 h-4" />
-            Edit Profile
-          </button>
-
-          <button
-            onClick={handleSettings}
-            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </button>
-
-          {/* Reset Password removed */}
-
-          <button
-            onClick={handleHelp}
-            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <HelpCircle className="w-4 h-4" />
-            Help & Support
-          </button>
-
-          <hr className="my-2 border-gray-200 dark:border-gray-700" />
-
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </button>
-        </div>
+        </>
       )}
-      </div>
-
-      {/* Modal for Profile, Settings, Help pages */}
-      <Modal
-        isOpen={currentPage !== null}
-        onClose={handleBackToMain}
-        title={getPageTitle()}
-        isMobile={isMobile}
-      >
-        {renderPageContent()}
-      </Modal>
-    </>
+    </div>
   );
 };
 

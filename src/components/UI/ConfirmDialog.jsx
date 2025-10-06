@@ -1,39 +1,99 @@
-import React, { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import React from 'react';
+import { AlertTriangle } from 'lucide-react';
 
-const ConfirmDialog = ({ open, title, description, confirmText = 'Delete', cancelText = 'Cancel', onConfirm, onCancel }) => {
-  const ref = useRef(null);
+const ConfirmDialog = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  type = 'warning', // warning, danger, info
+  loading = false
+}) => {
+  if (!isOpen) return null;
 
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.activeElement;
-    setTimeout(() => ref.current?.focus(), 0);
-    const handle = (e) => {
-      if (e.key === 'Escape') onCancel?.();
-    };
-    document.addEventListener('keydown', handle);
-    return () => {
-      document.removeEventListener('keydown', handle);
-      if (prev && typeof prev.focus === 'function') try { prev.focus(); } catch { /* ignore */ }
-    };
-  }, [open, onCancel]);
+  const getTypeStyles = () => {
+    switch (type) {
+      case 'danger':
+        return {
+          icon: <AlertTriangle className="w-6 h-6 text-red-500" />,
+          confirmButton: 'bg-red-500 hover:bg-red-600 text-white'
+        };
+      case 'info':
+        return {
+          icon: <AlertTriangle className="w-6 h-6 text-blue-500" />,
+          confirmButton: 'bg-blue-500 hover:bg-blue-600 text-white'
+        };
+      default:
+        return {
+          icon: <AlertTriangle className="w-6 h-6 text-yellow-500" />,
+          confirmButton: 'bg-yellow-500 hover:bg-yellow-600 text-white'
+        };
+    }
+  };
 
-  if (!open) return null;
+  const styles = getTypeStyles();
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget && !loading) {
+      onClose();
+    }
+  };
+
+  const handleConfirm = () => {
+    if (!loading) {
+      onConfirm();
+    }
+  };
+
+  const handleCancel = () => {
+    if (!loading) {
+      onClose();
+    }
+  };
 
   return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-      <div ref={ref} tabIndex={0} className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-sm p-4 shadow-lg ring-1 ring-black/10">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">{title}</h3>
-            {description && <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{description}</p>}
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-in fade-in"
+      onClick={handleBackdropClick}
+    >
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-xl animate-in slide-in-from-top">
+        <div className="p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="flex-shrink-0">
+              {styles.icon}
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {title}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {message}
+              </p>
+            </div>
           </div>
-          <button onClick={onCancel} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"><X className="w-4 h-4" /></button>
-        </div>
-
-        <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onCancel} className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700">{cancelText}</button>
-          <button onClick={onConfirm} className="px-3 py-1 rounded bg-red-600 text-white">{confirmText}</button>
+          
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={handleCancel}
+              disabled={loading}
+              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {cancelText}
+            </button>
+            <button
+              onClick={handleConfirm}
+              disabled={loading}
+              className={`flex-1 px-4 py-2 ${styles.confirmButton} rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+            >
+              {loading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              {confirmText}
+            </button>
+          </div>
         </div>
       </div>
     </div>

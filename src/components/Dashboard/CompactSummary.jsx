@@ -1,21 +1,30 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { getTransactions } from '../../services/transactionService';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus } from 'lucide-react';
+import { useTransactions } from '../../hooks/useTransactions';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus, Eye } from 'lucide-react';
 import { isCreditCategory, isLoanCategory } from '../../utils/aiTransactionParser';
 import AddTransactionModal from '../Transaction/AddTransactionModal';
+import LoanCreditModal from '../Transaction/LoanCreditModal';
 
 const CompactSummary = ({ refreshTrigger, onRefresh }) => {
-  const { user, userProfile, refreshUserProfile } = useAuth();
+  const { user, userProfile } = useAuth();
+  const { 
+    transactions,
+    currentMonthIncome,
+    currentMonthExpense,
+    refreshTransactions
+  } = useTransactions();
+  
   const [stats, setStats] = useState({
-    balance: 0,
-    thisMonthIncome: 0,
-    thisMonthExpense: 0,
     thisWeekChange: 0
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showLoanModal, setShowLoanModal] = useState(false);
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  
+
   
   const formatCurrency = (amount) => {
     const currency = userProfile?.currency || 'BDT';
@@ -37,7 +46,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   };
 
   const refreshData = async () => {
-    if (!user || refreshing) return;
+    if (refreshing) return;
     
     if (onRefresh) {
       // Use the parent's refresh handler to sync header loading state
@@ -46,6 +55,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       // Fallback to local refresh
       setRefreshing(true);
       try {
+        await refreshTransactions();
         await loadData();
       } finally {
         setRefreshing(false);
@@ -60,37 +70,45 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
 
     let monthIncome = 0;
     let monthExpense = 0;
-    let monthCreditGiven = 0;
-    let monthLoanTaken = 0;
+    let allTimeCreditGiven = 0;
+    let allTimeLoanTaken = 0;
+  let allTimeCreditDue = 0;
+  let allTimeLoanDue = 0;
     let weekBalance = 0;
 
     transactions.forEach(transaction => {
-      const transDate = new Date(transaction.date);
+      const createdDate = new Date(transaction.createdAt); // Use createdAt instead of user-provided date
       const amount = parseFloat(transaction.amount) || 0;
 
       // Normalize transaction type for credit/loan detection
       const transactionType = (transaction.type || '').toString().toLowerCase().trim();
 
-      // This month calculations
-      if (transDate >= thisMonth) {
+      // This month calculations for income and expense only (based on when transaction was created)
+      if (createdDate >= thisMonth) {
         if (transaction.type === 'income') {
           monthIncome += amount;
         } else if (transaction.type === 'expense') {
           monthExpense += amount;
         }
-
-        // detect credit given and loans taken using centralized helpers
-        if (isCreditCategory(transactionType)) {
-          monthCreditGiven += amount;
-        }
-
-        if (isLoanCategory(transactionType)) {
-          monthLoanTaken += amount;
-        }
       }
 
-      // Last week change
-      if (transDate >= lastWeek) {
+      // All-time calculations for credit and loans
+      if (isCreditCategory(transactionType)) {
+        allTimeCreditGiven += amount;
+        const paid = parseFloat(transaction.paidAmount) || 0;
+        const remaining = Math.max(0, amount - paid);
+        allTimeCreditDue += remaining;
+      }
+
+      if (isLoanCategory(transactionType)) {
+        allTimeLoanTaken += amount;
+        const paid = parseFloat(transaction.paidAmount) || 0;
+        const remaining = Math.max(0, amount - paid);
+        allTimeLoanDue += remaining;
+      }
+
+      // Last week change (based on creation time)
+      if (createdDate >= lastWeek) {
         if (transaction.type === 'income') {
           weekBalance += amount;
         } else {
@@ -104,37 +122,34 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       thisMonthIncome: monthIncome,
       thisMonthExpense: monthExpense,
       thisWeekChange: weekBalance,
-      thisMonthCreditGiven: monthCreditGiven,
-      thisMonthLoanTaken: monthLoanTaken
+      allTimeCreditGiven: allTimeCreditGiven,
+      allTimeLoanTaken: allTimeLoanTaken,
+      creditDue: allTimeCreditDue,
+      loanDue: allTimeLoanDue
     });
   }, [userProfile]);
 
   const loadData = useCallback(async () => {
-    if (!user) return;
+    if (!user || !userProfile) return;
     
     setLoading(true);
     try {
-      // Fetch updated user profile
-      const profileResult = await refreshUserProfile();
-
-      // Fetch recent transactions for stats
-      const transactionsResult = await getTransactions(user.uid, { limit: 100 });
-      if (transactionsResult.success && profileResult) {
-        calculateStats(transactionsResult.data, profileResult);
+      // Use shared transaction data from context
+      if (transactions && transactions.length >= 0) {
+        calculateStats(transactions, userProfile);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error calculating stats:', error);
     } finally {
       setLoading(false);
     }
-  }, [user, refreshUserProfile, calculateStats]);
+  }, [user, userProfile, transactions, calculateStats]);
 
   useEffect(() => {
-    if (user?.uid) {
+    if (user?.uid && transactions !== null) {
       loadData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.uid]); // Only depend on user ID to avoid infinite loop
+  }, [user?.uid, transactions, loadData]);
 
   // Refresh when refreshTrigger changes (for real-time updates)
   useEffect(() => {
@@ -173,7 +188,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     };
   }, [loadData]);
 
-  if (loading) {
+  if (loading || refreshing) {
     return (
       <div className="w-full">
         {/* header skeleton: greeting + small action */}
@@ -190,13 +205,17 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
-              className="flex items-center gap-2 p-2 rounded-lg transition-all duration-200 bg-white/5 dark:bg-gray-800/40 text-sm"
+              className="relative flex items-center gap-2 p-2 rounded-lg transition-all duration-200 bg-white/5 dark:bg-gray-800/40 text-sm"
             >
               <div className="flex-shrink-0 w-8 h-8 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse" />
-              <div className="min-w-0 w-full">
+              <div className="min-w-0 flex-1 pr-6">
                 <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-1 animate-pulse" />
                 <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse" />
               </div>
+              {/* Skeleton for action button on cards with actions */}
+              {(i === 2 || i === 3) && (
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+              )}
             </div>
           ))}
         </div>
@@ -207,31 +226,52 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   const summaryCards = [
     {
       label: 'Earned',
-      value: formatCurrency(stats.thisMonthIncome),
+      value: formatCurrency(currentMonthIncome),
       icon: TrendingUp,
       color: 'text-green-600 dark:text-green-400',
-      bgColor: 'bg-green-50 dark:bg-green-900/20'
+      bgColor: 'bg-green-50 dark:bg-green-900/20',
+      hasAction: false
     },
     {
       label: 'Expended',
-      value: formatCurrency(stats.thisMonthExpense),
+      value: formatCurrency(currentMonthExpense),
       icon: TrendingDown,
       color: 'text-red-600 dark:text-red-400',
-      bgColor: 'bg-red-50 dark:bg-red-900/20'
+      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      hasAction: false
     },
     {
-      label: 'Given Credit',
-      value: formatCurrency(stats.thisMonthCreditGiven || 0),
+      label: 'Given Credit (All Time)',
+      // render value and due separately so we can style the due amount
+      value: {
+        total: formatCurrency(stats.allTimeCreditGiven || 0),
+        due: formatCurrency(stats.creditDue || 0),
+        rawDue: stats.creditDue || 0
+      },
       icon: Wallet,
       color: 'text-teal-600 dark:text-teal-400',
-      bgColor: 'bg-teal-50 dark:bg-teal-900/20'
+      bgColor: 'bg-teal-50 dark:bg-teal-900/20',
+      hasAction: true,
+      actionLabel: 'View Credits',
+      onAction: () => setShowCreditModal(true),
+      // show button only when there is an outstanding due amount
+      hasAmount: (stats.creditDue || 0) > 0
     },
     {
-      label: 'Took Loan',
-      value: formatCurrency(stats.thisMonthLoanTaken || 0),
+      label: 'Took Loan (All Time)',
+      value: {
+        total: formatCurrency(stats.allTimeLoanTaken || 0),
+        due: formatCurrency(stats.loanDue || 0),
+        rawDue: stats.loanDue || 0
+      },
       icon: DollarSign,
       color: 'text-indigo-600 dark:text-indigo-400',
-      bgColor: 'bg-indigo-50 dark:bg-indigo-900/20'
+      bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
+      hasAction: true,
+      actionLabel: 'View Loans',
+      onAction: () => setShowLoanModal(true),
+      // show button only when there is an outstanding due amount
+      hasAmount: (stats.loanDue || 0) > 0
     }
   ];
 
@@ -252,13 +292,6 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-md transition-colors"
-            title="Add Custom Transaction"
-          >
-            <Plus className="w-3 h-3" />
-          </button>
         </div>
       </div>
 
@@ -268,14 +301,42 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
             {summaryCards.map((card, index) => {
               const IconComponent = card.icon;
               return (
-                <div key={index} className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 ${card.bgColor} ${card.color} text-sm`}> 
-                  <div className={`p-2 rounded-md ${card.bgColor}`}> 
-                    <IconComponent className={`w-5 h-5 ${card.color}`} />
+                <div key={index} className={`relative flex items-center gap-2 p-2 rounded-lg transition-all duration-200 ${card.bgColor} ${card.color} text-sm`}> 
+                  <div className={`p-1.5 rounded-md ${card.bgColor}`}> 
+                    <IconComponent className={`w-4 h-4 ${card.color}`} />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1 pr-6">
                     <div className="text-xs font-medium truncate">{card.label}</div>
-                    <div className="text-sm font-semibold truncate">{card.value}</div>
+                    {/* If card.value is an object, render total and styled due part separately */}
+                    {typeof card.value === 'object' ? (
+                      <div className="text-sm font-semibold truncate">
+                        <span>{card.value.total}</span>
+                        <span
+                          className={`ml-2 text-xs font-medium ${card.value.rawDue > 0 ? 'text-red-500' : 'text-gray-400'} truncate`}
+                          title={card.value.rawDue > 0 ? 'Outstanding amount still owed' : 'No outstanding due'}
+                          role="tooltip"
+                          aria-label={card.value.rawDue > 0 ? 'Outstanding amount still owed' : 'No outstanding due'}
+                        >
+                          | {card.value.due}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-sm font-semibold truncate">{card.value}</div>
+                    )}
                   </div>
+                  {card.hasAction && card.hasAmount && (
+                    <button
+                      onClick={card.onAction}
+                      className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full transition-colors ${
+                        card.color.includes('teal') 
+                          ? 'bg-teal-600 hover:bg-teal-700 text-white' 
+                          : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      }`}
+                      title={card.actionLabel}
+                    >
+                      <Eye className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -291,6 +352,20 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
           // Refresh data after successful addition
           await loadData();
         }}
+      />
+
+      {/* Loan Management Modal */}
+      <LoanCreditModal
+        open={showLoanModal}
+        onClose={() => setShowLoanModal(false)}
+        type="loans"
+      />
+
+      {/* Credit Management Modal */}
+      <LoanCreditModal
+        open={showCreditModal}
+        onClose={() => setShowCreditModal(false)}
+        type="credits"
       />
     </div>
   );

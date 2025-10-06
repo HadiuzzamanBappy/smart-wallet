@@ -1,254 +1,356 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Edit3, 
+  Trash2, 
+  Filter, 
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  Search
+} from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { getRecentTransactions, deleteTransaction } from '../../services/transactionService';
-import { getCategoryEmoji } from '../../utils/aiTransactionParser';
+import { useTransactions } from '../../hooks/useTransactions';
+import { deleteTransaction } from '../../services/transactionService';
 import { formatCurrency, formatDate } from '../../utils/helpers';
-import { Trash2, Calendar, Tag, DollarSign } from 'lucide-react';
-import LoadingSpinner from '../UI/LoadingSpinner';
+import { getCategoryEmoji, getCategoryColor } from '../../utils/aiTransactionParser';
 import EditParsedModal from '../Transaction/EditParsedModal';
 import ConfirmDialog from '../UI/ConfirmDialog';
+import LoadingSpinner from '../UI/LoadingSpinner';
 
-const TransactionList = ({ onTransactionChange }) => {
+const TransactionList = ({ onTransactionUpdate }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
-  const [editing, setEditing] = useState({ open: false, parsed: null });
-
-  const loadTransactions = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    const result = await getRecentTransactions(user.uid, 20);
-    if (result.success) {
-      setTransactions(result.data);
-    }
-    setLoading(false);
-  }, [user]);
-
-  useEffect(() => {
-    loadTransactions();
-  }, [loadTransactions]);
-
-  // Listen for transaction updates from other components
-  useEffect(() => {
-    const handleTransactionAdded = () => {
-      console.log('TransactionList: Reloading due to transaction added');
-      loadTransactions();
-    };
-
-    const handleTransactionEdited = (e) => {
-      const updatedTransaction = e.detail?.transaction;
-      if (updatedTransaction) {
-        console.log('TransactionList: Updating edited transaction', updatedTransaction.id);
-        setTransactions(prev =>
-          prev.map(t => t.id === updatedTransaction.id ? { ...t, ...updatedTransaction } : t)
-        );
-      }
-    };
-
-    const handleTransactionDeleted = (e) => {
-      const transactionId = e.detail?.transactionId;
-      if (transactionId) {
-        console.log('TransactionList: Removing deleted transaction', transactionId);
-        setTransactions(prev => prev.filter(t => t.id !== transactionId));
-      }
-    };
-
-    // Add event listeners
-    window.addEventListener('wallet:transaction-added', handleTransactionAdded);
-    window.addEventListener('wallet:transaction-edited', handleTransactionEdited);
-    window.addEventListener('wallet:transaction-deleted', handleTransactionDeleted);
-    window.addEventListener('wallet:reload-transactions', handleTransactionAdded);
-
-    return () => {
-      window.removeEventListener('wallet:transaction-added', handleTransactionAdded);
-      window.removeEventListener('wallet:transaction-edited', handleTransactionEdited);
-      window.removeEventListener('wallet:transaction-deleted', handleTransactionDeleted);
-      window.removeEventListener('wallet:reload-transactions', handleTransactionAdded);
-    };
-  }, [loadTransactions]);
-
-  const handleDeleteTransaction = async (transactionId, transaction) => {
-    // show confirm dialog instead - handled by state in component
-    setPendingDelete({ id: transactionId, transaction });
-  };
-
-  const [pendingDelete, setPendingDelete] = useState(null);
-
-  const confirmDelete = async () => {
-    if (!pendingDelete) return;
-    const { id, transaction } = pendingDelete;
-    const result = await deleteTransaction(user.uid, id, transaction);
-    if (result.success) {
-      setTransactions(prev => prev.filter(t => t.id !== id));
-      if (onTransactionChange) onTransactionChange();
-
-      // Dispatch global event to notify other components (ChatWidget)
-      try {
-        window.dispatchEvent(new CustomEvent('wallet:transaction-deleted', {
-          detail: { transactionId: id }
-        }));
-      } catch {
-        console.warn('Failed to dispatch transaction-deleted event');
-      }
-    }
-    setPendingDelete(null);
-  };
-
-  const cancelDelete = () => setPendingDelete(null);
-
-  const filteredTransactions = transactions.filter(transaction => {
-    if (filter === 'all') return true;
-    return transaction.type === filter;
+  const { 
+    transactions, 
+    loading: transactionLoading, 
+    refreshTransactions 
+  } = useTransactions();
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [deletingTransaction, setDeletingTransaction] = useState(null);
+  
+  // Filters
+  const [filters, setFilters] = useState({
+    search: '',
+    type: 'all',
+    category: 'all',
+    dateRange: '30' // days
   });
 
   // Pagination
-  const ITEMS_PER_PAGE = 5;
+  const PAGE_SIZE = 8;
   const [page, setPage] = useState(1);
-  const pageCount = Math.max(1, Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE));
-  const pagedTransactions = filteredTransactions.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // Reset to first page whenever the filter changes
+  const currency = userProfile?.currency || 'BDT';
+
+  // Transactions are now managed by TransactionContext
+
+  const handleDelete = async () => {
+    if (!deletingTransaction) return;
+    
+    setDeleteLoading(true);
+    try {
+      const result = await deleteTransaction(user.uid, deletingTransaction.id, deletingTransaction);
+      if (result.success) {
+        await refreshUserProfile();
+        await refreshTransactions();
+        onTransactionUpdate?.();
+      }
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+    } finally {
+      setDeleteLoading(false);
+      setDeletingTransaction(null);
+    }
+  };
+
+  const handleEditSuccess = async () => {
+    await refreshUserProfile();
+    await refreshTransactions();
+    onTransactionUpdate?.();
+  };
+
+  // Filter transactions
+  const filteredTransactions = transactions.filter(transaction => {
+    // Search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      if (!transaction.description.toLowerCase().includes(searchTerm) &&
+          !transaction.category.toLowerCase().includes(searchTerm)) {
+        return false;
+      }
+    }
+
+    // Type filter
+    if (filters.type !== 'all' && transaction.type !== filters.type) {
+      return false;
+    }
+
+    // Category filter
+    if (filters.category !== 'all' && transaction.category !== filters.category) {
+      return false;
+    }
+
+    // Date range filter (based on creation time)
+    if (filters.dateRange !== 'all') {
+      const daysAgo = parseInt(filters.dateRange);
+      const filterDate = new Date();
+      filterDate.setDate(filterDate.getDate() - daysAgo);
+      const createdDate = new Date(transaction.createdAt);
+      if (createdDate < filterDate) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Reset page when filters change or transactions update
   useEffect(() => {
     setPage(1);
-  }, [filter]);
+  }, [filters.search, filters.type, filters.category, filters.dateRange, transactions.length]);
 
-  // Clamp page if filtered results become smaller (e.g., after switching tabs or deletions)
-  useEffect(() => {
-    const pc = Math.max(1, Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE));
-    if (page > pc) setPage(pc);
-  }, [filteredTransactions.length, page]);
+  // Pagination helpers
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
+  const paginatedTransactions = filteredTransactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  if (loading) {
+  const getUniqueCategories = () => {
+    const categories = [...new Set(transactions.map(t => t.category))];
+    return categories.sort();
+  };
+
+  const getTransactionIcon = (type) => {
+    switch (type) {
+      case 'income':
+      case 'loan':
+        return <TrendingUp className="w-4 h-4 text-green-500" />;
+      case 'expense':
+      case 'credit':
+        return <TrendingDown className="w-4 h-4 text-red-500" />;
+      default:
+        return <div className="w-4 h-4 bg-gray-400 rounded-full" />;
+    }
+  };
+
+  const getAmountColor = (type) => {
+    switch (type) {
+      case 'income':
+      case 'loan':
+        return 'text-green-600 dark:text-green-400';
+      case 'expense':
+      case 'credit':
+        return 'text-red-600 dark:text-red-400';
+      default:
+        return 'text-gray-600 dark:text-gray-400';
+    }
+  };
+
+  if (transactionLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Recent Transactions</h2>
-        <LoadingSpinner message="Loading transactions..." size="md" />
+      <div className="card p-6">
+        <div className="flex items-center justify-center h-32">
+          <LoadingSpinner size="lg" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Header - Responsive */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">Recent Transactions</h2>
+    <>
+      <div className="card">
+          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Transaction History
+            </h3>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {filteredTransactions.length} of {transactions.length} transactions
+            </div>
+          </div>
 
-        {/* Filter Buttons - Responsive */}
-        <div className="flex gap-1 sm:gap-2 overflow-x-auto">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${filter === 'all'
-              ? 'bg-teal-600 text-white shadow-md'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilter('income')}
-            className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${filter === 'income'
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            Income
-          </button>
-          <button
-            onClick={() => setFilter('expense')}
-            className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${filter === 'expense'
-              ? 'bg-red-600 text-white shadow-md'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            Expenses
-          </button>
-          <button
-            onClick={() => setFilter('credit')}
-            className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${filter === 'credit'
-              ? 'bg-teal-600 text-white shadow-md'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            Credit
-          </button>
-          <button
-            onClick={() => setFilter('loan')}
-            className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${filter === 'loan'
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            Loan
-          </button>
-        </div>
-      </div>
+          {/* Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Search */}
+            <div className="relative sm:col-span-2 lg:col-span-1">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-sm"
+              />
+            </div>
 
-      {filteredTransactions.length === 0 ? (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          <DollarSign className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-          <p>No transactions found</p>
-          <p className="text-sm mt-2">Start by adding your first transaction using the chat!</p>
+            {/* Type Filter */}
+            <select
+              value={filters.type}
+              onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-sm"
+            >
+              <option value="all">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+              <option value="credit">Credit</option>
+              <option value="loan">Loan</option>
+            </select>
+
+            {/* Category Filter */}
+            <select
+              value={filters.category}
+              onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-sm"
+            >
+              <option value="all">All Categories</option>
+              {getUniqueCategories().map(category => (
+                <option key={category} value={category}>
+                  {getCategoryEmoji(category)} {category}
+                </option>
+              ))}
+            </select>
+
+            {/* Date Range Filter */}
+            <select
+              value={filters.dateRange}
+              onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-sm"
+            >
+              <option value="all">All Time</option>
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="90">Last 3 months</option>
+              <option value="365">Last year</option>
+            </select>
+          </div>
         </div>
-      ) : (
-        <div>
-          <div className="space-y-2 sm:space-y-3">
-            {pagedTransactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800"
-              >
-                {/* Mobile Layout - Stacked */}
-                <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                  <div className="text-xl sm:text-2xl flex-shrink-0">
-                    {getCategoryEmoji(transaction.category)}
+
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          {filteredTransactions.length === 0 ? (
+            <div className="p-8 text-center">
+              <div className="text-gray-400 dark:text-gray-500 mb-2">
+                <Filter className="w-12 h-12 mx-auto mb-4" />
+              </div>
+              <p className="text-gray-500 dark:text-gray-400">
+                {transactions.length === 0 
+                  ? "No transactions yet. Add your first transaction to get started!"
+                  : "No transactions match your current filters."
+                }
+              </p>
+            </div>
+          ) : (
+            paginatedTransactions.map((transaction) => (
+              <div key={transaction.id} className="p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                {/* Mobile Layout */}
+                <div className="sm:hidden">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center space-x-2 flex-1 min-w-0">
+                      <div className="text-lg">
+                        {getCategoryEmoji(transaction.category)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {transaction.description}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatDate(transaction.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 ml-2">
+                      <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} flex items-center`}>
+                        {getTransactionIcon(transaction.type)}
+                        <span className="ml-1">
+                          {(transaction.type === 'income' || transaction.type === 'loan') ? '+' : '-'}
+                          {formatCurrency(transaction.amount, currency)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="flex-1 min-w-0">
-
-                    <div className='flex flex-wrap align-center gap-2'>
-                      <p className="font-medium text-gray-800 dark:text-gray-100 text-sm sm:text-base truncate">
-                        {transaction.description}
-                      </p>
-                      {/* Show original user prompt as a top block row for chat-generated transactions */}
-                      {transaction.originalMessage && (
-                        <div className="mb-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 truncate">
-                          <span className="flex-shrink-0">💬</span>
-                          <span className="truncate italic">{transaction.originalMessage}</span>
-                        </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 flex-wrap">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCategoryColor(transaction.category)}`}>
+                        {transaction.category}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                        {transaction.type}
+                      </span>
+                      {transaction.source === 'chat' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          AI
+                        </span>
                       )}
                     </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{formatDate(transaction.date)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Tag className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{transaction.category}</span>
-                      </div>
+                    
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => setEditingTransaction(transaction)}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                        title="Edit"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setDeletingTransaction(transaction)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Amount and Actions - Mobile responsive */}
-                <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 mt-2 sm:mt-0">
-                  <div className="text-left sm:text-right">
-                    <p className={`font-semibold text-sm sm:text-base ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                      {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount, userProfile?.currency)}
-                    </p>
-                    <p className="text-xs text-gray-500 capitalize">
-                      {transaction.type}
-                    </p>
+                {/* Desktop Layout */}
+                <div className="hidden sm:flex items-center space-x-4">
+                  {/* Category & Type Icon */}
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <div className="text-xl">
+                      {getCategoryEmoji(transaction.category)}
+                    </div>
+                    {getTransactionIcon(transaction.type)}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => setEditing({ open: true, parsed: { ...transaction, userId: user?.uid } })} className="p-1.5 sm:p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors text-xs">Edit</button>
+                  {/* Transaction Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate pr-4">
+                        {transaction.description}
+                      </p>
+                      <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} whitespace-nowrap`}>
+                        {(transaction.type === 'income' || transaction.type === 'loan') ? '+' : '-'}
+                        {formatCurrency(transaction.amount, currency)}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 flex-wrap">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCategoryColor(transaction.category)}`}>
+                        {transaction.category}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap" title={`Created: ${formatDate(transaction.createdAt)}`}>
+                        {formatDate(transaction.createdAt)}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                        {transaction.type}
+                      </span>
+                      {transaction.source === 'chat' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          AI Parsed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center space-x-2 flex-shrink-0">
                     <button
-                      onClick={() => handleDeleteTransaction(transaction.id, transaction)}
-                      className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                      onClick={() => setEditingTransaction(transaction)}
+                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      title="Edit transaction"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingTransaction(transaction)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       title="Delete transaction"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -256,53 +358,57 @@ const TransactionList = ({ onTransactionChange }) => {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Pagination controls */}
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 disabled:opacity-50">Prev</button>
-            {Array.from({ length: pageCount }).map((_, i) => (
-              <button key={i} onClick={() => setPage(i + 1)} className={`px-3 py-1 rounded ${page === i + 1 ? 'bg-teal-600 text-white' : 'bg-gray-50 dark:bg-gray-800'}`}>{i + 1}</button>
-            ))}
-            <button onClick={() => setPage(p => Math.min(pageCount, p + 1))} disabled={page === pageCount} className="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 disabled:opacity-50">Next</button>
-          </div>
+            ))
+          )}
         </div>
-      )}
-      <EditParsedModal open={editing.open} onClose={() => setEditing({ open: false, parsed: null })} originalMessage={editing.parsed?.description} parsed={editing.parsed} onSave={async (updated) => {
-        // Update local list
-        setTransactions(prev => prev.map(t => t.id === editing.parsed.id ? { ...t, ...updated } : t));
 
-        // Refresh user profile to update balance if this was a saved transaction
-        if (editing.parsed?.id && user?.uid) {
-          try {
-            await refreshUserProfile();
-          } catch (error) {
-            console.error('Error refreshing user profile after transaction update:', error);
-          }
-        }
+        {/* Pagination Controls */}
+        {filteredTransactions.length > PAGE_SIZE && (
+          <div className="p-4 flex items-center justify-between">
+            <div className="text-sm text-gray-500">Page {page} of {totalPages}</div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1 rounded-md border border-gray-200 dark:border-gray-700 text-sm disabled:opacity-50"
+              >Prev</button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i + 1)}
+                  className={`px-3 py-1 rounded-md text-sm ${page === i + 1 ? 'bg-teal-500 text-white' : 'border border-gray-200 dark:border-gray-700'}`}
+                >{i + 1}</button>
+              ))}
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 py-1 rounded-md border border-gray-200 dark:border-gray-700 text-sm disabled:opacity-50"
+              >Next</button>
+            </div>
+          </div>
+        )}
+      </div>
 
-        setEditing({ open: false, parsed: null });
-        if (onTransactionChange) onTransactionChange();
+      {/* Edit Modal */}
+      <EditParsedModal
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+        transaction={editingTransaction}
+        onSuccess={handleEditSuccess}
+      />
 
-        // Also update shared recent saved list in localStorage if present
-        try {
-          if (typeof window !== 'undefined' && window.localStorage) {
-            const key = 'wallet_last_transactions';
-            const raw = localStorage.getItem(key);
-            let arr = raw ? JSON.parse(raw) : [];
-            if (!Array.isArray(arr)) arr = [];
-            const newArr = arr.map(a => (a.id === editing.parsed.id || a._id === editing.parsed.id) ? { ...a, ...updated } : a);
-            localStorage.setItem(key, JSON.stringify(newArr));
-            // notify other components (ChatWidget) about the edit
-            try { window.dispatchEvent(new CustomEvent('wallet:transaction-edited', { detail: { transaction: { ...editing.parsed, ...updated } } })); } catch { /* ignore */ }
-          }
-        } catch (e) {
-          console.warn('Failed to update wallet_last_transactions from TransactionList', e);
-        }
-      }} />
-      <ConfirmDialog open={!!pendingDelete} title="Delete transaction" description="This will permanently delete the transaction. This action cannot be undone." onConfirm={confirmDelete} onCancel={cancelDelete} />
-    </div>
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={!!deletingTransaction}
+        onClose={() => setDeletingTransaction(null)}
+        onConfirm={handleDelete}
+        title="Delete Transaction"
+        message={`Are you sure you want to delete "${deletingTransaction?.description}"? This action cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
+        loading={deleteLoading}
+      />
+    </>
   );
 };
 

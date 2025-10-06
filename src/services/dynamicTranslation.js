@@ -153,6 +153,9 @@ class DynamicTranslationService {
     // Wait a bit for React components to finish rendering
     await new Promise(resolve => setTimeout(resolve, 100));
 
+    // Store original content before translation (first time only)
+    this.storeOriginalContent();
+
     try {
       // Get all text nodes
       const textNodes = this.getTextNodes();
@@ -317,6 +320,77 @@ class DynamicTranslationService {
   clearCache() {
     this.cache.clear();
     sessionStorage.removeItem('translationCache');
+  }
+
+  // Reset page back to English
+  async resetToEnglish() {
+    console.log('Resetting page to English...');
+    
+    // Clear current language state
+    this.currentLanguage = 'en';
+    this.isTranslating = false;
+    
+    // Show loading indicator
+    document.body.style.cursor = 'wait';
+    
+    try {
+      // Store original content if not already stored
+      if (!this.originalContent) {
+        // If we don't have original content, reload the page
+        window.location.reload();
+        return;
+      }
+      
+      // Restore all original text nodes
+      this.originalContent.textNodes.forEach((originalText, node) => {
+        if (node.parentNode && originalText !== node.nodeValue) {
+          node.nodeValue = originalText;
+        }
+      });
+      
+      // Restore all original attributes
+      this.originalContent.attributes.forEach((originalValue, element, attribute) => {
+        if (element && element.hasAttribute && element.hasAttribute(attribute)) {
+          element.setAttribute(attribute, originalValue);
+        }
+      });
+      
+      // Clear translation cache for this session
+      this.cache.clear();
+      this.clearCache();
+      
+      console.log('Successfully reset to English');
+    } catch (error) {
+      console.error('Error resetting to English:', error);
+      // Fallback to page reload
+      window.location.reload();
+    } finally {
+      document.body.style.cursor = 'default';
+    }
+  }
+
+  // Store original content before translation
+  storeOriginalContent() {
+    if (this.originalContent) return; // Already stored
+    
+    this.originalContent = {
+      textNodes: new Map(),
+      attributes: new Map()
+    };
+    
+    // Store original text nodes
+    const textNodes = this.getTextNodes();
+    textNodes.forEach(node => {
+      this.originalContent.textNodes.set(node, node.nodeValue);
+    });
+    
+    // Store original attributes
+    const attributeElements = this.getAttributeElements();
+    attributeElements.forEach(({ element, attribute }) => {
+      const key = `${element}_${attribute}`;
+      const value = element.getAttribute(attribute);
+      this.originalContent.attributes.set(key, { element, attribute, value });
+    });
   }
 }
 

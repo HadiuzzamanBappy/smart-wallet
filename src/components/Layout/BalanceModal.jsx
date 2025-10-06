@@ -1,109 +1,119 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { X, ArrowDown, ArrowUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Eye, EyeOff } from 'lucide-react';
+import Modal from '../UI/Modal';
+import { useAuth } from '../../hooks/useAuth';
+import { formatCurrency } from '../../utils/helpers';
 
-// Minimal, animated balance modal - small slide-up panel
-const BalanceModal = ({ open, onClose, balance, currency = 'BDT' }) => {
-  const [value, setValue] = useState(0);
+const BalanceModal = ({ isOpen, onClose }) => {
+  const { userProfile } = useAuth();
+  const [showDetails, setShowDetails] = useState(false);
 
-  // Read last transactions minimal info
-  const last = useMemo(() => {
-    try {
-      if (typeof window === 'undefined') return { debit: null, credit: null };
-      const raw = localStorage.getItem('wallet_last_transactions');
-      if (!raw) return { debit: null, credit: null };
-      const arr = JSON.parse(raw) || [];
-      arr.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
-      const debit = arr.find(t => (t.type === 'expense' || t.type === 'loan' || t.type === 'debit')) || null;
-      const credit = arr.find(t => (t.type === 'income' || t.type === 'credit')) || null;
-      return { debit, credit };
-    } catch {
-      return { debit: null, credit: null };
-    }
-  }, []);
+  if (!userProfile) return null;
 
-  useEffect(() => {
-    if (!open) return;
-    const to = Number(balance) || 0;
-    const from = 0;
-    const duration = 600;
-    const start = performance.now();
-    let raf = 0;
-    const step = (t) => {
-      const p = Math.min(1, (t - start) / duration);
-      const eased = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
-      const v = Math.round(from + (to - from) * eased);
-      setValue(v);
-      if (p < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    // auto-close after a short delay
-    const timer = setTimeout(() => {
-      onClose();
-    }, 4000);
+  const {
+    balance = 0,
+    totalIncome = 0,
+    totalExpense = 0,
+    totalCreditGiven = 0,
+    totalLoanTaken = 0,
+    currency = 'BDT'
+  } = userProfile;
 
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(timer);
-    };
-  }, [open, balance, onClose]);
-
-  const format = (n) => {
-    const currencyLocales = {
-      BDT: 'en-BD',
-      USD: 'en-US',
-      EUR: 'en-DE',
-      GBP: 'en-GB',
-      INR: 'en-IN'
-    };
-
-    const locale = currencyLocales[currency] || 'en-BD';
-    
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: currency === 'BDT' ? 0 : 2
-    }).format(n || 0);
-  };
-
-  if (!open) return null;
+  const netLending = totalCreditGiven - totalLoanTaken;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-md mx-4 mt-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 transition-transform transform -translate-y-4 opacity-0 animate-slide-down">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-medium">Balance</div>
-            <button aria-label="Close" onClick={onClose} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="mt-3 flex items-end justify-between">
-            <div>
-              <div className="text-2xl font-bold tracking-tight">{format(value)}</div>
-              <div className="text-xs text-gray-500">Updated</div>
-            </div>
-            <div className="flex flex-col space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="p-1 rounded bg-red-50 text-red-600"><ArrowDown className="w-4 h-4"/></span>
-                <div className="text-xs">
-                  <div className="text-xs text-gray-500">Last Debit</div>
-                  <div className="text-sm font-medium">{last.debit ? format(last.debit.amount) : '—'}</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="p-1 rounded bg-green-50 text-green-600"><ArrowUp className="w-4 h-4"/></span>
-                <div className="text-xs">
-                  <div className="text-xs text-gray-500">Last Credit</div>
-                  <div className="text-sm font-medium">{last.credit ? format(last.credit.amount) : '—'}</div>
-                </div>
-              </div>
-            </div>
+    <Modal isOpen={isOpen} onClose={onClose} title="Balance Details" size="md">
+      <div className="space-y-6">
+        {/* Current Balance */}
+        <div className="text-center p-6 bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 rounded-xl">
+          <h3 className="text-sm text-gray-600 dark:text-gray-400 mb-2">Current Balance</h3>
+          <div className="text-3xl font-bold text-teal-600 dark:text-teal-400">
+            {formatCurrency(balance, currency)}
           </div>
         </div>
+
+        {/* Toggle Details */}
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+          >
+            {showDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            <span>{showDetails ? 'Hide Details' : 'Show Details'}</span>
+          </button>
+        </div>
+
+        {/* Balance Breakdown */}
+        {showDetails && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-green-700 dark:text-green-300">Total Income</span>
+                <span className="font-semibold text-green-800 dark:text-green-200">
+                  +{formatCurrency(totalIncome, currency)}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-red-700 dark:text-red-300">Total Expenses</span>
+                <span className="font-semibold text-red-800 dark:text-red-200">
+                  -{formatCurrency(totalExpense, currency)}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-blue-700 dark:text-blue-300">Credit Given</span>
+                <span className="font-semibold text-blue-800 dark:text-blue-200">
+                  -{formatCurrency(totalCreditGiven, currency)}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-purple-700 dark:text-purple-300">Loans Taken</span>
+                <span className="font-semibold text-purple-800 dark:text-purple-200">
+                  +{formatCurrency(totalLoanTaken, currency)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Net Lending */}
+        {showDetails && (
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Net Lending Position</span>
+              <span className={`font-semibold ${
+                netLending > 0 
+                  ? 'text-blue-600 dark:text-blue-400' 
+                  : netLending < 0
+                  ? 'text-purple-600 dark:text-purple-400'
+                  : 'text-gray-600 dark:text-gray-400'
+              }`}>
+                {netLending > 0 && '+'}
+                {formatCurrency(Math.abs(netLending), currency)}
+                {netLending > 0 && ' (You lent more)'}
+                {netLending < 0 && ' (You borrowed more)'}
+                {netLending === 0 && ' (Balanced)'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Balance Formula */}
+        {showDetails && (
+          <div className="text-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+            Balance = Income + Loans Taken - Expenses - Credit Given
+          </div>
+        )}
       </div>
-      <style>{`@keyframes slideDown { from { transform: translateY(-12px); opacity: 0 } to { transform: translateY(0); opacity: 1 } } .animate-slide-down { animation: slideDown 220ms cubic-bezier(.2,.9,.2,1) forwards; }`}</style>
-    </div>
+    </Modal>
   );
 };
 

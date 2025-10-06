@@ -1,27 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { getTransactions } from '../../services/transactionService';
+import { useTransactions } from '../../hooks/useTransactions';
 import { calculateBudgetStatus, getCurrentMonthSpending, formatCurrency } from '../../utils/helpers';
 import { AlertTriangle, CheckCircle, DollarSign, TrendingUp, Settings } from 'lucide-react';
 
 const BudgetProgress = ({ onSettingsClick }) => {
-    const { user, userProfile } = useAuth();
-    const [transactions, setTransactions] = useState([]);
+    const { userProfile } = useAuth();
+    const { transactions, loading: transactionLoading } = useTransactions();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadTransactions = async () => {
-            if (!user) return;
-            setLoading(true);
-            const result = await getTransactions(user.uid);
-            if (result.success) {
-                setTransactions(result.data);
-            }
-            setLoading(false);
-        };
-
-        loadTransactions();
-    }, [user]);
+        // Transactions are managed by context, just update loading state
+        setLoading(transactionLoading || !transactions);
+    }, [transactionLoading, transactions]);
 
     if (loading) {
         return (
@@ -83,43 +74,44 @@ const BudgetProgress = ({ onSettingsClick }) => {
         switch (warningLevel) {
             case 'danger':
                 return {
-                    bg: 'bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20',
+                    // Light: strong red highlights, Dark: deeper red shades
+                    bg: 'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/10 dark:to-red-900/30',
                     border: 'border-red-200 dark:border-red-800',
                     progressBg: 'bg-red-100 dark:bg-red-900/30',
-                    progressFill: 'bg-red-500',
-                    textColor: 'text-red-700 dark:text-red-300',
+                    progressFill: 'bg-red-600',
+                    textColor: 'text-red-700 dark:text-red-200',
                     icon: AlertTriangle,
-                    iconColor: 'text-red-500'
+                    iconColor: 'text-red-600'
                 };
             case 'warning':
                 return {
-                    bg: 'bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20',
+                    bg: 'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/10 dark:to-yellow-900/30',
                     border: 'border-yellow-200 dark:border-yellow-800',
                     progressBg: 'bg-yellow-100 dark:bg-yellow-900/30',
                     progressFill: 'bg-yellow-500',
-                    textColor: 'text-yellow-700 dark:text-yellow-300',
+                    textColor: 'text-yellow-700 dark:text-yellow-200',
                     icon: AlertTriangle,
-                    iconColor: 'text-yellow-500'
+                    iconColor: 'text-yellow-600'
                 };
             case 'caution':
                 return {
-                    bg: 'bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20',
-                    border: 'border-blue-200 dark:border-blue-800',
-                    progressBg: 'bg-blue-100 dark:bg-blue-900/30',
-                    progressFill: 'bg-blue-500',
-                    textColor: 'text-blue-700 dark:text-blue-300',
+                    bg: 'bg-gradient-to-r from-sky-50 to-cyan-50 dark:from-sky-900/10 dark:to-cyan-900/24',
+                    border: 'border-sky-200 dark:border-sky-800',
+                    progressBg: 'bg-sky-100 dark:bg-sky-900/30',
+                    progressFill: 'bg-sky-500',
+                    textColor: 'text-sky-700 dark:text-sky-200',
                     icon: TrendingUp,
-                    iconColor: 'text-blue-500'
+                    iconColor: 'text-sky-500'
                 };
             default: // safe
                 return {
-                    bg: 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20',
-                    border: 'border-green-200 dark:border-green-800',
-                    progressBg: 'bg-green-100 dark:bg-green-900/30',
-                    progressFill: 'bg-green-500',
-                    textColor: 'text-green-700 dark:text-green-300',
+                    bg: 'bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/8 dark:to-emerald-900/28',
+                    border: 'border-emerald-200 dark:border-emerald-800',
+                    progressBg: 'bg-emerald-100 dark:bg-emerald-900/30',
+                    progressFill: 'bg-emerald-500',
+                    textColor: 'text-emerald-700 dark:text-emerald-200',
                     icon: CheckCircle,
-                    iconColor: 'text-green-500'
+                    iconColor: 'text-emerald-500'
                 };
         }
     };
@@ -134,38 +126,34 @@ const BudgetProgress = ({ onSettingsClick }) => {
     const remaining = Math.max(0, (budgetStatus.budget || 0) - spent);
 
     return (
-        <div className="rounded-md p-3 bg-gray-800/50">
+        <div className={`rounded-md p-3 bg-white dark:bg-gray-800 border ${colors.border}`}>
             <div className="flex items-start justify-between gap-3 mb-2">
-                <div>
-                    <div className={`text-xs font-medium ${
-                        budgetStatus.warningLevel === 'danger' ? 'text-red-200' :
-                        budgetStatus.warningLevel === 'warning' ? 'text-yellow-200' :
-                        budgetStatus.warningLevel === 'caution' ? 'text-blue-200' :
-                        'text-green-200'
-                    }`}>{budgetStatus.status}</div>
+                <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${colors.bg}`}>
+                        <IconComponent className={`w-4 h-4 ${colors.iconColor}`} />
+                    </div>
+                    <div>
+                        <div className={`text-xs font-medium ${colors.textColor}`}>{budgetStatus.status}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Monthly budget overview</div>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <div className="text-sm font-semibold text-white">{clampedPct}%</div>
+                    <div className={`text-sm font-semibold ${colors.textColor}`}>{clampedPct}%</div>
                     <button onClick={onSettingsClick} title="Open settings" className="p-1 rounded hover:bg-white/10 transition-colors">
-                        <Settings className="w-4 h-4 text-gray-200 hover:text-white" />
+                        <Settings className={`w-4 h-4 ${colors.textColor}`} />
                     </button>
                 </div>
             </div>
 
-            <div className="w-full h-2 bg-gray-700/40 rounded-full overflow-hidden">
+            <div className={`w-full h-2 ${colors.progressBg} rounded-full overflow-hidden`}>
                 <div
-                    className={`h-2 rounded-full transition-all duration-500 ${
-                        budgetStatus.warningLevel === 'danger' ? 'bg-red-400' :
-                        budgetStatus.warningLevel === 'warning' ? 'bg-yellow-400' :
-                        budgetStatus.warningLevel === 'caution' ? 'bg-blue-400' :
-                        'bg-green-400'
-                    }`}
+                    className={`h-2 rounded-full transition-all duration-500 ${colors.progressFill}`}
                     style={{ width: `${clampedPct}%` }}
                 />
             </div>
 
-            <div className="mt-2 flex items-center justify-between text-xs text-gray-100">
+            <div className={`mt-2 flex items-center justify-between text-xs ${colors.textColor}`}>
                 <div>BDT {formatCurrency(spent, currency).replace(/[^0-9.,]/g, '')} spent</div>
                 <div>{budgetStatus.exceeded ? `Over by ${formatCurrency(spent - (budgetStatus.budget || 0), currency)}` : `${formatCurrency(remaining, currency)} left`}</div>
             </div>

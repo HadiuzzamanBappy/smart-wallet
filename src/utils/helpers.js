@@ -99,10 +99,11 @@ export const getCurrentMonthSpending = (transactions) => {
   
   return transactions
     .filter(transaction => {
-      const transactionDate = new Date(transaction.date);
+      // Use createdAt for more accurate monthly calculations
+      const createdDate = new Date(transaction.createdAt || transaction.date);
       return (
-        transactionDate.getMonth() === currentMonth &&
-        transactionDate.getFullYear() === currentYear &&
+        createdDate.getMonth() === currentMonth &&
+        createdDate.getFullYear() === currentYear &&
         transaction.type === 'expense'
       );
     })

@@ -1,91 +1,87 @@
-import React, { useState } from 'react';
-import { Wallet } from 'lucide-react';
-import UserMenuDropdown from '../User/UserMenuDropdown';
+import React from 'react';
+import { Wallet, Plus, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import BalanceModal from './BalanceModal';
+import { formatCurrency } from '../../utils/helpers';
+import UserMenuDropdown from '../User/UserMenuDropdown';
 
-const Header = ({ isRefreshing = false }) => {
-  const { userProfile } = useAuth();
-  const [showBalance, setShowBalance] = useState(false);
+const Header = ({
+    onAddTransaction,
+    onOpenProfile,
+    onOpenSettings,
+    currentLanguage,
+    onLanguageToggle,
+    isRefreshing = false,
+    onRefresh
+}) => {
+    const { userProfile } = useAuth();
 
-  const formatCurrencyAmount = (amount) => {
-    const currency = userProfile?.currency || 'BDT';
-    const currencyLocales = {
-      BDT: 'en-BD',
-      USD: 'en-US',
-      EUR: 'en-DE',
-      GBP: 'en-GB',
-      INR: 'en-IN'
-    };
+    const balance = userProfile?.balance || 0;
 
-    const locale = currencyLocales[currency] || 'en-BD';
-    
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: currency === 'BDT' ? 0 : 2
-    }).format(amount || 0);
-  };
+    return (
+        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                    {/* Logo and Title */}
+                    <div className="flex items-center space-x-3">
+                        <img
+                            src="/favicon/favicon.svg"
+                            alt="Wallet Tracker Logo"
+                            className="w-8 h-8"
+                            onError={(e) => {
+                                // Fallback to Wallet icon if logo fails to load
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'block';
+                            }}
+                        />
+                        <Wallet className="w-6 h-6 text-white" style={{ display: 'none' }} />
+                        <div>
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                                Wallet Tracker
+                            </h1>
+                            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <span>Balance:</span>
+                                {isRefreshing ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-4 w-20 rounded"></div>
+                                        <RefreshCw className="w-3 h-3 animate-spin text-teal-500" />
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={onRefresh || (() => {})}
+                                        className="font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors cursor-pointer flex items-center gap-1 group"
+                                        title="Click to refresh balance"
+                                    >
+                                        {formatCurrency(balance, 'BDT')}
+                                        <RefreshCw className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
-  return (
-    <>
-    <header className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-b border-teal-100 dark:border-gray-700 sticky top-0 z-40 shadow-sm dark:shadow-lg backdrop-blur-sm">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto md:max-w-4xl w-full">
-          <div className="flex justify-between items-center h-16 sm:h-18 lg:h-20">
-          {/* Logo and Website Name */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            <img src="/favicon/favicon.svg" alt="" width={32} height={32}/>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent truncate">
-                Wallet Tracker
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 hidden sm:block truncate">
-                Smart Financial Management
-              </p>
+                    {/* Actions */}
+                    <div className="flex items-center space-x-4">
+                        {/* Add Transaction Button */}
+                        <button
+                            onClick={onAddTransaction}
+                            className="flex items-center space-x-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span className="hidden sm:block">Add</span>
+                        </button>
+
+                        {/* User Menu */}
+                        <UserMenuDropdown
+                            onOpenProfile={onOpenProfile}
+                            onOpenSettings={onOpenSettings}
+                            currentLanguage={currentLanguage}
+                            onLanguageToggle={onLanguageToggle}
+                        />
+                    </div>
+                </div>
             </div>
-          </div>
-
-          {/* Right side - Theme Toggle and User Menu */}
-          <div className="flex items-center gap-3 sm:gap-2">
-            {/* Balance badge (always visible) */}
-            <button
-              type="button"
-              onClick={() => setShowBalance(true)}
-              className={`flex-shrink-0 flex items-center px-2 py-1 rounded-xl text-sm font-medium space-x-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-teal-300 ${
-                isRefreshing
-                  ? 'bg-white/40 dark:bg-gray-800/40 border border-transparent text-transparent'
-                  : 'bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-100'
-              }`}
-              aria-label="Open balance details"
-              aria-live="polite"
-              aria-busy={isRefreshing}
-            >
-              {/* Icon - show subtle skeleton glow when refreshing */}
-              {isRefreshing ? (
-                <div className="w-4 h-4 rounded bg-teal-200 dark:bg-teal-800 ring-2 ring-teal-200/60 dark:ring-teal-800/40 animate-pulse" aria-hidden="true"></div>
-              ) : (
-                <Wallet className="w-4 h-4 text-teal-600" />
-              )}
-
-              {/* Balance / Placeholder */}
-              <div className="flex flex-col">
-                {isRefreshing ? (
-                  <div className="w-20 h-4 rounded bg-gray-200 dark:bg-gray-700/60 ring-1 ring-teal-200/40 dark:ring-teal-800/30 animate-pulse" aria-hidden="true"></div>
-                ) : (
-                  <span className="text-sm">{formatCurrencyAmount(userProfile?.balance)}</span>
-                )}
-              </div>
-            </button>
-            <UserMenuDropdown />
-          </div>
-          </div>
-        </div>
-      </div>
-    </header>
-    <BalanceModal open={showBalance} onClose={() => setShowBalance(false)} balance={userProfile?.balance} currency={userProfile?.currency} />
-    </>
-  );
+        </header>
+    );
 };
 
 export default Header;

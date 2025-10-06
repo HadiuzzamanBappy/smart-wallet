@@ -1,178 +1,212 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
-import { learnFromCorrection } from '../../utils/aiTransactionParser';
-import * as transactionService from '../../services/transactionService';
+import React, { useState, useEffect } from 'react';
+import { Edit3, Save, X } from 'lucide-react';
+import Modal from '../UI/Modal';
+import { updateTransaction } from '../../services/transactionService';
+import { useAuth } from '../../hooks/useAuth';
 
-const EditParsedModal = ({ open, onClose, originalMessage, parsed, onSave }) => {
-  const [form, setForm] = useState({
-    type: parsed?.type || 'expense',
-    amount: parsed?.amount || '',
-    category: parsed?.category || 'other',
-    description: parsed?.description || ''
+const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
+  const { user, refreshUserProfile } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [editData, setEditData] = useState({
+    type: 'expense',
+    amount: '',
+    description: '',
+    category: 'other',
+    date: new Date().toISOString().split('T')[0]
   });
-  const [saving, setSaving] = useState(false);
-  const modalRef = useRef(null);
-  const previousActiveRef = useRef(null);
 
-  // Keep internal form in sync when the modal opens or parsed changes
+  const categories = [
+    { value: 'food', label: 'Food & Dining', emoji: '🍔' },
+    { value: 'transport', label: 'Transportation', emoji: '🚗' },
+    { value: 'entertainment', label: 'Entertainment', emoji: '🎬' },
+    { value: 'shopping', label: 'Shopping', emoji: '🛍️' },
+    { value: 'bills', label: 'Bills & Utilities', emoji: '📄' },
+    { value: 'health', label: 'Healthcare', emoji: '🏥' },
+    { value: 'education', label: 'Education', emoji: '📚' },
+    { value: 'salary', label: 'Salary', emoji: '💼' },
+    { value: 'freelance', label: 'Freelance', emoji: '💻' },
+    { value: 'investment', label: 'Investment', emoji: '📈' },
+    { value: 'other', label: 'Other', emoji: '📦' }
+  ];
+
+  // Update form data when transaction changes
   useEffect(() => {
-    if (open) {
-      setForm({
-        type: parsed?.type || 'expense',
-        amount: parsed?.amount ?? '',
-        category: parsed?.category || 'other',
-        description: parsed?.description || ''
+    if (transaction) {
+      setEditData({
+        type: transaction.type || 'expense',
+        amount: transaction.amount?.toString() || '',
+        description: transaction.description || '',
+        category: transaction.category || 'other',
+        date: transaction.date ? new Date(transaction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
       });
     }
-  }, [open, parsed]);
+  }, [transaction]);
 
-  // Focus trap & restore
-  useEffect(() => {
-    if (!open) return;
-    previousActiveRef.current = document.activeElement;
-    // focus the modal
-    setTimeout(() => {
-      modalRef.current?.focus();
-    }, 0);
-
-    const handleKey = (e) => {
-      if (e.key === 'Tab') {
-        // trap focus within modal
-        const focusable = modalRef.current.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])');
-        if (!focusable.length) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      } else if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('keydown', handleKey);
-      // restore focus
-      try { previousActiveRef.current?.focus(); } catch { /* ignore */ }
-    };
-  }, [open, onClose]);
-
-  if (!open) return null;
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async () => {
-    setSaving(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!editData.amount || !editData.description || !transaction) return;
+    
+    setLoading(true);
     try {
-      // Normalize amount to a number for downstream consumers
-      const normalizedAmount = (() => {
-        if (form.amount === null || form.amount === undefined) return null;
-        // If already a number, return it
-        if (typeof form.amount === 'number') return form.amount;
-        // Remove commas and currency symbols then parse
-        const cleaned = String(form.amount).replace(/[_,\s\u20B9$\u09F3\u09F2\u20B9\u00A3\u20AC\u00A5]/g, '').replace(/,/g, '');
-        const num = Number(cleaned);
-        return isNaN(num) ? null : num;
-      })();
-
-      const normalized = { ...form, amount: normalizedAmount };
-      // Call learning hook to adapt future predictions
-      try {
-        learnFromCorrection(originalMessage, parsed, normalized);
-      } catch (e) {
-        // non-fatal
-        console.warn('Learning call failed', e);
+      const result = await updateTransaction(transaction.id, {
+        ...editData,
+        amount: Number(editData.amount),
+        userId: user.uid
+      });
+      
+      if (result.success) {
+        await refreshUserProfile();
+        onSuccess?.();
+        onClose();
+      } else {
+        console.error('Transaction update failed:', result.error);
       }
-
-      // If server update function exists and parsed had an id, update the stored transaction
-      if (parsed?.id && typeof transactionService.updateTransaction === 'function') {
-        try {
-          const updatesWithUser = { ...normalized, userId: parsed.userId };
-          const result = await transactionService.updateTransaction(parsed.id, updatesWithUser);
-          
-          if (!result.success) {
-            // Transaction not found in Firebase - it was likely deleted from main list
-            if (result.error?.includes('Transaction not found') || result.error?.includes('not found')) {
-              console.warn('Transaction not found in Firebase - it may have been deleted from main list:', result.error);
-              throw new Error('Transaction not found');
-            } else {
-              throw new Error(result.error || 'Unknown error updating transaction');
-            }
-          } else {
-            // Dispatch global event for real-time updates
-            try {
-              window.dispatchEvent(new CustomEvent('wallet:transaction-edited', {
-                detail: { transaction: { ...normalized, id: parsed.id } }
-              }));
-              console.log('EditParsedModal: Dispatched transaction-edited event');
-            } catch (error) {
-              console.warn('Failed to dispatch transaction-edited event:', error);
-            }
-          }
-        } catch (e) {
-          console.warn('Could not update transaction on server:', e);
-          // Re-throw the error so parent component can handle it appropriately
-          throw e;
-        }
-      }
-
-      if (onSave) onSave(normalized);
-      onClose();
+    } catch (error) {
+      console.error('Error updating transaction:', error);
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
-  // Keep internal form in sync when the modal opens or parsed changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  if (!transaction) return null;
+
   return (
-    <div tabIndex={-1} role="dialog" aria-modal="true" aria-label="Edit parsed transaction" className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-      <div ref={modalRef} tabIndex={0} className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md p-4 shadow-lg ring-1 ring-black/10" role="document">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">Edit parsed transaction</h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"><X className="w-4 h-4"/></button>
+    <Modal isOpen={isOpen} onClose={onClose} title="Edit Transaction" size="md">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Transaction Type */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Type
+          </label>
+          <select
+            name="type"
+            value={editData.type}
+            onChange={handleInputChange}
+            className="input-field"
+          >
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+            <option value="credit">Credit Given</option>
+            <option value="loan">Loan Taken</option>
+          </select>
         </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Amount */}
           <div>
-            <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Type</label>
-            <select name="type" value={form.type} onChange={handleChange} className="w-full rounded px-2 py-1 bg-gray-50 dark:bg-gray-900" aria-label="Transaction type">
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-              <option value="credit">Credit Given</option>
-              <option value="loan">Loan Taken</option>
-            </select>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Amount (BDT)
+            </label>
+            <input
+              type="number"
+              name="amount"
+              value={editData.amount}
+              onChange={handleInputChange}
+              className="input-field"
+              placeholder="0"
+              min="0"
+              step="0.01"
+              required
+            />
           </div>
 
+          {/* Date */}
           <div>
-            <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Amount</label>
-            <input name="amount" value={form.amount} onChange={handleChange} className="w-full rounded px-2 py-1 bg-gray-50 dark:bg-gray-900" aria-label="Amount" autoFocus />
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Category</label>
-            <input name="category" value={form.category} onChange={handleChange} className="w-full rounded px-2 py-1 bg-gray-50 dark:bg-gray-900" />
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Description</label>
-            <input name="description" value={form.description} onChange={handleChange} className="w-full rounded px-2 py-1 bg-gray-50 dark:bg-gray-900" />
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <button onClick={onClose} className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700">Cancel</button>
-            <button onClick={handleSubmit} disabled={saving} className="px-3 py-1 rounded bg-teal-600 text-white disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Date
+            </label>
+            <input
+              type="date"
+              name="date"
+              value={editData.date}
+              onChange={handleInputChange}
+              className="input-field"
+              required
+            />
           </div>
         </div>
-      </div>
-    </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Description
+          </label>
+          <input
+            type="text"
+            name="description"
+            value={editData.description}
+            onChange={handleInputChange}
+            className="input-field"
+            placeholder="What was this transaction for?"
+            required
+          />
+        </div>
+
+        {/* Category */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Category
+          </label>
+          <select
+            name="category"
+            value={editData.category}
+            onChange={handleInputChange}
+            className="input-field"
+          >
+            {categories.map(category => (
+              <option key={category.value} value={category.value}>
+                {category.emoji} {category.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Original Message (if from chat) */}
+        {transaction.originalMessage && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+              Original Message:
+            </h4>
+            <p className="text-sm text-blue-600 dark:text-blue-300">
+              "{transaction.originalMessage}"
+            </p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+          >
+            <X className="w-4 h-4" />
+            <span>Cancel</span>
+          </button>
+          <button
+            type="submit"
+            disabled={loading || !editData.amount || !editData.description}
+            className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span>Save Changes</span>
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 
