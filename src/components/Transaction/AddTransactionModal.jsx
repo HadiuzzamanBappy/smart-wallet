@@ -7,9 +7,10 @@ import { useAuth } from '../../hooks/useAuth';
 
 const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   const { user, refreshUserProfile } = useAuth();
-  const [mode, setMode] = useState('chat'); // 'chat' or 'manual'
+  const [mode, setMode] = useState('manual'); // 'chat' or 'manual'
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [lastResponse, setLastResponse] = useState(null);
   
   // Chat mode state
   const [chatMessage, setChatMessage] = useState('');
@@ -47,11 +48,14 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
       const result = await parseTransaction(chatMessage);
       if (result.success) {
         setParsedTransactions(result.data);
+        setLastResponse({ type: 'success', message: `Parsed ${result.data.length} transaction${result.data.length>1?'s':''}` });
       } else {
         console.error('Parsing failed:', result.error);
+        setLastResponse({ type: 'error', message: result.error || 'Parsing failed' });
       }
     } catch (error) {
       console.error('Parse error:', error);
+      setLastResponse({ type: 'error', message: 'Parsing error' });
     } finally {
       setAiLoading(false);
     }
@@ -71,15 +75,18 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         
         if (!result.success) {
           console.error('Transaction add failed:', result.error);
+          setLastResponse({ type: 'error', message: 'Failed to add some transactions' });
         }
       }
       
       await refreshUserProfile();
+      setLastResponse({ type: 'success', message: `Added ${parsedTransactions.length} transaction${parsedTransactions.length>1?'s':''}` });
       onSuccess?.();
       onClose();
       resetForm();
     } catch (error) {
       console.error('Error adding transactions:', error);
+      setLastResponse({ type: 'error', message: 'Failed to add transactions' });
     } finally {
       setLoading(false);
     }
@@ -100,14 +107,17 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
       
       if (result.success) {
         await refreshUserProfile();
+        setLastResponse({ type: 'success', message: 'Transaction added' });
         onSuccess?.();
         onClose();
         resetForm();
       } else {
         console.error('Transaction add failed:', result.error);
+        setLastResponse({ type: 'error', message: 'Failed to add transaction' });
       }
     } catch (error) {
       console.error('Error adding transaction:', error);
+      setLastResponse({ type: 'error', message: 'Add transaction failed' });
     } finally {
       setLoading(false);
     }
@@ -137,6 +147,12 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Add Transaction" size="lg">
       <div className="space-y-6">
+        {/* Feedback */}
+        {lastResponse && (
+          <div className={`p-3 rounded-lg ${lastResponse.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'}`}>
+            <p className="text-sm font-medium">{lastResponse.message}</p>
+          </div>
+        )}
         {/* Mode Toggle */}
         <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
           <button

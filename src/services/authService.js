@@ -145,6 +145,17 @@ export const deleteAuthUser = async () => {
     if (!u) throw new Error('No authenticated user');
 
     await firebaseDeleteUser(u);
+    // Sign out the client to ensure local auth state is cleared and the UI
+    // transitions to the logged-out state immediately. Deleting the user
+    // does not always guarantee the client credentials are cleared, so
+    // explicitly sign out here.
+    try {
+      await signOut(auth);
+    } catch (signOutErr) {
+      // Non-fatal: log and continue — the user has already been deleted server-side
+      console.warn('deleteAuthUser: signOut after delete failed:', signOutErr);
+    }
+
     return { success: true };
   } catch (error) {
     console.error('Error deleting auth user:', error);

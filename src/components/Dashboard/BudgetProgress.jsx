@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import { calculateBudgetStatus, getCurrentMonthSpending, formatCurrency } from '../../utils/helpers';
 import { AlertTriangle, CheckCircle, DollarSign, TrendingUp, Settings } from 'lucide-react';
+import { SummaryCardSkeleton, BudgetSkeleton } from '../UI/SkeletonLoader';
 
 const BudgetProgress = ({ onSettingsClick }) => {
     const { userProfile } = useAuth();
@@ -15,27 +16,11 @@ const BudgetProgress = ({ onSettingsClick }) => {
     }, [transactionLoading, transactions]);
 
     if (loading) {
+        // Use the Budget-specific skeleton so width and progress placeholders
+        // match the real BudgetProgress card layout.
         return (
-            <div className="rounded-md p-3 bg-gray-800/50 border border-gray-600/30 animate-pulse">
-                {/* header skeleton: status text left, pct/action right */}
-                <div className="flex items-center justify-between gap-3 mb-2">
-                    <div className="w-24 h-3 bg-gray-600 rounded" />
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-4 bg-gray-600 rounded" />
-                        <div className="w-8 h-8 bg-gray-600 rounded-full" />
-                    </div>
-                </div>
-
-                {/* progress bar skeleton */}
-                <div className="w-full h-2 bg-gray-700/40 rounded-full overflow-hidden mb-2">
-                    <div className="h-2 rounded-full bg-gray-500 w-1/3" />
-                </div>
-
-                {/* bottom labels skeleton */}
-                <div className="mt-2 flex items-center justify-between text-xs">
-                    <div className="w-24 h-3 bg-gray-600 rounded" />
-                    <div className="w-28 h-3 bg-gray-600 rounded" />
-                </div>
+            <div className="w-full">
+                <BudgetSkeleton />
             </div>
         );
     }

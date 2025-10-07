@@ -3,16 +3,10 @@ import {
   User, 
   Settings, 
   LogOut, 
-  Download, 
-  Trash2, 
-  Moon, 
-  Sun, 
-  Globe,
   ChevronDown
 } from 'lucide-react';
 import { HelpCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useTheme } from '../../hooks/useTheme';
 import { logoutUser } from '../../services/authService';
 import HelpModal from './HelpModal';
 
@@ -23,7 +17,7 @@ const UserMenuDropdown = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { userProfile } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -45,11 +39,6 @@ const UserMenuDropdown = ({
       icon: Settings,
       label: 'Settings',
       onClick: onOpenSettings
-    },
-    {
-      icon: isDark ? Sun : Moon,
-      label: isDark ? 'Light Mode' : 'Dark Mode',
-      onClick: toggleTheme
     },
     {
       icon: HelpCircle,

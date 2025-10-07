@@ -256,9 +256,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                 <div className="space-y-2">
                   <div className="flex items-start justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
                     <div className="flex-1 pr-2">
-                      <div className="font-medium">Natural one-line</div>
-                      <div className="text-[11px] text-gray-600 dark:text-gray-300">Bought groceries for 500 BDT today</div>
-                    </div>
+                          <div className="text-[11px] text-gray-600 dark:text-gray-300">Bought groceries for 500 BDT today</div>
+                        </div>
                     <button
                       onClick={() => { setMessage('Bought groceries for 500 BDT today'); textareaRef.current?.focus(); }}
                       className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
@@ -267,9 +266,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
 
                   <div className="flex items-start justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
                     <div className="flex-1 pr-2">
-                      <div className="font-medium">Tokenized (deterministic)</div>
-                      <div className="text-[11px] text-gray-600 dark:text-gray-300">type:expense amount:250 currency:BDT category:food note:Lunch</div>
-                    </div>
+                          <div className="text-[11px] text-gray-600 dark:text-gray-300">type:expense amount:250 currency:BDT category:food note:Lunch</div>
+                        </div>
                     <button
                       onClick={() => { setMessage('type:expense amount:250 currency:BDT category:food note:Lunch'); textareaRef.current?.focus(); }}
                       className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
@@ -278,9 +276,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
 
                   <div className="flex items-start justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
                     <div className="flex-1 pr-2">
-                      <div className="font-medium">Multi-line (batch)</div>
-                      <div className="text-[11px] text-gray-600 dark:text-gray-300">Lunch 250\nTaxi 120\nSalary 50000 2025-10-01</div>
-                    </div>
+                          <div className="text-[11px] text-gray-600 dark:text-gray-300">Lunch 250\nTaxi 120\nSalary 50000 2025-10-01</div>
+                        </div>
                     <button
                       onClick={() => { setMessage('Lunch 250\nTaxi 120\nSalary 50000 2025-10-01'); textareaRef.current?.focus(); }}
                       className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"

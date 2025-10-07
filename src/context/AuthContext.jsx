@@ -1,75 +1,89 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { getUserProfile } from '../services/transactionService';
 import { AuthContext } from './createAuthContext';
+import { useTheme } from '../hooks/useTheme';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Apply theme to document
-  const applyTheme = (theme) => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (theme === 'light') {
-      document.documentElement.classList.remove('dark');
-    } else {
-      // System theme
-      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (systemDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-  };
+  const { setTheme } = useTheme();
+  const lastAppliedUidRef = useRef(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      if (u) {
+        setUser(u);
         // Fetch user profile from Firestore
-        const profileResult = await getUserProfile(user.uid);
-        if (profileResult.success) {
-          setUserProfile(profileResult.data);
-          // Apply saved theme preference or default to system
-          const savedTheme = profileResult.data.theme || 'system';
-          applyTheme(savedTheme);
-        } else {
-          // Create a basic profile if none exists
-          setUserProfile({
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName || 'User',
-            theme: 'system'
-          });
-          applyTheme('system');
+        try {
+          const profileResult = await getUserProfile(u.uid);
+          if (profileResult.success) {
+            setUserProfile(profileResult.data);
+            // Apply saved theme preference or default to system via ThemeContext.
+            // Only apply if:
+            // - we have never applied a theme for this user in this session, OR
+            // - the profile's updatedAt is newer than the last local theme change.
+            const savedTheme = profileResult.data.theme || 'system';
+            try {
+              const lastUid = lastAppliedUidRef.current;
+              const profileUpdatedAt = profileResult.data.updatedAt && profileResult.data.updatedAt.toDate ? profileResult.data.updatedAt.toDate() : (profileResult.data.updatedAt ? new Date(profileResult.data.updatedAt) : null);
+              const localUpdatedAtStr = (() => {
+                try { return localStorage.getItem('wallet-theme-updatedAt'); } catch { return null; }
+              })();
+              const localUpdatedAt = localUpdatedAtStr ? new Date(localUpdatedAtStr) : null;
+
+              const shouldApply = !lastUid || lastUid !== u.uid || (profileUpdatedAt && localUpdatedAt && profileUpdatedAt > localUpdatedAt) || (profileUpdatedAt && !localUpdatedAt);
+              if (shouldApply) {
+                setTheme(savedTheme);
+                lastAppliedUidRef.current = u.uid;
+              }
+            } catch (err) { void err; }
+          } else {
+            // Create a basic profile if none exists
+            setUserProfile({
+              uid: u.uid,
+              email: u.email,
+              displayName: u.displayName || 'User',
+              theme: 'system'
+            });
+            try {
+              const lastUid = lastAppliedUidRef.current;
+              if (!lastUid || lastUid !== u.uid) {
+                setTheme('system');
+                lastAppliedUidRef.current = u.uid;
+              }
+            } catch (err) { void err; }
+          }
+        } catch (err) {
+          console.error('Error fetching profile during auth state change:', err);
         }
       } else {
         setUser(null);
         setUserProfile(null);
-        // Apply system theme for non-authenticated users
-        applyTheme('system');
+        // Apply system theme for non-authenticated users via ThemeContext
+        try { setTheme('system'); } catch (err) { void err; }
       }
+
       setLoading(false);
     });
 
     return unsubscribe;
-  }, []);
+  }, [setTheme]);
 
   // Function to refresh user profile from Firebase
   const refreshUserProfile = async () => {
-    if (!user) return;
-    
+    if (!user) return null;
+
     try {
       const profileResult = await getUserProfile(user.uid);
       if (profileResult.success) {
         setUserProfile(profileResult.data);
-        // Apply saved theme preference
-        const savedTheme = profileResult.data.theme || 'system';
-        applyTheme(savedTheme);
+        // NOTE: Do NOT apply saved theme on routine profile refresh.
+        // Theme should be controlled via ThemeContext and user actions (Settings or dropdown).
+        // If you want to sync stored preference to ThemeContext, do so only at login/initial load.
         return profileResult.data;
       }
     } catch (error) {

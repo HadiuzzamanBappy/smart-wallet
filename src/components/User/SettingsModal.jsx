@@ -22,11 +22,12 @@ import {
 } from '../../services/authService';
 import { exportUserData, deleteAllUserData, importUserData } from '../../services/transactionService';
 import { useTransactions } from '../../hooks/useTransactions';
+import { useTheme } from '../../hooks/useTheme';
 
 const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const { refreshTransactions } = useTransactions();
-  // Theme will be handled through settings state
+  // Theme will be handled through ThemeContext
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showReauthDialog, setShowReauthDialog] = useState(false);
@@ -35,12 +36,28 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isUserGoogleAuth, setIsUserGoogleAuth] = useState(false);
   
+  const { theme: currentTheme, setTheme } = useTheme();
+
   const [settings, setSettings] = useState({
-    theme: userProfile?.theme || 'system',
+    theme: userProfile?.theme || currentTheme || 'system',
     language: userProfile?.language || 'en',
     budgetAlerts: userProfile?.budgetAlerts !== false,
     notifications: userProfile?.notifications !== false
   });
+
+  // Persistence status for theme saving: 'idle' | 'saving' | 'success' | 'error'
+  const [persistStatus, setPersistStatus] = useState('idle');
+  const initialThemeRef = React.useRef(currentTheme);
+
+  // Capture original theme when modal opens so we can rollback if save fails
+  React.useEffect(() => {
+    if (isOpen) {
+      initialThemeRef.current = currentTheme;
+      setPersistStatus('idle');
+      // Initialize settings.theme from profile or currentTheme
+      setSettings(prev => ({ ...prev, theme: userProfile?.theme || currentTheme || 'system' }));
+    }
+  }, [isOpen, currentTheme, userProfile?.theme]);
 
   // Check authentication method when modal opens
   React.useEffect(() => {
@@ -62,29 +79,32 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
   const handleSaveSettings = async () => {
     setLoading(true);
+    // Apply theme optimistically on Save
+    const previousTheme = initialThemeRef.current;
     try {
+      setPersistStatus('saving');
+      // Apply locally
+      if (settings.theme) {
+        try { setTheme(settings.theme); } catch (err) { void err; }
+      }
+
       const result = await updateUserProfile(user.uid, settings);
       if (result.success) {
-        await refreshUserProfile();
-        // Apply theme immediately if changed
-        if (settings.theme !== userProfile?.theme) {
-          if (settings.theme === 'dark') {
-            document.documentElement.classList.add('dark');
-          } else if (settings.theme === 'light') {
-            document.documentElement.classList.remove('dark');
-          } else {
-            // System theme
-            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (systemDark) {
-              document.documentElement.classList.add('dark');
-            } else {
-              document.documentElement.classList.remove('dark');
-            }
-          }
-        }
+        // refresh profile but DO NOT reapply theme from profile (we already applied it optimistically)
+        if (refreshUserProfile) await refreshUserProfile();
+        setPersistStatus('success');
+        setTimeout(() => setPersistStatus('idle'), 1500);
+      } else {
+        // rollback optimistic theme change
+        try { setTheme(previousTheme); } catch (err) { void err; }
+        setPersistStatus('error');
+        setTimeout(() => setPersistStatus('idle'), 3000);
       }
     } catch (error) {
       console.error('Settings update failed:', error);
+      // rollback optimistic theme change
+      try { setTheme(previousTheme); } catch (err) { void err; }
+      setPersistStatus('error');
     } finally {
       setLoading(false);
     }
@@ -294,7 +314,12 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                 return (
                   <button
                     key={theme.value}
-                    onClick={() => setSettings(prev => ({ ...prev, theme: theme.value }))}
+                    onClick={() => {
+                        // Only update the local selection; actual application occurs when the user clicks Save
+                        setSettings(prev => ({ ...prev, theme: theme.value }));
+                        // Mark as unsaved
+                        setPersistStatus('idle');
+                      }}
                     className={`p-3 rounded-lg border-2 transition-colors ${
                       settings.theme === theme.value
                         ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
@@ -308,6 +333,12 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                   </button>
                 );
               })}
+              {/* persistence status indicator */}
+              <div className="mt-2">
+                {persistStatus === 'saving' && <span className="text-xs text-yellow-600">Saving theme...</span>}
+                {persistStatus === 'success' && <span className="text-xs text-green-600">Theme saved</span>}
+                {persistStatus === 'error' && <span className="text-xs text-red-600">Failed to save theme</span>}
+              </div>
             </div>
           </div>
 

@@ -53,17 +53,33 @@ export const addTransaction = async (userId, transactionData) => {
       throw new Error(`Invalid amount: ${transactionData.amount}`);
     }
     
-    // Prepare transaction data for encryption
+    // Prepare transaction data for encryption with robust date normalization.
     const transactionToStore = {
       ...transactionData,
       amount, // Ensure it's stored as number
       userId,
       createdAt: Timestamp.now(),
-      date: transactionData.date 
-        ? (transactionData.date instanceof Date 
-           ? Timestamp.fromDate(transactionData.date) 
-           : Timestamp.fromDate(new Date(transactionData.date)))
-        : Timestamp.now(), // Default to now if no date provided
+      // Normalize date input to a JS Date constructed in local time for
+      // YYYY-MM-DD strings to avoid timezone shifts when converting to
+      // Firestore Timestamp. Accept Date, numeric ms, Firestore Timestamp-like
+      // objects (have toDate), or ISO-like strings.
+      date: (function () {
+        const d = transactionData.date;
+        if (!d) return Timestamp.now();
+        // Firestore Timestamp-like
+        if (d && typeof d.toDate === 'function') return Timestamp.fromDate(d.toDate());
+        // JS Date
+        if (d instanceof Date) return Timestamp.fromDate(d);
+        // Numeric ms
+        if (typeof d === 'number' && Number.isFinite(d)) return Timestamp.fromDate(new Date(d));
+        // ISO-like YYYY-MM-DD string -> construct local Date to avoid UTC shift
+        if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+          const [y, m, day] = d.split('-').map(n => parseInt(n, 10));
+          return Timestamp.fromDate(new Date(y, m - 1, day));
+        }
+        // Fallback to Date parsing (best-effort)
+        return Timestamp.fromDate(new Date(d));
+      })(),
       // Include original user message/prompt if provided
       originalMessage: transactionData.originalMessage || transactionData.description,
       source: transactionData.source || 'manual' // Track if created via chat or manual entry
@@ -79,14 +95,14 @@ export const addTransaction = async (userId, transactionData) => {
 
     // Encrypt sensitive transaction data
     const encryptedTransaction = await encryptTransactionData(transactionToStore);
-    
+
     // Add encrypted transaction to database
     const transactionsRef = collection(db, `users/${userId}/transactions`);
     const docRef = await addDoc(transactionsRef, encryptedTransaction);
-    
+
     // Update user balance
     await updateUserBalance(userId, transactionData.type, amount);
-    
+
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error("Error adding transaction:", error);
@@ -361,12 +377,20 @@ export const updateTransaction = async (transactionId, updates) => {
 
     if (rest.date) {
       try {
-        if (typeof rest.date === 'string') {
-          updatesWithTimestamp.date = Timestamp.fromDate(new Date(rest.date));
-        } else if (rest.date instanceof Date) {
-          updatesWithTimestamp.date = Timestamp.fromDate(rest.date);
+        const rd = rest.date;
+        if (rd && typeof rd.toDate === 'function') {
+          updatesWithTimestamp.date = Timestamp.fromDate(rd.toDate());
+        } else if (rd instanceof Date) {
+          updatesWithTimestamp.date = Timestamp.fromDate(rd);
+        } else if (typeof rd === 'number' && Number.isFinite(rd)) {
+          updatesWithTimestamp.date = Timestamp.fromDate(new Date(rd));
+        } else if (typeof rd === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rd)) {
+          const [yy, mm, dd] = rd.split('-').map(n => parseInt(n, 10));
+          updatesWithTimestamp.date = Timestamp.fromDate(new Date(yy, mm - 1, dd));
+        } else if (typeof rd === 'string') {
+          updatesWithTimestamp.date = Timestamp.fromDate(new Date(rd));
         }
-        // If it's already a Timestamp, keep it as is
+        // If it's already a Timestamp-like or convertible, handled above
       } catch {
         // keep original if conversion fails
       }
@@ -747,12 +771,6 @@ export const markCreditAsCollected = async (userId, creditId, collectionAmount, 
       
       const encryptedCredit = await encryptTransactionData(updatedCreditData);
       await updateDoc(creditRef, encryptedCredit);
-      
-      return { 
-        success: true, 
-        collectionTransactionId: result.id,
-        remainingAmount: remainingAmount 
-      };
     }
     
     return result;
