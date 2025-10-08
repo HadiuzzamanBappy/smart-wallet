@@ -186,28 +186,28 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                 <p className="text-sm font-medium">{lastResponse.message}</p>
                 
                 {/* Show parsed transactions */}
-                {lastResponse.transactions && (
-                  <div className="mt-2 space-y-1">
-                    {lastResponse.transactions.map((transaction, index) => (
-                      <div key={index} className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">{getCategoryEmoji(transaction.category)}</span>
-                          <div>
-                            <div className="font-medium">{transaction.description}</div>
-                            <div className="text-[11px] text-gray-500">{humanizeType(transaction.type)}</div>
+                    {lastResponse.transactions && (
+                      <div className="mt-2 space-y-1">
+                        {lastResponse.transactions.map((transaction, index) => (
+                          <div key={index} className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-sm">{getCategoryEmoji(transaction.category)}</span>
+                              <div className="min-w-0">
+                                <div className="font-medium truncate">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
+                                <div className="text-[11px] text-gray-500">{humanizeType(transaction.type)}</div>
+                              </div>
+                            </div>
+                            <span className={`font-medium ${
+                              transaction.type === 'income' || transaction.type === 'loan' 
+                                ? 'text-green-600 dark:text-green-400' 
+                                : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
+                            </span>
                           </div>
-                        </div>
-                        <span className={`font-medium ${
-                          transaction.type === 'income' || transaction.type === 'loan' 
-                            ? 'text-green-600 dark:text-green-400' 
-                            : 'text-red-600 dark:text-red-400'
-                        }`}>
-                          {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
-                        </span>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    )}
               </div>
             )}
 
@@ -265,11 +265,11 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                       {/* Normal row view */}
                       {editingIndex !== index ? (
                         <>
-                          <div className="flex-1">
-                            <div className="font-medium">{transaction.description}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{transaction.description}</div>
                             <div className="text-[11px] text-gray-500">{humanizeType(transaction.type)}</div>
                           </div>
-                          <div className="w-24 text-right">
+                          <div className="text-right">
                             <div className={`font-medium ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                               {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
                             </div>

@@ -320,7 +320,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                   Parsed Transactions ({parsedTransactions.length})
                 </h4>
                 {parsedTransactions.map((transaction, index) => (
-                  <div key={index} className="flex items-center gap-2 text-xs p-2 bg-gray-50 dark:bg-gray-700/40 rounded">
+                  <div key={index} className="flex items-center gap-2 text-xs p-2 bg-gray-50 dark:bg-gray-700/40 rounded min-w-0">
                     <div className="w-8 h-8 flex items-center justify-center rounded bg-gray-50 dark:bg-gray-700">
                       <span className="text-xs">{getCategoryEmoji(transaction.category)}</span>
                     </div>
@@ -328,11 +328,11 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                     {/* Normal row view */}
                     {editingIndex !== index ? (
                       <>
-                        <div className="flex-1">
-                          <div className="font-medium">{transaction.description}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
                           <div className="text-[11px] text-gray-500">{humanizeType(transaction.type)} • {getCategoryLabel(transaction.category)}</div>
                         </div>
-                        <div className="w-24 text-right">
+                        <div className="text-right">
                           <div className={`font-medium ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                             {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
                           </div>
@@ -346,10 +346,10 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                           </button>
                         </div>
                       </>
-                    ) : (
-                      /* Edit mode for this row */
+                      ) : (
+                      /* Edit mode for this row (responsive) */
                       <>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <input
                             type="text"
                             value={transaction.description || ''}
@@ -357,44 +357,44 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                             className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full"
                             placeholder="Description"
                           />
-                          <div className="mt-2 flex items-center gap-2">
-                            <select
-                              value={transaction.type || 'expense'}
-                              onChange={(e) => updateParsedTransaction(index, { type: e.target.value })}
-                              className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                            >
-                              <option value="expense">Expense</option>
-                              <option value="income">Income</option>
-                              <option value="credit">Credit (lent)</option>
-                              <option value="loan">Loan (borrowed)</option>
-                            </select>
-                            <select
-                              value={transaction.category || 'other'}
-                              onChange={(e) => updateParsedTransaction(index, { category: e.target.value })}
-                              className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                            >
-                              {categories.map(cat => (
-                                <option key={cat.value} value={cat.value}>{cat.emoji} {cat.label}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                        <div className="w-24 text-right flex flex-col items-end gap-2">
+
                           <input
                             type="number"
                             value={transaction.amount ?? ''}
                             onChange={(e) => updateParsedTransaction(index, { amount: e.target.value })}
-                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-24 text-right"
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full "
                             placeholder="Amount"
                           />
-                          <div className="flex items-center space-x-2">
-                            <button onClick={() => setEditingIndex(null)} className="p-2 bg-white dark:bg-gray-800 border rounded hover:scale-95 transition-transform" aria-label="Cancel edit">
-                              <X className="w-4 h-4 text-gray-700 dark:text-gray-200" />
-                            </button>
-                            <button onClick={saveRowEdit} className="p-2 bg-teal-500 text-white rounded hover:opacity-90 transition-opacity" aria-label="Save edit">
-                              <Check className="w-4 h-4" />
-                            </button>
-                          </div>
+
+                          <select
+                            value={transaction.type || 'expense'}
+                            onChange={(e) => updateParsedTransaction(index, { type: e.target.value })}
+                            className="col-span-1 sm:col-span-1 px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full"
+                          >
+                            <option value="expense">Expense</option>
+                            <option value="income">Income</option>
+                            <option value="credit">Credit (lent)</option>
+                            <option value="loan">Loan (borrowed)</option>
+                          </select>
+
+                          <select
+                            value={transaction.category || 'other'}
+                            onChange={(e) => updateParsedTransaction(index, { category: e.target.value })}
+                            className="col-span-1 sm:col-span-1 px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full"
+                          >
+                            {categories.map(cat => (
+                              <option key={cat.value} value={cat.value}>{cat.emoji} {cat.label}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="flex items-center space-x-2 mt-2 sm:mt-0">
+                          <button onClick={() => setEditingIndex(null)} className="p-2 bg-white dark:bg-gray-800 border rounded hover:scale-95 transition-transform" aria-label="Cancel edit">
+                            <X className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+                          </button>
+                          <button onClick={saveRowEdit} className="p-2 bg-teal-500 text-white rounded hover:opacity-90 transition-opacity" aria-label="Save edit">
+                            <Check className="w-4 h-4" />
+                          </button>
                         </div>
                       </>
                     )}
@@ -417,7 +417,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                     {loading && (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     )}
-                    Add {parsedTransactions.length} Transaction{parsedTransactions.length > 1 ? 's' : ''}
+                    Add Transaction{parsedTransactions.length > 1 ? 's' : ''}
                   </button>
                 </div>
               </div>
