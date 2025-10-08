@@ -179,23 +179,22 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
 
   // Listen for transaction updates from other components
   useEffect(() => {
-    const handleTransactionUpdate = async (event) => {
+    const handleTransactionUpdate = async () => {
       console.log('CompactSummary: Refreshing due to transaction update');
       
       // If this is a repayment/collection event, also refresh user profile
       // to get updated balance since loan/credit repayments affect balance
-      if (event?.detail?.isRepayment) {
-        try {
-          await stableRefreshUserProfile();
-        } catch (error) {
-          console.warn('Failed to refresh user profile after repayment:', error);
-        }
+      // Always attempt to refresh user profile to keep totals/balance in sync
+      try {
+        await stableRefreshUserProfile();
+      } catch (error) {
+        console.warn('Failed to refresh user profile after transaction update:', error);
       }
-      
+
       await loadData();
     };
 
-    // Add event listeners
+  // Add event listeners
     window.addEventListener('wallet:transaction-added', handleTransactionUpdate);
     window.addEventListener('wallet:transaction-edited', handleTransactionUpdate);
     window.addEventListener('wallet:transaction-deleted', handleTransactionUpdate);
@@ -339,9 +338,14 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={async () => {
-          // Refresh data after successful addition
-          await loadData();
-        }}
+            // Refresh user profile and data after successful addition
+            try {
+              await stableRefreshUserProfile();
+            } catch (err) {
+              console.warn('CompactSummary: failed to refresh profile after add', err);
+            }
+            await loadData();
+          }}
       />
 
       {/* Loan Management Modal */}

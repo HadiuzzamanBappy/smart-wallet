@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { MessageSquare, Send, Loader2 } from 'lucide-react';
+import { MessageSquare, Send, Loader2, Edit, Trash, Check, X } from 'lucide-react';
 import { parseTransaction } from '../../utils/aiTransactionParser';
 import { addTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
@@ -57,8 +57,10 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
       // Encrypt the original message once and reuse
       const messageData = await encryptMessageData({ originalMessage: message });
 
-      let added = 0;
-      for (const transaction of parsedTransactions) {
+  let added = 0;
+  // Use editable copy if available
+  const toSave = parsedTransactions.map(t => ({ ...t, amount: Number(t.amount) }));
+  for (const transaction of toSave) {
         const addResult = await addTransaction(user.uid, {
           ...transaction,
           // Ensure date is properly formatted as Date object
@@ -120,6 +122,38 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
     return emojiMap[category] || '📦';
   };
 
+  const humanizeType = (type) => {
+    if (!type) return 'Other';
+    const t = type.toLowerCase();
+    if (t === 'income') return 'Income';
+    if (t === 'expense') return 'Expense';
+    if (t === 'loan') return 'Loan (borrowed)';
+    if (t === 'credit') return 'Credit (lent)';
+    return 'Other';
+  };
+
+  // categoryOptions removed: edit now focuses on transaction type (income/expense/loan/other)
+
+  const updateParsedTransaction = (index, patch) => {
+    setParsedTransactions(prev => {
+      if (!prev) return prev;
+      const copy = prev.map((p, i) => i === index ? { ...p, ...patch } : p);
+      return copy;
+    });
+  };
+
+  const [editingIndex, setEditingIndex] = useState(null);
+
+  const removeParsedTransaction = (index) => {
+    setParsedTransactions(prev => prev ? prev.filter((_, i) => i !== index) : prev);
+  };
+
+  const saveRowEdit = () => {
+    // Force a shallow copy so React definitely re-renders the list with updated values
+    setParsedTransactions(prev => prev ? [...prev] : prev);
+    setEditingIndex(null);
+  };
+
   return (
     <div className={`relative ${className}`}>
       {/* Chat Toggle Button */}
@@ -156,16 +190,19 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                   <div className="mt-2 space-y-1">
                     {lastResponse.transactions.map((transaction, index) => (
                       <div key={index} className="flex items-center justify-between text-xs">
-                        <span>
-                          {getCategoryEmoji(transaction.category)} {transaction.description}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{getCategoryEmoji(transaction.category)}</span>
+                          <div>
+                            <div className="font-medium">{transaction.description}</div>
+                            <div className="text-[11px] text-gray-500">{humanizeType(transaction.type)}</div>
+                          </div>
+                        </div>
                         <span className={`font-medium ${
                           transaction.type === 'income' || transaction.type === 'loan' 
                             ? 'text-green-600 dark:text-green-400' 
                             : 'text-red-600 dark:text-red-400'
                         }`}>
-                          {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
-                          {transaction.amount} BDT
+                          {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
                         </span>
                       </div>
                     ))}
@@ -213,20 +250,76 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
             {/* Preview / Confirm area */}
             {isPreviewOpen && parsedTransactions && (
               <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="mb-2 text-xs text-yellow-700 dark:text-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
+                  ⚠️ AI can make mistakes. Please review and edit the parsed transactions before saving.
+                </div>
+
                 <p className="text-sm font-medium mb-2">Preview parsed transactions</p>
-                <div className="space-y-2 max-h-44 overflow-auto mb-3">
+                <div className="space-y-2 max-h-56 overflow-auto mb-3">
                   {parsedTransactions.map((transaction, index) => (
-                    <div key={index} className="flex items-center justify-between text-xs p-2 bg-gray-50 dark:bg-gray-700/40 rounded">
-                      <span>
-                        {getCategoryEmoji(transaction.category)} {transaction.description}
-                      </span>
-                      <span className={`font-medium ${
-                        transaction.type === 'income' || transaction.type === 'loan' 
-                          ? 'text-green-600 dark:text-green-400' 
-                          : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
-                      </span>
+                    <div key={index} className="flex items-center gap-2 text-xs p-2 bg-gray-50 dark:bg-gray-700/40 rounded">
+                      <div className="w-8 h-8 flex items-center justify-center rounded bg-gray-50 dark:bg-gray-700">
+                        <span className="text-xs">{getCategoryEmoji(transaction.category)}</span>
+                      </div>
+
+                      {/* Normal row view */}
+                      {editingIndex !== index ? (
+                        <>
+                          <div className="flex-1">
+                            <div className="font-medium">{transaction.description}</div>
+                            <div className="text-[11px] text-gray-500">{humanizeType(transaction.type)}</div>
+                          </div>
+                          <div className="w-24 text-right">
+                            <div className={`font-medium ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                              {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button onClick={() => setEditingIndex(index)} className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded hover:scale-105 transition-transform" aria-label="Edit">
+                              <Edit className="w-4 h-4 text-yellow-700 dark:text-yellow-300" />
+                            </button>
+                            <button onClick={() => removeParsedTransaction(index)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 rounded hover:bg-red-100 dark:hover:bg-red-800 transition-colors" aria-label="Delete">
+                              <Trash className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        /* Edit mode for this row */
+                        <>
+                          <div className="flex-1 grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={transaction.description || ''}
+                              onChange={(e) => updateParsedTransaction(index, { description: e.target.value })}
+                              className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                            />
+                            <input
+                              type="number"
+                              value={transaction.amount ?? ''}
+                              onChange={(e) => updateParsedTransaction(index, { amount: e.target.value })}
+                              className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                            />
+                            <select
+                              value={transaction.type || 'expense'}
+                              onChange={(e) => updateParsedTransaction(index, { type: e.target.value })}
+                              className="col-span-2 px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                            >
+                              <option value="expense">Expense</option>
+                              <option value="income">Income</option>
+                              <option value="credit">Credit (lent)</option>
+                              <option value="loan">Loan (borrowed)</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button onClick={() => setEditingIndex(null)} className="p-2 bg-white dark:bg-gray-800 border rounded hover:scale-95 transition-transform" aria-label="Cancel edit">
+                              <X className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+                            </button>
+                            <button onClick={saveRowEdit} className="p-2 bg-teal-500 text-white rounded hover:opacity-90 transition-opacity" aria-label="Save edit">
+                              <Check className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -270,16 +363,6 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                         </div>
                     <button
                       onClick={() => { setMessage('type:expense amount:250 currency:BDT category:food note:Lunch'); textareaRef.current?.focus(); }}
-                      className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
-                    >Use</button>
-                  </div>
-
-                  <div className="flex items-start justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
-                    <div className="flex-1 pr-2">
-                          <div className="text-[11px] text-gray-600 dark:text-gray-300">Lunch 250\nTaxi 120\nSalary 50000 2025-10-01</div>
-                        </div>
-                    <button
-                      onClick={() => { setMessage('Lunch 250\nTaxi 120\nSalary 50000 2025-10-01'); textareaRef.current?.focus(); }}
                       className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
                     >Use</button>
                   </div>

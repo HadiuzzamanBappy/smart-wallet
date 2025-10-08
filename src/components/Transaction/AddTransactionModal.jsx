@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Plus, MessageSquare } from 'lucide-react';
+import { Plus, MessageSquare, Edit, Trash, Check, X, Loader2 } from 'lucide-react';
 import Modal from '../UI/Modal';
 import { addTransaction } from '../../services/transactionService';
 import { parseTransaction } from '../../utils/aiTransactionParser';
 import { useAuth } from '../../hooks/useAuth';
+import { encryptMessageData } from '../../utils/encryption';
 
 const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   const { user, refreshUserProfile } = useAuth();
@@ -16,6 +17,8 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   const [chatMessage, setChatMessage] = useState('');
   const [parsedTransactions, setParsedTransactions] = useState([]);
   const chatTextareaRef = useRef(null);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   // Manual mode state
   const [manualData, setManualData] = useState({
@@ -48,7 +51,9 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
       const result = await parseTransaction(chatMessage);
       if (result.success) {
         setParsedTransactions(result.data);
-        setLastResponse({ type: 'success', message: `Parsed ${result.data.length} transaction${result.data.length>1?'s':''}` });
+        // do not set a persistent success message here — hide parse-success badge and show the inline preview instead
+        setLastResponse(null);
+        setIsPreviewOpen(true);
       } else {
         console.error('Parsing failed:', result.error);
         setLastResponse({ type: 'error', message: result.error || 'Parsing failed' });
@@ -61,15 +66,48 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
     }
   };
 
+  const updateParsedTransaction = (index, patch) => {
+    setParsedTransactions(prev => {
+      if (!prev) return prev;
+      return prev.map((p, i) => i === index ? { ...p, ...patch } : p);
+    });
+  };
+
+  const removeParsedTransaction = (index) => {
+    setParsedTransactions(prev => prev ? prev.filter((_, i) => i !== index) : prev);
+  };
+
+  const saveRowEdit = () => {
+    // force re-render by creating new array reference
+    setParsedTransactions(prev => prev ? [...prev] : prev);
+    setEditingIndex(null);
+  };
+
+  const humanizeType = (type) => {
+    if (!type) return 'Other';
+    const t = String(type).toLowerCase();
+    if (t === 'income') return 'Income';
+    if (t === 'expense') return 'Expense';
+    if (t === 'credit') return 'Credit (lent)';
+    if (t === 'loan') return 'Loan (borrowed)';
+    return 'Other';
+  };
+
   const handleAddParsedTransactions = async () => {
     if (parsedTransactions.length === 0) return;
     
     setLoading(true);
     try {
+      // Encrypt original chat message once
+      const messageData = await encryptMessageData({ originalMessage: chatMessage });
+      const addedIds = [];
+
       for (const transaction of parsedTransactions) {
         const result = await addTransaction(user.uid, {
           ...transaction,
-          originalMessage: chatMessage,
+          amount: Number(transaction.amount),
+          date: transaction.date ? new Date(transaction.date) : new Date(),
+          originalMessage_encrypted: messageData.originalMessage_encrypted,
           source: 'chat'
         });
         
@@ -77,10 +115,22 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
           console.error('Transaction add failed:', result.error);
           setLastResponse({ type: 'error', message: 'Failed to add some transactions' });
         }
+        else {
+          addedIds.push(result.id);
+        }
       }
       
       await refreshUserProfile();
-      setLastResponse({ type: 'success', message: `Added ${parsedTransactions.length} transaction${parsedTransactions.length>1?'s':''}` });
+
+      // Notify other UI components (analytics/summary) that transactions were added
+      try {
+        window.dispatchEvent(new CustomEvent('wallet:transaction-added', { detail: { addedIds, count: addedIds.length, source: 'chat' } }));
+      } catch {
+        // ignore dispatch errors on older browsers
+      }
+
+      setLastResponse({ type: 'success', message: `Added ${addedIds.length} transaction${addedIds.length>1?'s':''}` });
+      setIsPreviewOpen(false);
       onSuccess?.();
       onClose();
       resetForm();
@@ -107,6 +157,13 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
       
       if (result.success) {
         await refreshUserProfile();
+        // Notify other components
+        try {
+          window.dispatchEvent(new CustomEvent('wallet:transaction-added', { detail: { addedIds: [result.id], count: 1, source: 'manual' } }));
+        } catch {
+          // ignore dispatch errors
+        }
+
         setLastResponse({ type: 'success', message: 'Transaction added' });
         onSuccess?.();
         onClose();
@@ -126,6 +183,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   const resetForm = () => {
     setChatMessage('');
     setParsedTransactions([]);
+    setIsPreviewOpen(false);
     setManualData({
       type: 'expense',
       amount: '',
@@ -144,11 +202,15 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
     return categories.find(cat => cat.value === category)?.emoji || '📦';
   };
 
+  const getCategoryLabel = (category) => {
+    return categories.find(cat => cat.value === category)?.label || String(category || 'Other');
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Add Transaction" size="lg">
       <div className="space-y-6">
-        {/* Feedback */}
-        {lastResponse && (
+        {/* Feedback: show errors or save-success only; hide parse-success badge when preview is open */}
+        {lastResponse && (lastResponse.type === 'error' || (lastResponse.type === 'success' && parsedTransactions.length === 0)) && (
           <div className={`p-3 rounded-lg ${lastResponse.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'}`}>
             <p className="text-sm font-medium">{lastResponse.message}</p>
           </div>
@@ -197,6 +259,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
 
             {/* Quick suggestion templates */}
+            {!isPreviewOpen && (
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               <p className="font-medium mb-2">Try these templates (tap to use):</p>
               <div className="space-y-2">
@@ -234,6 +297,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                 </div>
               </div>
             </div>
+            )}
 
             <button
               onClick={handleChatParse}
@@ -249,45 +313,113 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             {/* Parsed Results */}
             {parsedTransactions.length > 0 && (
               <div className="space-y-3">
+                <div className="mb-2 text-xs text-yellow-700 dark:text-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
+                  ⚠️ AI can make mistakes. Please review and edit the parsed transactions before saving.
+                </div>
                 <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Parsed Transactions ({parsedTransactions.length})
                 </h4>
                 {parsedTransactions.map((transaction, index) => (
-                  <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">{getCategoryEmoji(transaction.category)}</span>
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white text-sm">
-                            {transaction.description}
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {transaction.category} • {transaction.type}
+                  <div key={index} className="flex items-center gap-2 text-xs p-2 bg-gray-50 dark:bg-gray-700/40 rounded">
+                    <div className="w-8 h-8 flex items-center justify-center rounded bg-gray-50 dark:bg-gray-700">
+                      <span className="text-xs">{getCategoryEmoji(transaction.category)}</span>
+                    </div>
+
+                    {/* Normal row view */}
+                    {editingIndex !== index ? (
+                      <>
+                        <div className="flex-1">
+                          <div className="font-medium">{transaction.description}</div>
+                          <div className="text-[11px] text-gray-500">{humanizeType(transaction.type)} • {getCategoryLabel(transaction.category)}</div>
+                        </div>
+                        <div className="w-24 text-right">
+                          <div className={`font-medium ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
                           </div>
                         </div>
-                      </div>
-                      <div className={`font-semibold ${
-                        transaction.type === 'income' || transaction.type === 'loan'
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
-                        {transaction.amount} BDT
-                      </div>
-                    </div>
+                        <div className="flex items-center space-x-2">
+                          <button onClick={() => setEditingIndex(index)} className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded hover:scale-105 transition-transform" aria-label="Edit">
+                            <Edit className="w-4 h-4 text-yellow-700 dark:text-yellow-300" />
+                          </button>
+                          <button onClick={() => removeParsedTransaction(index)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 rounded hover:bg-red-100 dark:hover:bg-red-800 transition-colors" aria-label="Delete">
+                            <Trash className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      /* Edit mode for this row */
+                      <>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={transaction.description || ''}
+                            onChange={(e) => updateParsedTransaction(index, { description: e.target.value })}
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full"
+                            placeholder="Description"
+                          />
+                          <div className="mt-2 flex items-center gap-2">
+                            <select
+                              value={transaction.type || 'expense'}
+                              onChange={(e) => updateParsedTransaction(index, { type: e.target.value })}
+                              className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                            >
+                              <option value="expense">Expense</option>
+                              <option value="income">Income</option>
+                              <option value="credit">Credit (lent)</option>
+                              <option value="loan">Loan (borrowed)</option>
+                            </select>
+                            <select
+                              value={transaction.category || 'other'}
+                              onChange={(e) => updateParsedTransaction(index, { category: e.target.value })}
+                              className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                            >
+                              {categories.map(cat => (
+                                <option key={cat.value} value={cat.value}>{cat.emoji} {cat.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="w-24 text-right flex flex-col items-end gap-2">
+                          <input
+                            type="number"
+                            value={transaction.amount ?? ''}
+                            onChange={(e) => updateParsedTransaction(index, { amount: e.target.value })}
+                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-24 text-right"
+                            placeholder="Amount"
+                          />
+                          <div className="flex items-center space-x-2">
+                            <button onClick={() => setEditingIndex(null)} className="p-2 bg-white dark:bg-gray-800 border rounded hover:scale-95 transition-transform" aria-label="Cancel edit">
+                              <X className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+                            </button>
+                            <button onClick={saveRowEdit} className="p-2 bg-teal-500 text-white rounded hover:opacity-90 transition-opacity" aria-label="Save edit">
+                              <Check className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
                 
-                <button
-                  onClick={handleAddParsedTransactions}
-                  disabled={loading}
-                  className="w-full px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {loading && (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  )}
-                  Add {parsedTransactions.length} Transaction{parsedTransactions.length > 1 ? 's' : ''}
-                </button>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => { setIsPreviewOpen(false); setParsedTransactions([]); setLastResponse(null); }}
+                    className="flex-1 px-3 py-2 text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={handleAddParsedTransactions}
+                    disabled={loading}
+                    className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {loading && (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    )}
+                    Add {parsedTransactions.length} Transaction{parsedTransactions.length > 1 ? 's' : ''}
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -53,6 +53,12 @@ const AppContent = () => {
         // The balance will be updated automatically through AuthContext
         // when transactions are refreshed
       }
+      // Notify other components that transactions have been refreshed
+      try {
+        window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { source: 'header-refresh' } }));
+      } catch {
+        // ignore dispatch errors
+      }
     } catch (error) {
       console.error('Error refreshing data:', error);
     } finally {
@@ -67,6 +73,11 @@ const AppContent = () => {
     setIsRefreshing(true);
     try {
       await refreshUserProfile();
+      try {
+        window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { source: 'profile-refresh' } }));
+      } catch {
+        // ignore
+      }
     } catch (error) {
       console.error('Error refreshing user profile:', error);
     } finally {
@@ -122,11 +133,13 @@ const AppContent = () => {
   const handleTransactionUpdate = () => {
     refreshTransactions();
     success('Transaction updated successfully!');
+  try { window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { source: 'transaction-update' } })); } catch { /* ignore */ }
   };
 
   const handleTransactionAdded = () => {
     refreshTransactions();
     success('Transaction added successfully!');
+  try { window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { source: 'transaction-add' } })); } catch { /* ignore */ }
   };
 
   // Handle authentication flow
