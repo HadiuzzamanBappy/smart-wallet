@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Mail, Calendar } from 'lucide-react';
 import Modal from '../UI/Modal';
 import { useAuth } from '../../hooks/useAuth';
@@ -7,12 +7,35 @@ import { updateUserProfile } from '../../services/authService';
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const [loading, setLoading] = useState(false);
+  const detectDefaultName = () => {
+    // Prefer explicit profile value, then firebase user displayName, then providerData displayName, then email local-part
+    if (userProfile && userProfile.displayName) return userProfile.displayName;
+    if (user && user.displayName) return user.displayName;
+    try {
+      const pd = user?.providerData;
+      if (pd && pd.length > 0 && pd[0].displayName) return pd[0].displayName;
+    } catch (err) { void err; }
+    if (user && user.email) return String(user.email).split('@')[0];
+    return '';
+  };
+
   const [formData, setFormData] = useState({
-    displayName: userProfile?.displayName || '',
+    displayName: detectDefaultName(),
     currency: userProfile?.currency || 'BDT',
     monthlyBudget: userProfile?.monthlyBudget || '',
     budgetAlerts: userProfile?.budgetAlerts !== false
   });
+
+  // Keep form in sync when modal opens or when the auth/profile updates
+  useEffect(() => {
+    setFormData({
+      displayName: detectDefaultName(),
+      currency: userProfile?.currency || 'BDT',
+      monthlyBudget: userProfile?.monthlyBudget || '',
+      budgetAlerts: userProfile?.budgetAlerts !== false
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, userProfile]);
 
   const currencies = [
     { value: 'BDT', label: 'BDT (৳)', flag: '🇧🇩' },

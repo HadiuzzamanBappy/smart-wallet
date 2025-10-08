@@ -275,7 +275,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
           <button
             onClick={refreshData}
             disabled={refreshing}
-            className="inline-flex items-center justify-center w-8 h-8 text-sm rounded-md bg-white/5 dark:bg-gray-800/40 hover:bg-white/10 transition-colors disabled:opacity-50"
+            className="inline-flex items-center justify-center w-8 h-8 text-sm rounded-md bg-white/5 dark:bg-gray-800/40 hover:bg-white/10 transition-colors disabled:opacity-50 fixed right-6 z-10"
             title="Refresh"
             aria-label="Refresh summary"
           >

@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { auth, db } from '../config/firebase';
 import { getUserProfile } from '../services/transactionService';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { encryptUserProfile } from '../utils/encryption';
 import { AuthContext } from './createAuthContext';
 import { useTheme } from '../hooks/useTheme';
 
@@ -42,13 +44,34 @@ export const AuthProvider = ({ children }) => {
               }
             } catch (err) { void err; }
           } else {
-            // Create a basic profile if none exists
-            setUserProfile({
+            // Create a basic profile if none exists and persist it to Firestore (auto-migration)
+            const defaultDisplayName = u.displayName || (u.providerData && u.providerData[0] && u.providerData[0].displayName) || (u.email ? String(u.email).split('@')[0] : 'User');
+            const profileData = {
               uid: u.uid,
               email: u.email,
-              displayName: u.displayName || 'User',
-              theme: 'system'
-            });
+              displayName: defaultDisplayName,
+              currency: 'BDT',
+              balance: 0,
+              totalIncome: 0,
+              totalExpense: 0,
+              totalCreditGiven: 0,
+              totalLoanTaken: 0,
+              theme: 'system',
+              createdAt: Timestamp.now(),
+              updatedAt: Timestamp.now()
+            };
+
+            try {
+              // Encrypt and persist the profile to Firestore
+              const encryptedProfile = await encryptUserProfile(profileData);
+              await setDoc(doc(db, 'users', u.uid), encryptedProfile);
+              setUserProfile(profileData);
+            } catch (err) {
+              console.error('Failed to create default user profile:', err);
+              // Fall back to lightweight local profile so UI still works
+              setUserProfile({ uid: u.uid, email: u.email, displayName: defaultDisplayName, theme: 'system' });
+            }
+
             try {
               const lastUid = lastAppliedUidRef.current;
               if (!lastUid || lastUid !== u.uid) {
