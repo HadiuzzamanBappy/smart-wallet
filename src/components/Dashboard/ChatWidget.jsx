@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, Loader2, Edit, Trash, Check, X } from 'lucide-react';
 import { parseTransaction } from '../../utils/aiTransactionParser';
 import { addTransaction } from '../../services/transactionService';
@@ -14,6 +14,14 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
   const [parsedTransactions, setParsedTransactions] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const textareaRef = useRef(null);
+
+  // If the user removes all parsed items, automatically close the preview and show suggestions
+  useEffect(() => {
+    if (isPreviewOpen && Array.isArray(parsedTransactions) && parsedTransactions.length === 0) {
+      setIsPreviewOpen(false);
+      setParsedTransactions(null);
+    }
+  }, [parsedTransactions, isPreviewOpen]);
 
   // Parse-only: produce parsed transactions and open preview
   const handleParseMessage = async () => {
@@ -184,30 +192,29 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                   : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'
               }`}>
                 <p className="text-sm font-medium">{lastResponse.message}</p>
-                
-                {/* Show parsed transactions */}
-                    {lastResponse.transactions && (
-                      <div className="mt-2 space-y-1">
-                        {lastResponse.transactions.map((transaction, index) => (
-                          <div key={index} className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-sm">{getCategoryEmoji(transaction.category)}</span>
-                              <div className="min-w-0">
-                                <div className="font-medium truncate">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
-                                <div className="text-[11px] text-gray-500">{humanizeType(transaction.type)}</div>
-                              </div>
-                            </div>
-                            <span className={`font-medium ${
-                              transaction.type === 'income' || transaction.type === 'loan' 
-                                ? 'text-green-600 dark:text-green-400' 
-                                : 'text-red-600 dark:text-red-400'
-                            }`}>
-                              {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
-                            </span>
+                {/* Show parsed transactions only when non-empty */}
+                {Array.isArray(lastResponse.transactions) && lastResponse.transactions.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {lastResponse.transactions.map((transaction, index) => (
+                      <div key={index} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm">{getCategoryEmoji(transaction.category)}</span>
+                          <div className="min-w-0">
+                            <div className="font-medium truncate">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
+                            <div className="text-[11px] text-gray-500">{humanizeType(transaction.type)}</div>
                           </div>
-                        ))}
+                        </div>
+                        <span className={`font-medium ${
+                          transaction.type === 'income' || transaction.type === 'loan' 
+                            ? 'text-green-600 dark:text-green-400' 
+                            : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
+                        </span>
                       </div>
-                    )}
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -248,7 +255,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
             </div>
 
             {/* Preview / Confirm area */}
-            {isPreviewOpen && parsedTransactions && (
+            {isPreviewOpen && Array.isArray(parsedTransactions) && parsedTransactions.length > 0 && (
               <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                 <div className="mb-2 text-xs text-yellow-700 dark:text-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
                   ⚠️ AI can make mistakes. Please review and edit the parsed transactions before saving.

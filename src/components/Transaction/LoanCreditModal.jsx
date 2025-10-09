@@ -269,7 +269,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                         <p>{emptyMessage}</p>
                     </div>
                 ) : (
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                    <div className="space-y-4 overflow-y-auto max-h-100 sm:max-h-96 min-h-0">
                         {items.map((item) => (
                             <div
                                 key={item.id}

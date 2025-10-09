@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Plus, MessageSquare, Edit, Trash, Check, X, Loader2 } from 'lucide-react';
 import Modal from '../UI/Modal';
 import { addTransaction } from '../../services/transactionService';
@@ -72,6 +72,15 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
       return prev.map((p, i) => i === index ? { ...p, ...patch } : p);
     });
   };
+
+  // If user removes all parsed items, close the preview so suggestions re-appear
+  useEffect(() => {
+    if (isPreviewOpen && Array.isArray(parsedTransactions) && parsedTransactions.length === 0) {
+      setIsPreviewOpen(false);
+      setLastResponse(null);
+      // keep parsedTransactions as empty array
+    }
+  }, [parsedTransactions, isPreviewOpen]);
 
   const removeParsedTransaction = (index) => {
     setParsedTransactions(prev => prev ? prev.filter((_, i) => i !== index) : prev);
@@ -258,6 +267,17 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
+            <button
+              onClick={handleChatParse}
+              disabled={!chatMessage.trim() || aiLoading}
+              className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {aiLoading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              Parse with AI
+            </button>
+
             {/* Quick suggestion templates */}
             {!isPreviewOpen && (
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -298,17 +318,6 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
               </div>
             </div>
             )}
-
-            <button
-              onClick={handleChatParse}
-              disabled={!chatMessage.trim() || aiLoading}
-              className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {aiLoading && (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
-              Parse with AI
-            </button>
 
             {/* Parsed Results */}
             {parsedTransactions.length > 0 && (
