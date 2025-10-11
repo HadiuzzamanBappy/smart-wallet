@@ -24,7 +24,8 @@ html.dark {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-800;
+  /* Make the scrollbar track transparent so underlying background shows through */
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {

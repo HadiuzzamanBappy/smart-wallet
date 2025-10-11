@@ -7,14 +7,14 @@ import {
   Globe, 
   Download, 
   Trash2,
-  AlertCircle 
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import Modal from '../UI/Modal';
 import ConfirmDialog from '../UI/ConfirmDialog';
 import { useAuth } from '../../hooks/useAuth';
 import { 
   updateUserProfile, 
-  deleteAuthUser, 
   reauthenticateUser, 
   reauthenticateWithGoogle,
   isGoogleUser,
@@ -35,6 +35,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
   const [emailConfirmation, setEmailConfirmation] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isUserGoogleAuth, setIsUserGoogleAuth] = useState(false);
+  const [showEraseComplete, setShowEraseComplete] = useState(false);
   
   const { theme: currentTheme, setTheme } = useTheme();
 
@@ -158,10 +159,17 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
       }
 
       // Build a small preview (counts + sample)
+      const sample = parsed.transactions.slice(0, 5).map(s => {
+        const copy = { ...s };
+        if ('originalMessage' in copy) delete copy.originalMessage;
+        if ('originalMessage_encrypted' in copy) delete copy.originalMessage_encrypted;
+        return copy;
+      });
+
       const preview = {
         profile: parsed.profile || {},
         totalTransactions: parsed.transactions.length,
-        sample: parsed.transactions.slice(0, 5)
+        sample
       };
 
       setImportPreview(preview);
@@ -220,7 +228,9 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
     }
   };
 
+  // New flow: Erase user data but keep the auth account
   const handleDeleteAccount = () => {
+    // repurpose the delete flow to be an "Erase My Data" confirmation
     setShowDeleteConfirm(true);
   };
 
@@ -233,63 +243,103 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
   };
 
   const handleReauthAndDelete = async () => {
-    // Validate input based on auth method
-    if (isUserGoogleAuth && !emailConfirmation) return;
-    if (!isUserGoogleAuth && !password) return;
-    
+    // Allow skipping reauthentication if the user types their exact email (case-insensitive).
+    // Otherwise, fall back to reauthentication (password or provider).
+
+    // Basic email match guard: require the typed email to match the signed-in user's email
+    if (emailConfirmation && user?.email && emailConfirmation.trim().toLowerCase() !== user.email.trim().toLowerCase()) {
+      console.error('Provided email does not match signed-in user');
+      alert('The provided email does not match the signed-in user. Please type your account email to confirm.');
+      return;
+    }
+
+    // If emailConfirmation matches the signed-in user's email, we skip reauthentication per request.
+    const emailMatches = Boolean(emailConfirmation && user?.email && emailConfirmation.trim().toLowerCase() === user.email.trim().toLowerCase());
+
+    // If email doesn't match and the user is an email/password user, require password.
+    if (!emailMatches && !isUserGoogleAuth && !password) return;
+
     setDeleteLoading(true);
     try {
-      let reauth;
-      
-      if (isUserGoogleAuth) {
-        // For Google users: confirm email first, then reauthenticate with Google
-        const emailCheck = await confirmEmailForDeletion(emailConfirmation);
-        if (!emailCheck.success) {
-          console.error('Email confirmation failed:', emailCheck.error);
+      // If we still need to reauth (email didn't match and user didn't provide other proof), do it.
+      if (!emailMatches) {
+        let reauth;
+        if (isUserGoogleAuth) {
+          // For Google users: perform provider reauth (do not skip just because email is typed)
+          if (typeof confirmEmailForDeletion === 'function') {
+            const emailCheck = await confirmEmailForDeletion(emailConfirmation);
+            if (!emailCheck.success) {
+              console.error('Email confirmation failed:', emailCheck.error);
+              alert('Email confirmation failed.');
+              return;
+            }
+          }
+
+          reauth = await reauthenticateWithGoogle();
+        } else {
+          reauth = await reauthenticateUser(password);
+        }
+
+        if (!reauth.success) {
+          console.error('Reauthentication failed:', reauth.error);
+          alert('Reauthentication failed. Please try again.');
           return;
         }
-        
-        // Reauthenticate with Google popup
-        reauth = await reauthenticateWithGoogle();
-      } else {
-        // For email/password users: reauthenticate with password
-        reauth = await reauthenticateUser(password);
-      }
-      
-      if (!reauth.success) {
-        console.error('Reauthentication failed:', reauth.error);
-        return;
       }
 
-      // Delete Firestore data
+      // Delete Firestore data (transactions, recurring rules, etc.) but DO NOT delete the auth user
       const deleteData = await deleteAllUserData(user.uid);
       if (!deleteData.success) {
         console.error('Data deletion failed:', deleteData.error);
+        alert('Failed to erase data. Please try again.');
         return;
       }
 
-      // Delete auth user
-      const deleteAuth = await deleteAuthUser();
-      if (!deleteAuth.success) {
-        console.error('Auth deletion failed:', deleteAuth.error);
-        return;
+      // Reset user profile totals to zero (keep profile document but clear accounting fields)
+      try {
+        // Best-effort: reset common totals — ensure balance is explicitly set to 0
+        await updateUserProfile(user.uid, {
+          balance: 0,
+          totalIncome: 0,
+          totalExpense: 0,
+          transactionsCount: 0
+        });
+
+        // Notify other parts of the app that the profile changed (so UI updates immediately)
+        try {
+          window.dispatchEvent(new CustomEvent('wallet:profile-updated', { detail: { uid: user.uid, profile: { balance: 0, totalIncome: 0, totalExpense: 0, transactionsCount: 0 } } }));
+        } catch (err) {
+          console.warn('Failed to dispatch wallet:profile-updated event', err);
+        }
+      } catch (err) {
+        console.warn('Failed to reset user profile totals:', err);
       }
 
-      // Clear all local storage and cached data
+      // Clear local caches and storage
       localStorage.clear();
       sessionStorage.clear();
-      
-      // Clear any cached data from IndexedDB if used
       if ('caches' in window) {
         const cacheNames = await caches.keys();
-        await Promise.all(
-          cacheNames.map(cacheName => caches.delete(cacheName))
-        );
+        await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
       }
 
-      // Success - user will be signed out automatically
+      // Refresh UI state
+      if (refreshUserProfile) await refreshUserProfile();
+      try { if (refreshTransactions) await refreshTransactions(); } catch { /* ignore */ }
+
+      // Dispatch an event so components can refresh
+      try {
+        window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { erased: true } }));
+      } catch (err) {
+        // Non-fatal: some environments may restrict CustomEvent or window dispatch
+        console.warn('Failed to dispatch wallet:transactions-updated event', err);
+      }
+
+      // Show a friendly confirmation modal instead of a blocking alert
+      setShowEraseComplete(true);
     } catch (error) {
-      console.error('Account deletion failed:', error);
+      console.error('Erase data failed:', error);
+      alert('Failed to erase data. See console for details.');
     } finally {
       setDeleteLoading(false);
       setShowReauthDialog(false);
@@ -561,8 +611,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               >
                 <Trash2 className="w-5 h-5 text-red-500" />
                 <div>
-                  <div className="text-sm font-medium text-red-600 dark:text-red-400">Delete Account</div>
-                  <div className="text-xs text-red-500 dark:text-red-400">Permanently delete your account and all data</div>
+              <div className="text-sm font-medium text-red-600 dark:text-red-400">Erase My Data</div>
+              <div className="text-xs text-red-500 dark:text-red-400">Permanently erase all accounting data from this account (your auth account will remain)</div>
                 </div>
               </button>
             </div>
@@ -599,8 +649,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete Account"
-        message="Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data."
+        title="Erase My Data"
+        message="This will permanently remove all your accounting data (transactions, recurring rules, budgets). Your authentication account will remain. Proceed?"
         confirmText="Continue"
         type="danger"
       />
@@ -613,7 +663,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
           setPassword('');
           setEmailConfirmation('');
         }}
-        title="Confirm Account Deletion"
+        title="Confirm Erase My Data"
         size="sm"
       >
         <div className="space-y-4">
@@ -625,8 +675,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               </p>
               <p className="text-sm text-red-600 dark:text-red-300 mt-1">
                 {isUserGoogleAuth 
-                  ? 'Type your email address to confirm account deletion, then authenticate with Google' 
-                  : 'Enter your password to confirm account deletion'}
+                  ? 'Type your email address to confirm erasing data. If the email matches your account, no further reauthentication is needed; otherwise you will be prompted to sign in with Google.' 
+                  : 'Type your account email to confirm erasing data (matching email will skip reauthentication), or enter your password to reauthenticate.'}
               </p>
             </div>
           </div>
@@ -675,7 +725,35 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               {deleteLoading && (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               )}
-              {isUserGoogleAuth ? 'Authenticate' : 'Delete Account'}
+              {isUserGoogleAuth ? 'Authenticate' : 'Erase Data'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Erase complete modal */}
+      <Modal
+        isOpen={showEraseComplete}
+        onClose={() => {
+          setShowEraseComplete(false);
+          // Close the settings as well to return user to app
+          try { onClose && onClose(); } catch (err) { console.warn('onClose handler threw', err); }
+        }}
+        title="Erase complete"
+        size="sm"
+      >
+        <div className="flex flex-col items-center space-y-4 p-4">
+          <CheckCircle className="w-12 h-12 text-green-500" />
+          <div className="text-sm text-gray-800 dark:text-gray-100 text-center">All accounting data has been erased. Your authentication account remains.</div>
+          <div className="w-full">
+            <button
+              onClick={() => {
+                setShowEraseComplete(false);
+                try { onClose && onClose(); } catch (err) { console.warn('onClose handler threw', err); }
+              }}
+              className="w-full px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium"
+            >
+              OK
             </button>
           </div>
         </div>

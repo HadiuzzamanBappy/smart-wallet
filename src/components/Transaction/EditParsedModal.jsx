@@ -174,17 +174,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
           </select>
         </div>
 
-        {/* Original Message (if from chat) */}
-        {transaction.originalMessage && (
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
-              Original Message:
-            </h4>
-            <p className="text-sm text-blue-600 dark:text-blue-300">
-              "{transaction.originalMessage}"
-            </p>
-          </div>
-        )}
+        {/* Original message display removed for privacy — we do not store or show user-entered messages */}
 
         {/* Action Buttons */}
         <div className="flex space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">

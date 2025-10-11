@@ -80,8 +80,8 @@ export const addTransaction = async (userId, transactionData) => {
         // Fallback to Date parsing (best-effort)
         return Timestamp.fromDate(new Date(d));
       })(),
-      // Include original user message/prompt if provided
-      originalMessage: transactionData.originalMessage || transactionData.description,
+  // Do NOT include original user message/prompt to preserve user privacy
+  // (original messages intentionally not stored)
       source: transactionData.source || 'manual' // Track if created via chat or manual entry
     };
 
@@ -564,12 +564,14 @@ export const deleteAllUserData = async (userId) => {
       }
     }
 
-    // Delete user profile document
+    // After removing all transaction documents, reconcile user totals to zero
     try {
-      const userRef = doc(db, `users/${userId}`);
-      await deleteDoc(userRef);
+      const recon = await reconcileUserTotals(userId);
+      if (!recon.success) {
+        console.warn('Reconciliation after deleteAllUserData failed:', recon.error);
+      }
     } catch (e) {
-      console.warn('Failed to delete user profile doc:', e?.message);
+      console.warn('Error running reconciliation after deleteAllUserData:', e?.message || e);
     }
 
     return { success: true };
@@ -871,8 +873,14 @@ export const importUserData = async (userId, data, options = { preserveIds: fals
         }
 
         // Prepare tx to store and preserve timestamps
+        // IMPORTANT: strip any originalMessage fields to avoid resurrecting user messages
+        // that were intentionally removed for privacy.
+        const sanitizedTx = { ...tx };
+        if ('originalMessage' in sanitizedTx) delete sanitizedTx.originalMessage;
+        if ('originalMessage_encrypted' in sanitizedTx) delete sanitizedTx.originalMessage_encrypted;
+
         const txToStore = {
-          ...tx,
+          ...sanitizedTx,
           userId,
           originalId: originalId || undefined,
           importFingerprint: fingerprint || undefined,

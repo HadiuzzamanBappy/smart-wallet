@@ -264,10 +264,8 @@ export const encryptMessageData = async (messageData) => {
     delete encrypted.message; // Remove original field completely for privacy
   }
   
-  if (encrypted.originalMessage) {
-    encrypted.originalMessage_encrypted = await encryptData(encrypted.originalMessage);
-    delete encrypted.originalMessage; // Remove original field completely for privacy
-  }
+  // Note: originalMessage is no longer supported/stored for privacy reasons.
+  // If a caller passes originalMessage, we intentionally ignore it here.
 
   return encrypted;
 };
@@ -285,9 +283,7 @@ export const decryptMessageData = async (messageData) => {
     decrypted.message = await decryptData(decrypted.message_encrypted);
   }
   
-  if (decrypted.originalMessage_encrypted) {
-    decrypted.originalMessage = await decryptData(decrypted.originalMessage_encrypted);
-  }
+  // originalMessage_encrypted is intentionally not supported anymore. Do not attempt to decrypt it.
 
   return decrypted;
 };

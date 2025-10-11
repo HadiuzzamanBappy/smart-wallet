@@ -13,7 +13,8 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #f7fafc;
+  /* Transparent track so underlying component background is visible */
+  background: transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {

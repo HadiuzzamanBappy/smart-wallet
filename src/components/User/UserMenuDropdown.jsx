@@ -21,13 +21,71 @@ const UserMenuDropdown = ({
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleLogout = async () => {
+    // Show spinner immediately, keep it visible for at least 2s or until logout completes
     try {
-      await logoutUser();
-      setIsOpen(false);
-    } catch (error) {
-      console.error('Logout failed:', error);
+      setLogoutLoading(true);
+
+      // Create a global overlay synchronously so it's appended to document.body
+      // before any navigation or auth-state-driven redirect can occur. This
+      // ensures the loader is visible first.
+      let overlay = document.getElementById('logout-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.setAttribute('id', 'logout-overlay');
+        overlay.style.position = 'fixed';
+        overlay.style.inset = '0';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.background = 'rgba(0,0,0,0.6)';
+        overlay.style.zIndex = '9999';
+        overlay.innerHTML = `
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px;border-radius:8px;background:rgba(255,255,255,0.04);backdrop-filter:blur(6px);color:#fff">
+            <svg class="animate-spin" style="height:40px;width:40px;color:rgba(148,163,184,1)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <div style="font-size:16px;color:#e5e7eb">Logging out...</div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      }
+
+      // allow the browser one frame to paint the newly appended overlay
+      await new Promise((res) => requestAnimationFrame(res));
+
+      // Wait the minimum spinner display time before performing logout. This
+      // ensures we show the animation first, then call logoutUser which may
+      // trigger navigation/unauth state. The overlay is already appended so
+      // it will persist during the logout sequence.
+      const minMs = 2000;
+      await new Promise((res) => setTimeout(res, minMs));
+
+      // Now perform the actual logout; unauth view/navigation will happen after
+      // this point.
+      let ok = true;
+      try {
+        await logoutUser();
+      } catch (error) {
+        ok = false;
+        console.error('Logout failed:', error);
+      }
+
+      // If logout succeeded, close the menu. If it failed, keep the menu open so user can retry.
+      if (ok) setIsOpen(false);
+      // remove overlay
+      try {
+        const el = document.getElementById('logout-overlay');
+        if (el) document.body.removeChild(el);
+      } catch {
+        /* ignore */
+      }
+    } finally {
+      setLogoutLoading(false);
     }
   };
+
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
   const menuItems = [
     {
@@ -89,21 +147,35 @@ const UserMenuDropdown = ({
             <div className="py-2">
               {menuItems.map((item, index) => {
                 const Icon = item.icon;
+                const isSignOut = item.label === 'Sign Out';
                 return (
                   <button
                     key={index}
                     onClick={() => {
-                      item.onClick();
-                      if (item.label !== 'Sign Out') {
+                      if (isSignOut) {
+                        if (logoutLoading) return; // prevent double clicks
+                        item.onClick();
+                        // do not auto-close here; handleLogout will close on success
+                      } else {
+                        item.onClick();
                         setIsOpen(false);
                       }
                     }}
+                    disabled={isSignOut && logoutLoading}
                     className={`w-full flex items-center space-x-3 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
                       item.className || 'text-gray-700 dark:text-gray-300'
-                    }`}
+                    } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : ''}`}
                   >
                     <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
+                    <span className="flex items-center gap-2">
+                      {item.label}
+                      {isSignOut && logoutLoading && (
+                        <svg className="animate-spin h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                      )}
+                    </span>
                   </button>
                 );
               })}

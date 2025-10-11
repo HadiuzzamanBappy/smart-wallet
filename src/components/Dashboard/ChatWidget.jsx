@@ -3,7 +3,6 @@ import { MessageSquare, Send, Loader2, Edit, Trash, Check, X } from 'lucide-reac
 import { parseTransaction } from '../../utils/aiTransactionParser';
 import { addTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
-import { encryptMessageData } from '../../utils/encryption';
 
 const ChatWidget = ({ onTransactionAdded, className = '' }) => {
   const { user, refreshUserProfile } = useAuth();
@@ -62,9 +61,6 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
     setLastResponse(null);
 
     try {
-      // Encrypt the original message once and reuse
-      const messageData = await encryptMessageData({ originalMessage: message });
-
   let added = 0;
   // Use editable copy if available
   const toSave = parsedTransactions.map(t => ({ ...t, amount: Number(t.amount) }));
@@ -73,7 +69,6 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
           ...transaction,
           // Ensure date is properly formatted as Date object
           date: transaction.date ? new Date(transaction.date) : new Date(),
-          originalMessage_encrypted: messageData.originalMessage_encrypted,
           source: 'chat'
         });
 

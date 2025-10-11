@@ -4,7 +4,6 @@ import Modal from '../UI/Modal';
 import { addTransaction } from '../../services/transactionService';
 import { parseTransaction } from '../../utils/aiTransactionParser';
 import { useAuth } from '../../hooks/useAuth';
-import { encryptMessageData } from '../../utils/encryption';
 
 const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   const { user, refreshUserProfile } = useAuth();
@@ -107,8 +106,6 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
     
     setLoading(true);
     try {
-      // Encrypt original chat message once
-      const messageData = await encryptMessageData({ originalMessage: chatMessage });
       const addedIds = [];
 
       for (const transaction of parsedTransactions) {
@@ -116,7 +113,6 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
           ...transaction,
           amount: Number(transaction.amount),
           date: transaction.date ? new Date(transaction.date) : new Date(),
-          originalMessage_encrypted: messageData.originalMessage_encrypted,
           source: 'chat'
         });
         
