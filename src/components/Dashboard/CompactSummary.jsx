@@ -13,7 +13,8 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     transactions,
     currentMonthIncome,
     currentMonthExpense,
-    refreshTransactions
+    refreshTransactions,
+    loading: txLoading
   } = useTransactions();
   
   const [stats, setStats] = useState({
@@ -208,7 +209,8 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     };
   }, [loadData, stableRefreshUserProfile]);
 
-  if (loading || refreshing) {
+  // Show skeleton if local loading or global transactions are still loading
+  if (loading || refreshing || txLoading) {
     return <CompactSummarySkeleton />;
   }
 
