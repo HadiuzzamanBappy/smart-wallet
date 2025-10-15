@@ -99,7 +99,8 @@ export const SummaryCardSkeleton = ({ count = 4 }) => (
     {Array.from({ length: count }, (_, index) => (
       <div
         key={index}
-        className="relative flex items-center gap-2 p-2 sm:p-4 rounded-lg bg-white/5 dark:bg-gray-800/40"
+        // Make the last two skeleton cards full-width on mobile only to match CompactSummary
+        className={`${index >= 2 ? 'col-span-2 md:col-span-1' : ''} relative flex items-center gap-2 p-2 sm:p-4 rounded-lg bg-white/5 dark:bg-gray-800/40`}
       >
         <div className="flex-shrink-0">
           <Skeleton width="w-8" height="h-8" rounded="rounded-md" />

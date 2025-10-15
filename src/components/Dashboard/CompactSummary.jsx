@@ -289,8 +289,11 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {summaryCards.map((card, index) => {
               const IconComponent = card.icon;
+              // Make the last two cards span the full width only on mobile,
+              // on md+ keep them as regular single-column items
+              const spanClass = index >= 2 ? 'col-span-2 md:col-span-1' : '';
               return (
-                <div key={index} className={`relative flex items-center gap-2 p-2 sm:p-4 rounded-lg transition-all duration-200 ${card.bgColor} ${card.color} text-sm`}> 
+                <div key={index} className={`${spanClass} relative flex items-center gap-2 p-2 sm:p-4 rounded-lg transition-all duration-200 ${card.bgColor} ${card.color} text-sm`}> 
                   <div className={`p-1.5 rounded-md ${card.bgColor}`}> 
                     <IconComponent className={`w-4 h-4 ${card.color}`} />
                   </div>
