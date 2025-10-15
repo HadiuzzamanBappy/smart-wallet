@@ -170,7 +170,6 @@ const Header = ({
                                 </div>
                                 <div className="flex flex-col items-end space-y-2">
                                     <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full">
-                                        <DollarSign className="w-4 h-4" />
                                         <span className="text-sm">Net: {formatCurrency(((userProfile?.totalCreditGiven || 0) - (userProfile?.totalLoanTaken || 0)), userProfile?.currency || 'BDT')}</span>
                                     </div>
                                     <div className={`px-3 py-1 rounded-full text-xs ${((userProfile?.totalCreditGiven || 0) - (userProfile?.totalLoanTaken || 0)) > 0 ? 'bg-blue-100 text-blue-800' : ((userProfile?.totalCreditGiven || 0) - (userProfile?.totalLoanTaken || 0)) < 0 ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>

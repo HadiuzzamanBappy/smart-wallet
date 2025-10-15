@@ -1,22 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus, Eye } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus, Eye, BarChart3 } from 'lucide-react';
 import { isCreditCategory, isLoanCategory } from '../../utils/aiTransactionParser';
+import { getOutstandingLoans, getOutstandingCredits } from '../../services/transactionService';
 import AddTransactionModal from '../Transaction/AddTransactionModal';
 import LoanCreditModal from '../Transaction/LoanCreditModal';
+import MonthlyBreakdownModal from './MonthlyBreakdownModal';
 import { CompactSummarySkeleton } from '../UI/SkeletonLoader';
 
 const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
-  const { 
+  const {
     transactions,
     currentMonthIncome,
     currentMonthExpense,
     refreshTransactions,
     loading: txLoading
   } = useTransactions();
-  
+
   const [stats, setStats] = useState({
     thisWeekChange: 0
   });
@@ -25,9 +27,10 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [showCreditModal, setShowCreditModal] = useState(false);
-  
+  const [showMonthlyBreakdown, setShowMonthlyBreakdown] = useState(false);
 
-  
+
+
   const formatCurrency = (amount) => {
     const currency = userProfile?.currency || 'BDT';
     const currencyLocales = {
@@ -39,7 +42,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     };
 
     const locale = currencyLocales[currency] || 'en-BD';
-    
+
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currency,
@@ -69,48 +72,28 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     }
   };
 
-  const calculateStats = useCallback((transactions, profile) => {
+  const calculateStats = useCallback(async (transactions, profile) => {
     const now = new Date();
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     let monthIncome = 0;
     let monthExpense = 0;
-    let allTimeCreditGiven = 0;
-    let allTimeLoanTaken = 0;
-  let allTimeCreditDue = 0;
-  let allTimeLoanDue = 0;
     let weekBalance = 0;
 
     transactions.forEach(transaction => {
-      const createdDate = new Date(transaction.createdAt); // Use createdAt instead of user-provided date
+      // Use transaction.date (user-provided date) for monthly calculations so amounts reset properly each month
+      const transactionDate = new Date(transaction.date || transaction.createdAt);
+      const createdDate = new Date(transaction.createdAt);
       const amount = parseFloat(transaction.amount) || 0;
 
-      // Normalize transaction type for credit/loan detection
-      const transactionType = (transaction.type || '').toString().toLowerCase().trim();
-
-      // This month calculations for income and expense only (based on when transaction was created)
-      if (createdDate >= thisMonth) {
+      // This month calculations for income and expense only (based on transaction date, not when it was created)
+      if (transactionDate >= thisMonth) {
         if (transaction.type === 'income') {
           monthIncome += amount;
         } else if (transaction.type === 'expense') {
           monthExpense += amount;
         }
-      }
-
-      // All-time calculations for credit and loans
-      if (isCreditCategory(transactionType)) {
-        allTimeCreditGiven += amount;
-        const paid = parseFloat(transaction.paidAmount) || 0;
-        const remaining = Math.max(0, amount - paid);
-        allTimeCreditDue += remaining;
-      }
-
-      if (isLoanCategory(transactionType)) {
-        allTimeLoanTaken += amount;
-        const paid = parseFloat(transaction.paidAmount) || 0;
-        const remaining = Math.max(0, amount - paid);
-        allTimeLoanDue += remaining;
       }
 
       // Last week change (based on creation time)
@@ -123,6 +106,50 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       }
     });
 
+    // Fetch actual outstanding credit and loan data from the service layer
+    let allTimeCreditGiven = 0;
+    let allTimeCreditDue = 0;
+    let allTimeLoanTaken = 0;
+    let allTimeLoanDue = 0;
+
+    if (user?.uid) {
+      try {
+        const [creditsResult, loansResult] = await Promise.all([
+          getOutstandingCredits(user.uid),
+          getOutstandingLoans(user.uid)
+        ]);
+
+        if (creditsResult.success && creditsResult.data) {
+          creditsResult.data.forEach(credit => {
+            allTimeCreditGiven += Number(credit.amount || 0);
+            allTimeCreditDue += Number(credit.remainingAmount || 0);
+          });
+        }
+
+        if (loansResult.success && loansResult.data) {
+          loansResult.data.forEach(loan => {
+            allTimeLoanTaken += Number(loan.amount || 0);
+            allTimeLoanDue += Number(loan.remainingAmount || 0);
+          });
+        }
+
+        // Also include fully paid credits and loans in total amounts
+        transactions.forEach(tx => {
+          const transactionType = (tx.type || '').toString().toLowerCase().trim();
+          const amount = parseFloat(tx.amount) || 0;
+          
+          if (isCreditCategory(transactionType) && tx.isFullyPaid) {
+            allTimeCreditGiven += amount;
+          }
+          if (isLoanCategory(transactionType) && tx.isFullyPaid) {
+            allTimeLoanTaken += amount;
+          }
+        });
+      } catch (error) {
+        console.error('Error fetching outstanding credits/loans:', error);
+      }
+    }
+
     setStats({
       balance: profile?.balance || userProfile?.balance || 0,
       thisMonthIncome: monthIncome,
@@ -133,16 +160,16 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       creditDue: allTimeCreditDue,
       loanDue: allTimeLoanDue
     });
-  }, [userProfile]);
+  }, [userProfile, user]);
 
   const loadData = useCallback(async () => {
     if (!user || !userProfile) return;
-    
+
     setLoading(true);
     try {
       // Use shared transaction data from context
       if (transactions && transactions.length >= 0) {
-        calculateStats(transactions, userProfile);
+        await calculateStats(transactions, userProfile);
       }
     } catch (error) {
       console.error('Error calculating stats:', error);
@@ -182,7 +209,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   useEffect(() => {
     const handleTransactionUpdate = async () => {
       console.log('CompactSummary: Refreshing due to transaction update');
-      
+
       // If this is a repayment/collection event, also refresh user profile
       // to get updated balance since loan/credit repayments affect balance
       // Always attempt to refresh user profile to keep totals/balance in sync
@@ -195,7 +222,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       await loadData();
     };
 
-  // Add event listeners
+    // Add event listeners
     window.addEventListener('wallet:transaction-added', handleTransactionUpdate);
     window.addEventListener('wallet:transaction-edited', handleTransactionUpdate);
     window.addEventListener('wallet:transaction-deleted', handleTransactionUpdate);
@@ -232,7 +259,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       hasAction: false
     },
     {
-      label: 'Given Credit (All Time)',
+      label: 'Given Credit (Outstanding)',
       // render value and due separately so we can style the due amount
       value: {
         total: formatCurrency(stats.allTimeCreditGiven || 0),
@@ -249,7 +276,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       hasAmount: (stats.creditDue || 0) > 0
     },
     {
-      label: 'Took Loan (All Time)',
+      label: 'Took Loan (Outstanding)',
       value: {
         total: formatCurrency(stats.allTimeLoanTaken || 0),
         due: formatCurrency(stats.loanDue || 0),
@@ -275,6 +302,14 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowMonthlyBreakdown(true)}
+            className="inline-flex items-center justify-center w-8 h-8 text-sm rounded-md bg-white/5 dark:bg-gray-800/40 hover:bg-white/10 transition-colors z-10"
+            title="Monthly Breakdown"
+            aria-label="View monthly breakdown"
+          >
+            <BarChart3 className="w-4 h-4" />
+          </button>
+          <button
             onClick={refreshData}
             disabled={refreshing}
             className="inline-flex items-center justify-center w-8 h-8 text-sm rounded-md bg-white/5 dark:bg-gray-800/40 hover:bg-white/10 transition-colors disabled:opacity-50 z-10"
@@ -295,8 +330,8 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
               // on md+ keep them as regular single-column items
               const spanClass = index >= 2 ? 'col-span-2 md:col-span-1' : '';
               return (
-                <div key={index} className={`${spanClass} relative flex items-center gap-2 p-2 sm:p-4 rounded-lg transition-all duration-200 ${card.bgColor} ${card.color} text-sm`}> 
-                  <div className={`p-1.5 rounded-md ${card.bgColor}`}> 
+                <div key={index} className={`${spanClass} relative flex items-center gap-2 p-2 sm:p-4 rounded-lg transition-all duration-200 ${card.bgColor} ${card.color} text-sm`}>
+                  <div className={`p-1.5 rounded-md ${card.bgColor}`}>
                     <IconComponent className={`w-4 h-4 ${card.color}`} />
                   </div>
                   <div className="min-w-0 flex-1 pr-6">
@@ -304,15 +339,15 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
                     {/* If card.value is an object, render total and styled due part separately */}
                     {typeof card.value === 'object' ? (
                       <div className="text-sm font-semibold truncate">
-                        <span>{card.value.total}</span>
                         <span
                           className={`ml-2 text-xs font-medium ${card.value.rawDue > 0 ? 'text-red-500' : 'text-gray-400'} truncate`}
                           title={card.value.rawDue > 0 ? 'Outstanding amount still owed' : 'No outstanding due'}
                           role="tooltip"
                           aria-label={card.value.rawDue > 0 ? 'Outstanding amount still owed' : 'No outstanding due'}
                         >
-                          | {card.value.due}
+                          {card.value.due}
                         </span>
+                        <span> | {card.value.total}</span>
                       </div>
                     ) : (
                       <div className="text-sm font-semibold truncate">{card.value}</div>
@@ -321,11 +356,10 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
                   {card.hasAction && card.hasAmount && (
                     <button
                       onClick={card.onAction}
-                      className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full transition-colors ${
-                        card.color.includes('teal') 
-                          ? 'bg-teal-600 hover:bg-teal-700 text-white' 
+                      className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full transition-colors ${card.color.includes('teal')
+                          ? 'bg-teal-600 hover:bg-teal-700 text-white'
                           : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                      }`}
+                        }`}
                       title={card.actionLabel}
                     >
                       <Eye className="w-3 h-3" />
@@ -343,14 +377,14 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={async () => {
-            // Refresh user profile and data after successful addition
-            try {
-              await stableRefreshUserProfile();
-            } catch (err) {
-              console.warn('CompactSummary: failed to refresh profile after add', err);
-            }
-            await loadData();
-          }}
+          // Refresh user profile and data after successful addition
+          try {
+            await stableRefreshUserProfile();
+          } catch (err) {
+            console.warn('CompactSummary: failed to refresh profile after add', err);
+          }
+          await loadData();
+        }}
       />
 
       {/* Loan Management Modal */}
@@ -365,6 +399,12 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
         open={showCreditModal}
         onClose={() => setShowCreditModal(false)}
         type="credits"
+      />
+
+      {/* Monthly Breakdown Modal */}
+      <MonthlyBreakdownModal
+        open={showMonthlyBreakdown}
+        onClose={() => setShowMonthlyBreakdown(false)}
       />
     </div>
   );

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import {
-    getOutstandingLoans,
-    getOutstandingCredits,
+    getAllLoans,
+    getAllCredits,
     markLoanAsRepaid,
     markCreditAsCollected
 } from '../../services/transactionService';
@@ -27,19 +27,32 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState({});
     const [showPaymentModal, setShowPaymentModal] = useState(null);
-    const [paymentAmount, setPaymentAmount] = useState('');
+    // useRef to keep the input uncontrolled so cursor doesn't jump on re-renders
+    const paymentAmountRef = useRef(null);
+    const [paymentInputHasValue, setPaymentInputHasValue] = useState(false);
     const [paymentDescription, setPaymentDescription] = useState('');
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [showAllItems, setShowAllItems] = useState(false);
 
     const isLoans = type === 'loans';
-    const title = isLoans ? 'Outstanding Loans' : 'Outstanding Credits';
+    const title = isLoans ? 'All Loans' : 'All Credits';
     const emptyMessage = isLoans
-        ? 'No outstanding loans found'
-        : 'No outstanding credits found';
+        ? 'No loans found'
+        : 'No credits found';
 
-    // totals for header summary
-    const totalOriginalAmount = items.reduce((s, it) => s + (Number(it.amount) || 0), 0);
-    const totalRemaining = items.reduce((s, it) => s + (Number(it.remainingAmount) || 0), 0);
+    // By default show only items that are not fully paid/collected. User can toggle to show all.
+    const displayedItems = showAllItems ? items : items.filter(it => (Number(it.remainingAmount) || 0) > 0);
+
+    // whether any item is fully paid/collected (remainingAmount <= 0)
+    const hasFullyPaid = items.some(it => (Number(it.remainingAmount) || 0) <= 0);
+
+    // counts for badge
+    const unpaidCount = items.filter(it => (Number(it.remainingAmount) || 0) > 0).length;
+    const totalCount = items.length;
+
+    // totals for header summary (based on displayed items)
+    const totalOriginalAmount = displayedItems.reduce((s, it) => s + (Number(it.amount) || 0), 0);
+    const totalRemaining = displayedItems.reduce((s, it) => s + (Number(it.remainingAmount) || 0), 0);
 
     const formatCurrency = (amount) => {
         const currency = userProfile?.currency || 'BDT';
@@ -80,8 +93,8 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         setLoading(true);
         try {
             const result = isLoans
-                ? await getOutstandingLoans(user.uid)
-                : await getOutstandingCredits(user.uid);
+                ? await getAllLoans(user.uid)
+                : await getAllCredits(user.uid);
 
             if (result.success) {
                 setItems(result.data || []);
@@ -102,14 +115,28 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
 
     const handleMarkAsPaid = (item) => {
         setShowPaymentModal(item);
-        setPaymentAmount(item.remainingAmount?.toString() || '');
+        // we set the input value in an effect when the modal opens (ref will be available then)
         setPaymentDescription('');
     };
 
-    const handlePaymentSubmit = async () => {
-        if (!showPaymentModal || !paymentAmount) return;
+    // When payment modal opens, populate the uncontrolled input with remaining amount
+    useEffect(() => {
+        if (showPaymentModal && paymentAmountRef.current) {
+            paymentAmountRef.current.value = showPaymentModal.remainingAmount?.toString() || '';
+            setPaymentInputHasValue(Boolean(String(paymentAmountRef.current.value).trim()));
+        }
+    }, [showPaymentModal]);
 
-        const amount = parseFloat(paymentAmount);
+    const handlePaymentSubmit = async () => {
+        if (!showPaymentModal) return;
+
+        const raw = paymentAmountRef.current?.value;
+        if (!raw) {
+            showToast('Please enter a valid amount', 'error');
+            return;
+        }
+
+        const amount = parseFloat(raw);
         if (isNaN(amount) || amount <= 0) {
             showToast('Please enter a valid amount', 'error');
             return;
@@ -132,7 +159,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 const actionText = isLoans ? 'repayment' : 'collection';
                 showToast(`${formatCurrency(amount)} ${actionText} recorded successfully`);
                 setShowPaymentModal(null);
-                setPaymentAmount('');
+                if (paymentAmountRef.current) paymentAmountRef.current.value = '';
                 setPaymentDescription('');
 
                 // Dispatch transaction added event to notify other components
@@ -206,13 +233,14 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                 {isLoans ? 'Repayment' : 'Collection'} Amount *
                             </label>
                             <input
+                                ref={paymentAmountRef}
                                 type="number"
-                                value={paymentAmount}
-                                onChange={(e) => setPaymentAmount(e.target.value)}
                                 className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
                                 placeholder="Enter amount"
+                                defaultValue={showPaymentModal.remainingAmount}
                                 max={showPaymentModal.remainingAmount}
                                 step="0.01"
+                                onInput={(e) => setPaymentInputHasValue(String(e.target.value).trim() !== '')}
                             />
                         </div>
 
@@ -238,7 +266,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                             </button>
                             <button
                                 onClick={handlePaymentSubmit}
-                                disabled={!paymentAmount || processing[showPaymentModal.id]}
+                                disabled={!paymentInputHasValue || processing[showPaymentModal.id]}
                                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {processing[showPaymentModal.id] && <LoadingSpinner size="sm" />}
@@ -254,23 +282,41 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
     return (
         <>
             <Modal isOpen={open} onClose={onClose} title={title}>
-                {/* Header totals summary */}
+                {/* Header totals summary with toggle */}
                 <div className="flex items-center justify-between mb-4">
-                    <div className="text-sm text-gray-600 dark:text-gray-300">Total: <span className="font-semibold">{formatCurrency(totalOriginalAmount)}</span></div>
-                    <div className="text-sm text-orange-600 dark:text-orange-400">Due: <span className="font-semibold">{formatCurrency(totalRemaining)}</span></div>
+                    <div className="flex items-center gap-4">
+                        <div className="text-sm text-gray-600 dark:text-gray-300">Total: <span className="font-semibold">{formatCurrency(totalOriginalAmount)}</span></div>
+                        <div className="text-sm text-orange-600 dark:text-orange-400">Due: <span className="font-semibold">{formatCurrency(totalRemaining)}</span></div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">{unpaidCount} / {totalCount}</span>
+                        {hasFullyPaid && (
+                            <button
+                                onClick={() => setShowAllItems(s => !s)}
+                                className="p-2 rounded-md border border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                title={showAllItems ? 'Show unpaid only' : 'Show all items'}
+                            >
+                                {showAllItems ? (
+                                    <CheckCircle className="w-4 h-4 text-green-600" />
+                                ) : (
+                                    <User className="w-4 h-4 text-gray-600" />
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
                 {loading ? (
                     <div className="flex items-center justify-center py-8">
                         <LoadingSpinner />
                     </div>
-                ) : items.length === 0 ? (
+                ) : displayedItems.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                         <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>{emptyMessage}</p>
+                        <p>{showAllItems ? emptyMessage : `No ${isLoans ? 'loans' : 'credits'} match the filter. Try toggling 'Show all'.`}</p>
                     </div>
                 ) : (
                     <div className="space-y-4 overflow-y-auto max-h-100 sm:max-h-96 min-h-0">
-                        {items.map((item) => (
+                        {displayedItems.map((item) => (
                             <div
                                 key={item.id}
                                 className="border rounded-lg p-4 dark:border-gray-700"

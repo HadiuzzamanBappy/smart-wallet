@@ -6,15 +6,17 @@ import {
   Calendar,
   TrendingUp,
   TrendingDown,
-  Search
+  Search,
+  Eye
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
-import { deleteTransaction } from '../../services/transactionService';
+import { deleteTransaction, countLinkedRepayments } from '../../services/transactionService';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import { getCategoryEmoji, getCategoryColor } from '../../utils/aiTransactionParser';
 import EditParsedModal from '../Transaction/EditParsedModal';
 import ConfirmDialog from '../UI/ConfirmDialog';
+import Modal from '../UI/Modal';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { TransactionListSkeleton } from '../UI/SkeletonLoader';
 
@@ -28,6 +30,10 @@ const TransactionList = ({ onTransactionUpdate }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [deletingTransaction, setDeletingTransaction] = useState(null);
+  const [linkedCount, setLinkedCount] = useState(0);
+  const [preparingDelete, setPreparingDelete] = useState(false);
+  const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
+  const [adjustmentDetail, setAdjustmentDetail] = useState(null);
   
   // Filters
   const [filters, setFilters] = useState({
@@ -61,6 +67,29 @@ const TransactionList = ({ onTransactionUpdate }) => {
     } finally {
       setDeleteLoading(false);
       setDeletingTransaction(null);
+      setLinkedCount(0);
+    }
+  };
+
+  const handlePrepareDelete = async (transaction) => {
+    if (!user || !user.uid) {
+      // fallback to opening dialog without count
+      setLinkedCount(0);
+      setDeletingTransaction(transaction);
+      return;
+    }
+
+    setPreparingDelete(true);
+    try {
+      const res = await countLinkedRepayments(user.uid, transaction.id);
+      if (res && res.success) setLinkedCount(res.count || 0);
+      else setLinkedCount(0);
+    } catch (err) {
+      console.warn('Failed to count linked repayments before delete:', err?.message || err);
+      setLinkedCount(0);
+    } finally {
+      setPreparingDelete(false);
+      setDeletingTransaction(transaction);
     }
   };
 
@@ -145,6 +174,13 @@ const TransactionList = ({ onTransactionUpdate }) => {
     }
   };
 
+  const getDisplayCategory = (transaction) => transaction.adjustmentTag || transaction.category;
+  const getDisplayCategoryLabel = (transaction) => (
+    transaction.adjustmentTag === 'loan-repayment' ? 'Repayment'
+      : transaction.adjustmentTag === 'credit-collection' ? 'Collection'
+      : getDisplayCategory(transaction)
+  );
+
   if (transactionLoading) {
     return <TransactionListSkeleton />;
   }
@@ -163,9 +199,9 @@ const TransactionList = ({ onTransactionUpdate }) => {
           </div>
 
           {/* Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {/* Search */}
-            <div className="relative sm:col-span-2 lg:col-span-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search - Full width on all screens */}
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
               <input
                 type="text"
@@ -176,45 +212,48 @@ const TransactionList = ({ onTransactionUpdate }) => {
               />
             </div>
 
-            {/* Type Filter */}
-            <select
-              value={filters.type}
-              onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-sm"
-            >
-              <option value="all">All Types</option>
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-              <option value="credit">Credit</option>
-              <option value="loan">Loan</option>
-            </select>
+            {/* Filter dropdowns - Single row on mobile, grid on larger screens */}
+            <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3">
+              {/* Type Filter */}
+              <select
+                value={filters.type}
+                onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
+                className="px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-xs sm:text-sm truncate"
+              >
+                <option value="all">All Types</option>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+                <option value="credit">Credit</option>
+                <option value="loan">Loan</option>
+              </select>
 
-            {/* Category Filter */}
-            <select
-              value={filters.category}
-              onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-sm"
-            >
-              <option value="all">All Categories</option>
-              {getUniqueCategories().map(category => (
-                <option key={category} value={category}>
-                  {getCategoryEmoji(category)} {category}
-                </option>
-              ))}
-            </select>
+              {/* Category Filter */}
+              <select
+                value={filters.category}
+                onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+                className="px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-xs sm:text-sm truncate"
+              >
+                <option value="all">All Categories</option>
+                {getUniqueCategories().map(category => (
+                  <option key={category} value={category}>
+                    {getCategoryEmoji(category)} {category}
+                  </option>
+                ))}
+              </select>
 
-            {/* Date Range Filter */}
-            <select
-              value={filters.dateRange}
-              onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-sm"
-            >
-              <option value="all">All Time</option>
-              <option value="7">Last 7 days</option>
-              <option value="30">Last 30 days</option>
-              <option value="90">Last 3 months</option>
-              <option value="365">Last year</option>
-            </select>
+              {/* Date Range Filter */}
+              <select
+                value={filters.dateRange}
+                onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                className="px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-xs sm:text-sm truncate"
+              >
+                <option value="all">All Time</option>
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 3 months</option>
+                <option value="365">Last year</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -232,128 +271,77 @@ const TransactionList = ({ onTransactionUpdate }) => {
               </p>
             </div>
           ) : (
-            paginatedTransactions.map((transaction) => (
-              <div key={transaction.id} className="p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                {/* Mobile Layout */}
-                <div className="sm:hidden">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center space-x-2 flex-1 min-w-0">
-                      <div className="text-lg">
-                        {getCategoryEmoji(transaction.category)}
+            paginatedTransactions.map((transaction) => {
+              const dc = getDisplayCategory(transaction);
+              const dcl = getDisplayCategoryLabel(transaction);
+              return (
+                <div key={transaction.id} className="p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                  {/* Mobile Layout */}
+                  <div className="sm:hidden">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center space-x-2 flex-1 min-w-0">
+                        <div className="text-lg">{getCategoryEmoji(dc)}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{transaction.description}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(transaction.createdAt)}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {transaction.description}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatDate(transaction.createdAt)}
-                        </p>
+                      <div className="flex items-center space-x-2 ml-2">
+                        <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} flex items-center`}>
+                          {getTransactionIcon(transaction.type)}
+                          <span className="ml-1">{(transaction.type === 'income' || transaction.type === 'loan') ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 ml-2">
-                      <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} flex items-center`}>
-                        {getTransactionIcon(transaction.type)}
-                        <span className="ml-1">
-                          {(transaction.type === 'income' || transaction.type === 'loan') ? '+' : '-'}
-                          {formatCurrency(transaction.amount, currency)}
-                        </span>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 flex-wrap">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCategoryColor(dc)}`}>{dcl}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{transaction.type}</span>
+                        {transaction.source === 'chat' && (<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">AI</span>)}
+                        {transaction.adjustmentTag && (
+                          <button type="button" onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }} className="p-1 ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" title="View adjustment details"><Eye className="w-4 h-4" /></button>
+                        )}
+                      </div>
+
+                      <div className="flex items-center space-x-1">
+                        {!transaction.isRepayment && !transaction.adjustmentTag && (
+                          <button onClick={() => setEditingTransaction(transaction)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors" title="Edit"><Edit3 className="w-3.5 h-3.5" /></button>
+                        )}
+                        <button onClick={() => handlePrepareDelete(transaction)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2 flex-wrap">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCategoryColor(transaction.category)}`}>
-                        {transaction.category}
-                      </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                        {transaction.type}
-                      </span>
-                      {transaction.source === 'chat' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                          AI
-                        </span>
-                      )}
+
+                  {/* Desktop Layout */}
+                  <div className="hidden sm:flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      <div className="text-xl">{getCategoryEmoji(dc)}</div>
+                      {getTransactionIcon(transaction.type)}
                     </div>
-                    
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={() => setEditingTransaction(transaction)}
-                        className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                        title="Edit"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setDeletingTransaction(transaction)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate pr-4">{transaction.description}</p>
+                      </div>
+                      <div className="flex items-center space-x-3 flex-wrap">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCategoryColor(dc)}`}>{dcl}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap" title={`Created: ${formatDate(transaction.createdAt)}`}>{formatDate(transaction.createdAt)}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{transaction.type}</span>
+                        {transaction.source === 'chat' && (<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">AI Parsed</span>)}
+                        {transaction.adjustmentTag && (<button type="button" onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }} className="p-2 ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg" title="View adjustment details"><Eye className="w-4 h-4" /></button>)}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} whitespace-nowrap`}>{(transaction.type === 'income' || transaction.type === 'loan') ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</div>
+                      {!transaction.isRepayment && !transaction.adjustmentTag && (<button onClick={() => setEditingTransaction(transaction)} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="Edit transaction"><Edit3 className="w-4 h-4" /></button>)}
+                      <button onClick={() => handlePrepareDelete(transaction)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Delete transaction"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 </div>
-
-                {/* Desktop Layout */}
-                <div className="hidden sm:flex items-center space-x-4">
-                  {/* Category & Type Icon */}
-                  <div className="flex items-center space-x-2 flex-shrink-0">
-                    <div className="text-xl">
-                      {getCategoryEmoji(transaction.category)}
-                    </div>
-                    {getTransactionIcon(transaction.type)}
-                  </div>
-
-                  {/* Transaction Details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate pr-4">
-                        {transaction.description}
-                      </p>
-                      <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} whitespace-nowrap`}>
-                        {(transaction.type === 'income' || transaction.type === 'loan') ? '+' : '-'}
-                        {formatCurrency(transaction.amount, currency)}
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3 flex-wrap">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCategoryColor(transaction.category)}`}>
-                        {transaction.category}
-                      </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap" title={`Created: ${formatDate(transaction.createdAt)}`}>
-                        {formatDate(transaction.createdAt)}
-                      </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                        {transaction.type}
-                      </span>
-                      {transaction.source === 'chat' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                          AI Parsed
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center space-x-2 flex-shrink-0">
-                    <button
-                      onClick={() => setEditingTransaction(transaction)}
-                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                      title="Edit transaction"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setDeletingTransaction(transaction)}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                      title="Delete transaction"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
@@ -385,6 +373,64 @@ const TransactionList = ({ onTransactionUpdate }) => {
       </div>
 
       {/* Edit Modal */}
+      <Modal
+        isOpen={!!adjustmentModalOpen}
+        onClose={() => { setAdjustmentModalOpen(false); setAdjustmentDetail(null); }}
+        title="Adjustment Details"
+        size="md"
+      >
+        {adjustmentDetail ? (
+          <div className="text-gray-800 dark:text-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Adjustment</div>
+                <div className="mt-1 text-2xl font-semibold flex items-center">
+                  <span className={`${(adjustmentDetail.adjustmentTag === 'credit-collection' || (adjustmentDetail.type === 'income')) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {(adjustmentDetail.type === 'income' || adjustmentDetail.type === 'loan') ? '+' : '-'}{formatCurrency(adjustmentDetail.amount, currency)}
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-medium">
+                  {adjustmentDetail.adjustmentTag === 'loan-repayment' ? 'Loan Repayment' : adjustmentDetail.adjustmentTag === 'credit-collection' ? 'Credit Collection' : adjustmentDetail.adjustmentTag}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              {adjustmentDetail.originalAmount !== undefined && (
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="text-xs text-gray-500">Original Amount</div>
+                  <div className="mt-1 font-medium">{formatCurrency(adjustmentDetail.originalAmount, currency)}</div>
+                </div>
+              )}
+              {adjustmentDetail.repaymentFor && (
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="text-xs text-gray-500">Linked To</div>
+                  <div className="mt-1 font-medium">{adjustmentDetail.repaymentFor} {adjustmentDetail.linkedTransactionId ? `(${adjustmentDetail.linkedTransactionId})` : ''}</div>
+                </div>
+              )}
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded col-span-1 sm:col-span-2">
+                <div className="text-xs text-gray-500">Original Description</div>
+                <div className="mt-1 text-sm text-gray-700 dark:text-gray-200">{adjustmentDetail.originalDescription || '—'}</div>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded col-span-1 sm:col-span-2">
+                <div className="text-xs text-gray-500">Recorded At</div>
+                <div className="mt-1 font-medium">{formatDate(adjustmentDetail.createdAt)}</div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-xs text-gray-500">Notes</div>
+              <div className="mt-2 p-3 bg-white dark:bg-gray-900 rounded border border-gray-100 dark:border-gray-800 text-sm text-gray-700 dark:text-gray-200">{adjustmentDetail.description || '—'}</div>
+            </div>
+
+            {/* Footer intentionally removed for adjustment details modal — read-only view */}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500">No details available.</div>
+        )}
+      </Modal>
       <EditParsedModal
         isOpen={!!editingTransaction}
         onClose={() => setEditingTransaction(null)}
@@ -398,10 +444,16 @@ const TransactionList = ({ onTransactionUpdate }) => {
         onClose={() => setDeletingTransaction(null)}
         onConfirm={handleDelete}
         title="Delete Transaction"
-        message={`Are you sure you want to delete "${deletingTransaction?.description}"? This action cannot be undone.`}
+        message={
+          preparingDelete
+            ? 'Checking for linked repayments...'
+            : linkedCount > 0
+              ? `Deleting "${deletingTransaction?.description}" will also delete ${linkedCount} linked repayment${linkedCount > 1 ? 's' : ''}. This cannot be undone. Continue?`
+              : `Are you sure you want to delete "${deletingTransaction?.description}"? This action cannot be undone.`
+        }
         confirmText="Delete"
         type="danger"
-        loading={deleteLoading}
+        loading={deleteLoading || preparingDelete}
       />
     </>
   );

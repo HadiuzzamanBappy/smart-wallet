@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { getTransactions } from '../services/transactionService';
+import { computeTransactionEffects } from '../utils/transactionHelpers';
 import { TransactionContext } from './createTransactionContext';
 
 export const TransactionProvider = ({ children }) => {
@@ -62,33 +63,49 @@ export const TransactionProvider = ({ children }) => {
     });
   }, [transactions]);
 
+  // Exclude repayment/collection/adjustment transactions from income/expense aggregation
   const currentMonthIncome = React.useMemo(() => {
     return currentMonthTransactions
-      .filter(tx => tx.type === 'income')
+      .filter(tx => !tx.isRepayment && !tx.adjustmentTag && tx.type === 'income')
       .reduce((sum, tx) => sum + tx.amount, 0);
   }, [currentMonthTransactions]);
 
   const currentMonthExpense = React.useMemo(() => {
     return currentMonthTransactions
-      .filter(tx => tx.type === 'expense')
+      .filter(tx => !tx.isRepayment && !tx.adjustmentTag && tx.type === 'expense')
       .reduce((sum, tx) => sum + tx.amount, 0);
   }, [currentMonthTransactions]);
 
+  // Aggregate totals excluding repayments/collections
   const totalIncome = React.useMemo(() => {
     return transactions
-      .filter(tx => tx.type === 'income')
+      .filter(tx => !tx.isRepayment && !tx.adjustmentTag && tx.type === 'income')
       .reduce((sum, tx) => sum + tx.amount, 0);
   }, [transactions]);
 
   const totalExpense = React.useMemo(() => {
     return transactions
-      .filter(tx => tx.type === 'expense')
+      .filter(tx => !tx.isRepayment && !tx.adjustmentTag && tx.type === 'expense')
       .reduce((sum, tx) => sum + tx.amount, 0);
   }, [transactions]);
 
+  // Compute balance by summing each transaction's effect. This allows repayment
+  // transactions (isRepayment) to only affect balance and not the income/expense totals.
   const balance = React.useMemo(() => {
-    return totalIncome - totalExpense;
-  }, [totalIncome, totalExpense]);
+    return transactions.reduce((sum, tx) => {
+      try {
+        const eff = computeTransactionEffects(tx);
+        return sum + (eff.balance || 0);
+      } catch {
+        // Fallback: preserve legacy behavior for unknown tx
+        if (tx.type === 'income') return sum + (tx.amount || 0);
+        if (tx.type === 'expense') return sum - (tx.amount || 0);
+        if (tx.type === 'credit') return sum - (tx.amount || 0);
+        if (tx.type === 'loan') return sum + (tx.amount || 0);
+        return sum;
+      }
+    }, 0);
+  }, [transactions]);
 
   const value = {
     // Data

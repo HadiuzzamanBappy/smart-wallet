@@ -21,68 +21,42 @@ import {
   encryptUserProfile, 
   decryptUserProfile
 } from '../utils/encryption';
+import {
+  normalizeDateToTimestamp,
+  computeTransactionFingerprint,
+  computeTransactionEffects,
+  computeTransactionDelta,
+  reverseTransactionEffects,
+  validateTransaction,
+  validateTotalsNotNegative,
+  validateRepaymentAmount,
+  calculateUpdatedPaidAmount,
+  isFullyPaid,
+  applyEffectsToTotals,
+  normalizeLoanCreditNumbers
+} from '../utils/transactionHelpers';
 
-// Compute deterministic fingerprint for a transaction (used for export/import dedupe)
-const normalizeStringForFingerprint = (s) => (String(s || '')).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
-const computeTransactionFingerprint = async (t) => {
-  try {
-    const type = String(t.type || '').toLowerCase();
-    const amount = Number(t.amount || 0);
-    const date = (t.date && typeof t.date === 'string') ? t.date : (t.date && t.date.toDate ? t.date.toDate().toISOString().split('T')[0] : '');
-    const desc = normalizeStringForFingerprint(t.description || t.desc || t.note || '');
-    const src = `${type}|${amount}|${date}|${desc}`;
-    const enc = new TextEncoder().encode(src);
-    const hash = await (crypto.subtle || window.crypto.subtle).digest('SHA-256', enc);
-    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-  } catch {
-    return null;
-  }
-};
-
+/**
+ * Add a new transaction to the user's account
+ * @param {string} userId - User's unique identifier
+ * @param {Object} transactionData - Transaction data (type, amount, description, date, etc.)
+ * @returns {Promise<string>} Created transaction ID
+ * @throws {Error} If validation fails or database operation fails
+ */
 export const addTransaction = async (userId, transactionData) => {
   try {
-    // Validate transaction type
-    const validTypes = ['income', 'expense', 'credit', 'loan'];
-    if (!validTypes.includes(transactionData.type)) {
-      throw new Error(`Invalid transaction type: ${transactionData.type}`);
-    }
+    // Validate transaction data
+    validateTransaction(transactionData);
     
-    // Ensure amount is a number
-    const amount = Number(transactionData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      throw new Error(`Invalid amount: ${transactionData.amount}`);
-    }
-    
-    // Prepare transaction data for encryption with robust date normalization.
+    // Prepare transaction data for encryption with normalized fields
     const transactionToStore = {
       ...transactionData,
-      amount, // Ensure it's stored as number
+      amount: Number(transactionData.amount), // Ensure number type
       userId,
       createdAt: Timestamp.now(),
-      // Normalize date input to a JS Date constructed in local time for
-      // YYYY-MM-DD strings to avoid timezone shifts when converting to
-      // Firestore Timestamp. Accept Date, numeric ms, Firestore Timestamp-like
-      // objects (have toDate), or ISO-like strings.
-      date: (function () {
-        const d = transactionData.date;
-        if (!d) return Timestamp.now();
-        // Firestore Timestamp-like
-        if (d && typeof d.toDate === 'function') return Timestamp.fromDate(d.toDate());
-        // JS Date
-        if (d instanceof Date) return Timestamp.fromDate(d);
-        // Numeric ms
-        if (typeof d === 'number' && Number.isFinite(d)) return Timestamp.fromDate(new Date(d));
-        // ISO-like YYYY-MM-DD string -> construct local Date to avoid UTC shift
-        if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
-          const [y, m, day] = d.split('-').map(n => parseInt(n, 10));
-          return Timestamp.fromDate(new Date(y, m - 1, day));
-        }
-        // Fallback to Date parsing (best-effort)
-        return Timestamp.fromDate(new Date(d));
-      })(),
-  // Do NOT include original user message/prompt to preserve user privacy
-  // (original messages intentionally not stored)
+      date: normalizeDateToTimestamp(transactionData.date),
       source: transactionData.source || 'manual' // Track if created via chat or manual entry
+      // Do NOT include original user message/prompt to preserve user privacy
     };
 
     // Compute import fingerprint (store as plaintext to allow future dedupe)
@@ -96,12 +70,14 @@ export const addTransaction = async (userId, transactionData) => {
     // Encrypt sensitive transaction data
     const encryptedTransaction = await encryptTransactionData(transactionToStore);
 
-    // Add encrypted transaction to database
-    const transactionsRef = collection(db, `users/${userId}/transactions`);
-    const docRef = await addDoc(transactionsRef, encryptedTransaction);
+  // Add encrypted transaction to database
+  const transactionsRef = collection(db, `users/${userId}/transactions`);
+  const docRef = await addDoc(transactionsRef, encryptedTransaction);
 
-    // Update user balance
-    await updateUserBalance(userId, transactionData.type, amount);
+  // Update user balance. Pass the stored transaction so updateUserBalance can make
+  // decisions based on flags like isRepayment/isRepaymentFor (loan/credit).
+  const storedTx = { id: docRef.id, ...transactionToStore };
+  await updateUserBalance(userId, storedTx);
 
     return { success: true, id: docRef.id };
   } catch (error) {
@@ -110,82 +86,72 @@ export const addTransaction = async (userId, transactionData) => {
   }
 };
 
-export const updateUserBalance = async (userId, type, amount) => {
+/**
+ * Update user's balance and totals based on a transaction
+ * @param {string} userId - User's unique identifier
+ * @param {Object|string} txOrType - Transaction object or type string (for backwards compatibility)
+ * @param {number} [maybeAmount] - Amount (only used if txOrType is a string)
+ * @returns {Promise<Object>} Success/error result
+ */
+export const updateUserBalance = async (userId, txOrType, maybeAmount) => {
   try {
-    // Validate inputs
-    const validTypes = ['income', 'expense', 'credit', 'loan'];
-    if (!validTypes.includes(type)) {
-      throw new Error(`Invalid transaction type: ${type}`);
-    }
-    
-    const numAmount = Number(amount);
-    if (isNaN(numAmount) || numAmount <= 0) {
-      throw new Error(`Invalid amount: ${amount}`);
-    }
-    
     const userRef = doc(db, 'users', userId);
     const userDoc = await getDoc(userRef);
-    
-    if (userDoc.exists()) {
-      // Decrypt user data first
-      const encryptedUserData = userDoc.data();
-      const userData = await decryptUserProfile(encryptedUserData);
-      
-      const currentBalance = Number(userData.balance) || 0;
-      const totalIncome = Number(userData.totalIncome) || 0;
-      const totalExpense = Number(userData.totalExpense) || 0;
-      const totalCreditGiven = Number(userData.totalCreditGiven) || 0;
-      const totalLoanTaken = Number(userData.totalLoanTaken) || 0;
-      
-      // Calculate new values based on transaction type
-      let newBalance = currentBalance;
-      let newTotalIncome = totalIncome;
-      let newTotalExpense = totalExpense;
-      let newTotalCreditGiven = totalCreditGiven;
-      let newTotalLoanTaken = totalLoanTaken;
 
-      switch (type) {
-        case 'income':
-          // Money comes in: increase balance and totalIncome
-          newBalance = currentBalance + numAmount;
-          newTotalIncome = totalIncome + numAmount;
-          break;
-        case 'expense':
-          // Money goes out: decrease balance and increase totalExpense
-          newBalance = currentBalance - numAmount;
-          newTotalExpense = totalExpense + numAmount;
-          break;
-        case 'credit':
-          // User gave credit/loan to someone else: money goes out, track credit given
-          newBalance = currentBalance - numAmount;
-          newTotalCreditGiven = totalCreditGiven + numAmount;
-          break;
-        case 'loan':
-          // User took loan/credit: money comes in, track loan taken
-          newBalance = currentBalance + numAmount;
-          newTotalLoanTaken = totalLoanTaken + numAmount;
-          break;
-      }
-      
-      // Encrypt updated data before storing
-      const updatedData = {
-        balance: newBalance,
-        totalIncome: newTotalIncome,
-        totalExpense: newTotalExpense,
-        totalCreditGiven: newTotalCreditGiven,
-        totalLoanTaken: newTotalLoanTaken,
-        updatedAt: Timestamp.now()
-      };
-      
-      const encryptedUpdatedData = await encryptUserProfile(updatedData);
-      await updateDoc(userRef, encryptedUpdatedData);
-      
-      return { success: true };
-    } else {
-      throw new Error("User not found");
+    if (!userDoc.exists()) {
+      throw new Error('User not found');
     }
+
+    // Decrypt existing profile
+    const encryptedUserData = userDoc.data();
+    const userData = await decryptUserProfile(encryptedUserData);
+
+    // Extract current totals
+    const currentTotals = {
+      balance: Number(userData.balance) || 0,
+      totalIncome: Number(userData.totalIncome) || 0,
+      totalExpense: Number(userData.totalExpense) || 0,
+      totalCreditGiven: Number(userData.totalCreditGiven) || 0,
+      totalLoanTaken: Number(userData.totalLoanTaken) || 0
+    };
+
+    // Backwards compatible invocation: updateUserBalance(userId, type, amount)
+    let tx = null;
+    if (typeof txOrType === 'string') {
+      tx = { type: txOrType, amount: maybeAmount };
+    } else {
+      tx = txOrType || {};
+    }
+
+    // Basic validation
+    const type = tx.type;
+    const amount = Number(tx.amount || 0);
+
+    if (!type || isNaN(amount) || amount <= 0) {
+      throw new Error('Invalid type or amount for updateUserBalance');
+    }
+
+    // Compute transaction effects using helper
+    const effects = computeTransactionEffects(tx);
+
+    // Apply effects to current totals
+    const updatedTotals = applyEffectsToTotals(currentTotals, effects);
+
+    // Validate: prevent negative totals
+    validateTotalsNotNegative(updatedTotals);
+
+    // Prepare encrypted update
+    const updatedData = {
+      ...updatedTotals,
+      updatedAt: Timestamp.now()
+    };
+
+    const encryptedUpdatedData = await encryptUserProfile(updatedData);
+    await updateDoc(userRef, encryptedUpdatedData);
+
+    return { success: true };
   } catch (error) {
-    console.error("Error updating balance:", error);
+    console.error('Error updating balance:', error);
     return { success: false, error: error.message };
   }
 };
@@ -230,13 +196,33 @@ export const getRecentTransactions = async (userId, limitCount = 10) => {
   return getTransactions(userId, { limit: limitCount });
 };
 
+/**
+ * Delete a transaction and cascade-delete any linked repayments
+ * @param {string} userId - User's unique identifier
+ * @param {string} transactionId - Transaction ID to delete
+ * @param {Object} [transactionData] - Optional cached transaction data to avoid decrypt
+ * @returns {Promise<Object>} Success/error result
+ */
 export const deleteTransaction = async (userId, transactionId, transactionData) => {
   try {
     const transactionRef = doc(db, `users/${userId}/transactions/${transactionId}`);
     const userRef = doc(db, 'users', userId);
 
-    // Holder so we can emit a reliable event after the transaction commits
+    // Holder for event emission after commit
     let deletedTransactionInfo = null;
+
+    // Find any repayment/collection transactions that link to this original (cascade-delete)
+    let linkedRepayments = [];
+    try {
+      const transactionsRef = collection(db, `users/${userId}/transactions`);
+      const linkedQueryAll = query(transactionsRef, where('linkedTransactionId', '==', transactionId));
+      const linkedSnapAll = await getDocs(linkedQueryAll);
+      if (!linkedSnapAll.empty) {
+        linkedRepayments = linkedSnapAll.docs.map(d => ({ id: d.id, data: d.data() }));
+      }
+    } catch {
+      linkedRepayments = [];
+    }
 
     await runTransaction(db, async (tx) => {
       // Read transaction inside the transaction to ensure consistency
@@ -245,14 +231,14 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
         throw new Error('Transaction not found');
       }
 
-      // Decrypt the transaction to discover its true amount and type
+      // Decrypt the transaction
       const encryptedTx = { id: txSnap.id, ...txSnap.data() };
       const [decryptedTx] = await decryptTransactions([encryptedTx]);
 
       const transactionAmount = Number((transactionData && transactionData.amount) ?? decryptedTx.amount) || 0;
       const transactionType = (transactionData && transactionData.type) ?? decryptedTx.type;
 
-      // Read user profile inside transaction
+      // Read user profile
       const userSnap = await tx.get(userRef);
       if (!userSnap.exists()) {
         throw new Error('User not found');
@@ -261,45 +247,86 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
       const encryptedUserData = userSnap.data();
       const userData = await decryptUserProfile(encryptedUserData);
 
-      const currentBalance = Number(userData.balance) || 0;
-      const totalIncome = Number(userData.totalIncome) || 0;
-      const totalExpense = Number(userData.totalExpense) || 0;
-      const totalCreditGiven = Number(userData.totalCreditGiven) || 0;
-      const totalLoanTaken = Number(userData.totalLoanTaken) || 0;
+      // Extract current totals
+      let currentTotals = {
+        balance: Number(userData.balance) || 0,
+        totalIncome: Number(userData.totalIncome) || 0,
+        totalExpense: Number(userData.totalExpense) || 0,
+        totalCreditGiven: Number(userData.totalCreditGiven) || 0,
+        totalLoanTaken: Number(userData.totalLoanTaken) || 0
+      };
 
-      // Reverse the transaction effect
-      let newBalance = currentBalance;
-      let newTotalIncome = totalIncome;
-      let newTotalExpense = totalExpense;
-      let newTotalCreditGiven = totalCreditGiven;
-      let newTotalLoanTaken = totalLoanTaken;
+      // Reverse the transaction effect using helper
+      const reverseEffects = reverseTransactionEffects({
+        type: transactionType,
+        amount: transactionAmount,
+        isRepayment: decryptedTx.isRepayment,
+        repaymentFor: decryptedTx.repaymentFor
+      });
 
-      if (transactionType === 'income') {
-        newBalance = currentBalance - transactionAmount;
-        newTotalIncome = totalIncome - transactionAmount;
-      } else if (transactionType === 'expense') {
-        newBalance = currentBalance + transactionAmount;
-        newTotalExpense = totalExpense - transactionAmount;
-      } else if (transactionType === 'credit') {
-        newBalance = currentBalance + transactionAmount;
-        newTotalCreditGiven = totalCreditGiven - transactionAmount;
-      } else if (transactionType === 'loan') {
-        newBalance = currentBalance - transactionAmount;
-        newTotalLoanTaken = totalLoanTaken - transactionAmount;
+      // Apply reversed effects
+      currentTotals = applyEffectsToTotals(currentTotals, reverseEffects);
+
+      // If deleting a repayment, update the linked original's paidAmount
+      if (decryptedTx.isRepayment && decryptedTx.linkedTransactionId) {
+        try {
+          const linkedRef = doc(db, `users/${userId}/transactions/${decryptedTx.linkedTransactionId}`);
+          const linkedSnap = await tx.get(linkedRef);
+          if (linkedSnap.exists()) {
+            const [linkedDecrypted] = await decryptTransactions([{ id: linkedSnap.id, ...linkedSnap.data() }]);
+            const newPaid = calculateUpdatedPaidAmount(linkedDecrypted.paidAmount || 0, -transactionAmount);
+            const updatedLinked = {
+              ...linkedDecrypted,
+              paidAmount: newPaid,
+              isFullyPaid: isFullyPaid(linkedDecrypted.amount, newPaid),
+              lastPaymentDate: newPaid > 0 ? linkedDecrypted.lastPaymentDate : null,
+              updatedAt: Timestamp.now()
+            };
+            const encryptedLinked = await encryptTransactionData(updatedLinked);
+            tx.update(linkedRef, encryptedLinked);
+          }
+        } catch (err) {
+          console.warn('Failed to update linked loan/credit during delete:', err?.message || err);
+        }
       }
 
+      // Cascade-delete linked repayments and reverse their effects
+      if (linkedRepayments.length > 0) {
+        for (const linked of linkedRepayments) {
+          try {
+            const linkedRef = doc(db, `users/${userId}/transactions/${linked.id}`);
+            const [linkedDecrypted] = await decryptTransactions([{ id: linked.id, ...linked.data }]);
+            
+            // Reverse the linked repayment's effect
+            const linkedReverseEffects = reverseTransactionEffects({
+              type: linkedDecrypted.type,
+              amount: linkedDecrypted.amount,
+              isRepayment: linkedDecrypted.isRepayment,
+              repaymentFor: linkedDecrypted.repaymentFor
+            });
+
+            currentTotals = applyEffectsToTotals(currentTotals, linkedReverseEffects);
+
+            // Delete the linked repayment
+            tx.delete(linkedRef);
+          } catch (err) {
+            console.warn('Failed to cascade-delete linked repayment:', err?.message || err);
+          }
+        }
+      }
+
+      // Validate no negative totals
+      validateTotalsNotNegative(currentTotals);
+
+      // Prepare encrypted update
       const updatedData = {
-        balance: newBalance,
-        totalIncome: newTotalIncome,
-        totalExpense: newTotalExpense,
-        totalCreditGiven: newTotalCreditGiven,
-        totalLoanTaken: newTotalLoanTaken,
+        ...currentTotals,
         updatedAt: Timestamp.now()
       };
 
       const encryptedUpdatedData = await encryptUserProfile(updatedData);
 
-      // Schedule delete and update inside the same transaction
+      // Commit delete and update atomically
       tx.delete(transactionRef);
       tx.update(userRef, encryptedUpdatedData);
 
@@ -310,7 +337,7 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
       };
     });
 
-    // Emit event to notify other components about the deletion (after commit)
+    // Emit event after commit
     const event = new CustomEvent('wallet:transaction-deleted', {
       detail: deletedTransactionInfo
     });
@@ -343,14 +370,14 @@ export const getUserProfile = async (userId) => {
 };
 
 /**
- * Update an existing transaction by id and adjust user balances accordingly.
- * @param {string} transactionId - Firestore doc id for transaction
- * @param {Object} updates - Fields to update (type, amount, category, description, date)
+ * Update an existing transaction and adjust user balances accordingly
+ * @param {string} transactionId - Firestore doc ID for transaction
+ * @param {Object} updates - Fields to update (type, amount, category, description, date, userId)
+ * @returns {Promise<Object>} Success/error result
+ * @throws {Error} If validation fails or if guards prevent the update
  */
 export const updateTransaction = async (transactionId, updates) => {
   try {
-    // Find owning user by querying transactions collection across users is expensive.
-    // Here expect caller to provide userId in updates.userId or pass userId separately.
     const { userId, ...rest } = updates;
     if (!userId) {
       throw new Error('userId required to update transaction');
@@ -363,76 +390,74 @@ export const updateTransaction = async (transactionId, updates) => {
     }
 
     const encryptedOld = { id: txDoc.id, ...txDoc.data() };
-    // Decrypt the old transaction to read amount and type
     const [oldDecrypted] = await decryptTransactions([encryptedOld]);
 
     const oldAmount = Number(oldDecrypted.amount || 0);
     const oldType = oldDecrypted.type || 'expense';
 
-    // Prepare updates with timestamp. Convert date strings/Date objects to Timestamp when provided.
+    // Guard: Prevent invalid edits to loans/credits with repayments
+    if ((oldType === 'loan' || oldType === 'credit')) {
+      try {
+        const transactionsRef = collection(db, `users/${userId}/transactions`);
+        const linkedQuery = query(transactionsRef, where('linkedTransactionId', '==', transactionId), limit(1));
+        const linkedSnap = await getDocs(linkedQuery);
+        const hasLinkedRepayments = !linkedSnap.empty;
+
+        if (hasLinkedRepayments) {
+          const paidAmount = Number(oldDecrypted.paidAmount || 0);
+          const proposedAmount = rest.amount !== undefined ? Number(rest.amount) : oldAmount;
+          const proposedType = rest.type || oldType;
+
+          if (proposedType !== oldType) {
+            throw new Error('Cannot change transaction type for a loan/credit that has repayments. Remove linked repayments first.');
+          }
+
+          if (proposedAmount < paidAmount) {
+            throw new Error('Cannot reduce loan/credit amount below already paid amount. Adjust or remove repayments first.');
+          }
+        }
+      } catch (err) {
+        if (err.message && (err.message.includes('Cannot change transaction type') || err.message.includes('Cannot reduce loan/credit amount'))) {
+          throw err;
+        }
+      }
+    }
+
+    // Prepare updates with normalized date and timestamp
     const updatesWithTimestamp = {
       ...rest,
       updatedAt: Timestamp.now()
     };
 
     if (rest.date) {
-      try {
-        const rd = rest.date;
-        if (rd && typeof rd.toDate === 'function') {
-          updatesWithTimestamp.date = Timestamp.fromDate(rd.toDate());
-        } else if (rd instanceof Date) {
-          updatesWithTimestamp.date = Timestamp.fromDate(rd);
-        } else if (typeof rd === 'number' && Number.isFinite(rd)) {
-          updatesWithTimestamp.date = Timestamp.fromDate(new Date(rd));
-        } else if (typeof rd === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rd)) {
-          const [yy, mm, dd] = rd.split('-').map(n => parseInt(n, 10));
-          updatesWithTimestamp.date = Timestamp.fromDate(new Date(yy, mm - 1, dd));
-        } else if (typeof rd === 'string') {
-          updatesWithTimestamp.date = Timestamp.fromDate(new Date(rd));
-        }
-        // If it's already a Timestamp-like or convertible, handled above
-      } catch {
-        // keep original if conversion fails
-      }
+      updatesWithTimestamp.date = normalizeDateToTimestamp(rest.date);
     }
 
-    // Ensure amount is a number if provided
+    // Compute new values
     const newAmount = rest.amount !== undefined ? Number(rest.amount) : oldAmount;
     const newType = rest.type || oldType;
 
-  // Encrypt the updates if they contain sensitive data
-  const encryptedUpdates = await encryptTransactionData({ ...updatesWithTimestamp, amount: newAmount });
+    // Encrypt the updates
+    const encryptedUpdates = await encryptTransactionData({ ...updatesWithTimestamp, amount: newAmount });
 
-  // Compute effect helper
-    const computeEffects = (type, amount) => {
-      const a = Number(amount || 0);
-      switch (type) {
-        case 'income':
-          return { balance: a, totalIncome: a, totalExpense: 0, totalCreditGiven: 0, totalLoanTaken: 0 };
-        case 'expense':
-          return { balance: -a, totalIncome: 0, totalExpense: a, totalCreditGiven: 0, totalLoanTaken: 0 };
-        case 'credit':
-          return { balance: -a, totalIncome: 0, totalExpense: 0, totalCreditGiven: a, totalLoanTaken: 0 };
-        case 'loan':
-          return { balance: a, totalIncome: 0, totalExpense: 0, totalCreditGiven: 0, totalLoanTaken: a };
-        default:
-          return { balance: -a, totalIncome: 0, totalExpense: a, totalCreditGiven: 0, totalLoanTaken: 0 };
-      }
+    // Compute delta using helper
+    const oldTransaction = {
+      type: oldType,
+      amount: oldAmount,
+      isRepayment: oldDecrypted.isRepayment,
+      repaymentFor: oldDecrypted.repaymentFor
     };
 
-    const oldEffects = computeEffects(oldType, oldAmount);
-    const newEffects = computeEffects(newType, newAmount);
-
-    // Delta to apply to user profile
-    const delta = {
-      balance: newEffects.balance - oldEffects.balance,
-      totalIncome: (newEffects.totalIncome || 0) - (oldEffects.totalIncome || 0),
-      totalExpense: (newEffects.totalExpense || 0) - (oldEffects.totalExpense || 0),
-      totalCreditGiven: (newEffects.totalCreditGiven || 0) - (oldEffects.totalCreditGiven || 0),
-      totalLoanTaken: (newEffects.totalLoanTaken || 0) - (oldEffects.totalLoanTaken || 0)
+    const newTransaction = {
+      type: newType,
+      amount: newAmount,
+      isRepayment: rest.isRepayment !== undefined ? rest.isRepayment : oldDecrypted.isRepayment,
+      repaymentFor: rest.repaymentFor || oldDecrypted.repaymentFor
     };
 
-    // Prepare encrypted updated user profile data by reading and decrypting current profile
+    const delta = computeTransactionDelta(oldTransaction, newTransaction);
+
+    // Read and update user profile
     const userRef = doc(db, 'users', userId);
     const userDocSnapshot = await getDoc(userRef);
     if (!userDocSnapshot.exists()) {
@@ -442,18 +467,21 @@ export const updateTransaction = async (transactionId, updates) => {
     const encryptedUserData = userDocSnapshot.data();
     const userData = await decryptUserProfile(encryptedUserData);
 
-    const currentBalance = Number(userData.balance) || 0;
-    const totalIncome = Number(userData.totalIncome) || 0;
-    const totalExpense = Number(userData.totalExpense) || 0;
-    const totalCreditGiven = Number(userData.totalCreditGiven) || 0;
-    const totalLoanTaken = Number(userData.totalLoanTaken) || 0;
+    const currentTotals = {
+      balance: Number(userData.balance) || 0,
+      totalIncome: Number(userData.totalIncome) || 0,
+      totalExpense: Number(userData.totalExpense) || 0,
+      totalCreditGiven: Number(userData.totalCreditGiven) || 0,
+      totalLoanTaken: Number(userData.totalLoanTaken) || 0
+    };
+
+    const updatedTotals = applyEffectsToTotals(currentTotals, delta);
+
+    // Validate no negative totals
+    validateTotalsNotNegative(updatedTotals);
 
     const updatedProfilePlain = {
-      balance: currentBalance + delta.balance,
-      totalIncome: totalIncome + delta.totalIncome,
-      totalExpense: totalExpense + delta.totalExpense,
-      totalCreditGiven: totalCreditGiven + delta.totalCreditGiven,
-      totalLoanTaken: totalLoanTaken + delta.totalLoanTaken,
+      ...updatedTotals,
       updatedAt: Timestamp.now()
     };
 
@@ -461,11 +489,38 @@ export const updateTransaction = async (transactionId, updates) => {
 
     // Apply both transaction update and profile update atomically
     await runTransaction(db, async (tx) => {
+      // If updating a repayment, update linked loan/credit's paidAmount
+      const isRepaymentTx = oldDecrypted.isRepayment || rest.isRepayment;
+      const linkedId = oldDecrypted.linkedTransactionId || rest.linkedTransactionId;
+
+      if (isRepaymentTx && linkedId) {
+        try {
+          const linkedRef = doc(db, `users/${userId}/transactions/${linkedId}`);
+          const linkedSnap = await tx.get(linkedRef);
+          if (linkedSnap.exists()) {
+            const [linkedDecrypted] = await decryptTransactions([{ id: linkedSnap.id, ...linkedSnap.data() }]);
+            const deltaPaid = newAmount - oldAmount;
+            const updatedPaid = calculateUpdatedPaidAmount(linkedDecrypted.paidAmount || 0, deltaPaid);
+            const updatedLinked = {
+              ...linkedDecrypted,
+              paidAmount: updatedPaid,
+              isFullyPaid: isFullyPaid(linkedDecrypted.amount, updatedPaid),
+              lastPaymentDate: deltaPaid !== 0 ? Timestamp.now() : linkedDecrypted.lastPaymentDate,
+              updatedAt: Timestamp.now()
+            };
+            const encryptedLinked = await encryptTransactionData(updatedLinked);
+            tx.update(linkedRef, encryptedLinked);
+          }
+        } catch (err) {
+          console.warn('Failed to update linked loan/credit during transaction edit:', err?.message || err);
+        }
+      }
+
       tx.update(transactionRef, encryptedUpdates);
       tx.update(userRef, encryptedUpdatedProfile);
     });
 
-    // Emit event so UI can refresh
+    // Emit event for UI refresh
     const event = new CustomEvent('wallet:transaction-edited', { detail: { transactionId, updates: rest } });
     window.dispatchEvent(event);
 
@@ -582,13 +637,15 @@ export const deleteAllUserData = async (userId) => {
 };
 
 // New repayment functions
+/**
+ * Get outstanding (unpaid) loans for a user
+ * @param {string} userId - User's unique identifier
+ * @returns {Promise<Object>} Success/error result with outstanding loans
+ */
 export const getOutstandingLoans = async (userId) => {
   try {
     const transactionsRef = collection(db, `users/${userId}/transactions`);
-    const q = query(
-      transactionsRef, 
-      where('type', '==', 'loan')
-    );
+    const q = query(transactionsRef, where('type', '==', 'loan'));
     
     const querySnapshot = await getDocs(q);
     const loans = [];
@@ -600,20 +657,17 @@ export const getOutstandingLoans = async (userId) => {
       }]);
       
       const loan = decryptedTransactions[0];
-      // Check if loan is not fully repaid
+      // Only include loans that are not fully repaid
       if (!loan.isFullyPaid) {
-        loans.push({
-          ...loan,
-          remainingAmount: loan.amount - (loan.paidAmount || 0)
-        });
+        loans.push(normalizeLoanCreditNumbers(loan));
       }
     }
     
-    // Sort by createdAt in JavaScript instead of Firestore
+    // Sort by createdAt descending
     loans.sort((a, b) => {
       const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
       const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
-      return dateB - dateA; // desc order
+      return dateB - dateA;
     });
     
     return { success: true, data: loans };
@@ -623,13 +677,15 @@ export const getOutstandingLoans = async (userId) => {
   }
 };
 
+/**
+ * Get outstanding (unpaid) credits for a user
+ * @param {string} userId - User's unique identifier
+ * @returns {Promise<Object>} Success/error result with outstanding credits
+ */
 export const getOutstandingCredits = async (userId) => {
   try {
     const transactionsRef = collection(db, `users/${userId}/transactions`);
-    const q = query(
-      transactionsRef, 
-      where('type', '==', 'credit')
-    );
+    const q = query(transactionsRef, where('type', '==', 'credit'));
     
     const querySnapshot = await getDocs(q);
     const credits = [];
@@ -641,20 +697,17 @@ export const getOutstandingCredits = async (userId) => {
       }]);
       
       const credit = decryptedTransactions[0];
-      // Check if credit is not fully collected
+      // Only include credits that are not fully collected
       if (!credit.isFullyPaid) {
-        credits.push({
-          ...credit,
-          remainingAmount: credit.amount - (credit.paidAmount || 0)
-        });
+        credits.push(normalizeLoanCreditNumbers(credit));
       }
     }
     
-    // Sort by createdAt in JavaScript instead of Firestore
+    // Sort by createdAt descending
     credits.sort((a, b) => {
       const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
       const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
-      return dateB - dateA; // desc order
+      return dateB - dateA;
     });
     
     return { success: true, data: credits };
@@ -664,6 +717,88 @@ export const getOutstandingCredits = async (userId) => {
   }
 };
 
+/**
+ * Get all loans (including fully paid) for comprehensive view
+ * @param {string} userId - User's unique identifier
+ * @returns {Promise<Object>} Success/error result with all loans
+ */
+export const getAllLoans = async (userId) => {
+  try {
+    const transactionsRef = collection(db, `users/${userId}/transactions`);
+    const q = query(transactionsRef, where('type', '==', 'loan'));
+    
+    const querySnapshot = await getDocs(q);
+    const loans = [];
+    
+    for (const docSnap of querySnapshot.docs) {
+      const decryptedTransactions = await decryptTransactions([{
+        id: docSnap.id,
+        ...docSnap.data()
+      }]);
+      
+      const loan = decryptedTransactions[0];
+      loans.push(normalizeLoanCreditNumbers(loan));
+    }
+    
+    // Sort by createdAt descending
+    loans.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+      return dateB - dateA;
+    });
+    
+    return { success: true, data: loans };
+  } catch (error) {
+    console.error('Error getting all loans:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get all credits (including fully paid) for comprehensive view
+ * @param {string} userId - User's unique identifier
+ * @returns {Promise<Object>} Success/error result with all credits
+ */
+export const getAllCredits = async (userId) => {
+  try {
+    const transactionsRef = collection(db, `users/${userId}/transactions`);
+    const q = query(transactionsRef, where('type', '==', 'credit'));
+    
+    const querySnapshot = await getDocs(q);
+    const credits = [];
+    
+    for (const docSnap of querySnapshot.docs) {
+      const decryptedTransactions = await decryptTransactions([{
+        id: docSnap.id,
+        ...docSnap.data()
+      }]);
+      
+      const credit = decryptedTransactions[0];
+      credits.push(normalizeLoanCreditNumbers(credit));
+    }
+    
+    // Sort by createdAt descending
+    credits.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+      return dateB - dateA;
+    });
+    
+    return { success: true, data: credits };
+  } catch (error) {
+    console.error('Error getting all credits:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Mark a loan as (partially) repaid by creating a repayment transaction
+ * @param {string} userId - User's unique identifier
+ * @param {string} loanId - ID of the loan transaction
+ * @param {number} repaymentAmount - Amount being repaid
+ * @param {string} [description] - Optional description for the repayment
+ * @returns {Promise<Object>} Success/error result with repayment transaction ID
+ */
 export const markLoanAsRepaid = async (userId, loanId, repaymentAmount, description = '') => {
   try {
     // Get the original loan transaction
@@ -677,34 +812,39 @@ export const markLoanAsRepaid = async (userId, loanId, repaymentAmount, descript
     const loanData = loanDoc.data();
     const decryptedLoan = (await decryptTransactions([{ id: loanId, ...loanData }]))[0];
     
-    const currentPaidAmount = decryptedLoan.paidAmount || 0;
-    const newPaidAmount = currentPaidAmount + repaymentAmount;
-    const remainingAmount = decryptedLoan.amount - newPaidAmount;
+    // Validate repayment amount
+    const currentPaidAmount = Number(decryptedLoan.paidAmount || 0);
+    const totalAmount = Number(decryptedLoan.amount);
+    const remainingAmount = totalAmount - currentPaidAmount;
     
-    if (newPaidAmount > decryptedLoan.amount) {
-      throw new Error('Repayment amount exceeds loan amount');
-    }
+    validateRepaymentAmount(repaymentAmount, remainingAmount);
+    
+    const numRepaymentAmount = Number(repaymentAmount);
     
     // Create repayment transaction (expense)
     const repaymentTransaction = {
       type: 'expense',
-      amount: repaymentAmount,
+      amount: numRepaymentAmount,
       description: description || `Loan repayment - ${decryptedLoan.description}`,
-      category: 'other',
+      category: 'repayment',
       date: new Date().toISOString().split('T')[0],
       linkedTransactionId: loanId,
       isRepayment: true,
-      repaymentFor: 'loan'
+      repaymentFor: 'loan',
+      adjustmentTag: 'loan-repayment',
+      originalAmount: Number(decryptedLoan.amount || 0),
+      originalDescription: decryptedLoan.description || ''
     };
     
     const result = await addTransaction(userId, repaymentTransaction);
     
     if (result.success) {
       // Update original loan with payment info
+      const newPaidAmount = calculateUpdatedPaidAmount(currentPaidAmount, numRepaymentAmount);
       const updatedLoanData = {
         ...decryptedLoan,
         paidAmount: newPaidAmount,
-        isFullyPaid: remainingAmount <= 0,
+        isFullyPaid: isFullyPaid(totalAmount, newPaidAmount),
         lastPaymentDate: Timestamp.now(),
         updatedAt: Timestamp.now()
       };
@@ -715,7 +855,7 @@ export const markLoanAsRepaid = async (userId, loanId, repaymentAmount, descript
       return { 
         success: true, 
         repaymentTransactionId: result.id,
-        remainingAmount: remainingAmount 
+        remainingAmount: totalAmount - newPaidAmount
       };
     }
     
@@ -726,6 +866,14 @@ export const markLoanAsRepaid = async (userId, loanId, repaymentAmount, descript
   }
 };
 
+/**
+ * Mark a credit as (partially) collected by creating a collection transaction
+ * @param {string} userId - User's unique identifier
+ * @param {string} creditId - ID of the credit transaction
+ * @param {number} collectionAmount - Amount being collected
+ * @param {string} [description] - Optional description for the collection
+ * @returns {Promise<Object>} Success/error result
+ */
 export const markCreditAsCollected = async (userId, creditId, collectionAmount, description = '') => {
   try {
     // Get the original credit transaction
@@ -739,34 +887,39 @@ export const markCreditAsCollected = async (userId, creditId, collectionAmount, 
     const creditData = creditDoc.data();
     const decryptedCredit = (await decryptTransactions([{ id: creditId, ...creditData }]))[0];
     
-    const currentPaidAmount = decryptedCredit.paidAmount || 0;
-    const newPaidAmount = currentPaidAmount + collectionAmount;
-    const remainingAmount = decryptedCredit.amount - newPaidAmount;
+    // Validate collection amount
+    const currentPaidAmount = Number(decryptedCredit.paidAmount || 0);
+    const totalAmount = Number(decryptedCredit.amount);
+    const remainingAmount = totalAmount - currentPaidAmount;
     
-    if (newPaidAmount > decryptedCredit.amount) {
-      throw new Error('Collection amount exceeds credit amount');
-    }
+    validateRepaymentAmount(collectionAmount, remainingAmount);
+    
+    const numCollectionAmount = Number(collectionAmount);
     
     // Create collection transaction (income)
     const collectionTransaction = {
       type: 'income',
-      amount: collectionAmount,
+      amount: numCollectionAmount,
       description: description || `Credit collected - ${decryptedCredit.description}`,
-      category: 'other',
+      category: 'collection',
       date: new Date().toISOString().split('T')[0],
       linkedTransactionId: creditId,
       isRepayment: true,
-      repaymentFor: 'credit'
+      repaymentFor: 'credit',
+      adjustmentTag: 'credit-collection',
+      originalAmount: Number(decryptedCredit.amount || 0),
+      originalDescription: decryptedCredit.description || ''
     };
     
     const result = await addTransaction(userId, collectionTransaction);
     
     if (result.success) {
       // Update original credit with payment info
+      const newPaidAmount = calculateUpdatedPaidAmount(currentPaidAmount, numCollectionAmount);
       const updatedCreditData = {
         ...decryptedCredit,
         paidAmount: newPaidAmount,
-        isFullyPaid: remainingAmount <= 0,
+        isFullyPaid: isFullyPaid(totalAmount, newPaidAmount),
         lastPaymentDate: Timestamp.now(),
         updatedAt: Timestamp.now()
       };
@@ -1006,6 +1159,9 @@ export const reconcileUserTotals = async (userId) => {
     let totalLoanTaken = 0;
 
     transactions.forEach(tx => {
+      // Skip repayment/collection transactions - they only affect balance, not totals
+      if (tx.isRepayment) return;
+      
       const amt = Number(tx.amount || 0);
       if (tx.type === 'income') totalIncome += amt;
       else if (tx.type === 'expense') totalExpense += amt;
@@ -1032,6 +1188,19 @@ export const reconcileUserTotals = async (userId) => {
     return { success: true, totals: { balance, totalIncome, totalExpense, totalCreditGiven, totalLoanTaken } };
   } catch (error) {
     console.error('Error reconciling totals:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Count how many repayment/collection transactions link to a given original transaction
+export const countLinkedRepayments = async (userId, originalTransactionId) => {
+  try {
+    const transactionsRef = collection(db, `users/${userId}/transactions`);
+    const q = query(transactionsRef, where('linkedTransactionId', '==', originalTransactionId));
+    const snap = await getDocs(q);
+    return { success: true, count: snap.size };
+  } catch (error) {
+    console.error('Error counting linked repayments:', error);
     return { success: false, error: error.message };
   }
 };
