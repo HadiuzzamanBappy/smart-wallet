@@ -1,42 +1,41 @@
 # Deployment Guide
 
-Simple steps to deploy Wallet Tracker to production.
+Simple steps to deploy Smart Wallet to production.
 
 ## Firebase Hosting (Recommended)
 
 ### 1. Setup Firebase Project
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create new project (or use existing)
+2. Create a new project (or use an existing one)
 3. Enable these services:
    - **Authentication** (Email/Password + Google)
-   - **Firestore Database** 
+   - **Firestore Database**
    - **Hosting**
 
 ### 2. Install Firebase CLI
 
-```bash
+```powershell
 npm install -g firebase-tools
 firebase login
 ```
 
-### 3. Initialize Firebase
+### 3. Initialize Firebase (if needed)
 
-```bash
+```powershell
 # In your project directory
 firebase init
 
-# Select:
+# Choose:
 # - Hosting
 # - Use existing project
 # - Public directory: dist
 # - Single-page app: Yes
-# - GitHub deploys: No (for now)
 ```
 
-### 4. Configure Environment
+### 4. Configure environment variables
 
-Create `.env.local`:
+Create `.env.local` (local development) or set env vars in your hosting provider for production:
 
 ```env
 VITE_FIREBASE_API_KEY=your_api_key
@@ -50,37 +49,28 @@ VITE_OPENROUTER_API_KEY=your_openrouter_key
 
 ### 5. Deploy
 
-```bash
+```powershell
 # Build and deploy
 npm run build
 firebase deploy
 
-# Or use the shortcut
+# Or use the repo shortcut which runs the build first
 npm run deploy
 ```
 
-Your app will be live at `https://your-project.web.app`
+Your app will be live at `https://<your-project>.web.app` or your configured custom domain.
 
 ## Firestore Security Rules
 
-Add these rules in Firebase Console → Firestore → Rules:
+Rules are stored in `firestore.rules` in this repo. To publish them, run:
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      match /transactions/{transactionId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-    }
-  }
-}
+```powershell
+firebase deploy --only firestore:rules
 ```
 
-## Other Hosting Options
+If you prefer to edit rules in the Console, you can, but storing rules in the repo enables versioning and CI.
+
+## Other hosting options
 
 ### Vercel
 
@@ -88,40 +78,40 @@ service cloud.firestore {
 2. Add environment variables in Vercel dashboard
 3. Deploy automatically on push
 
-### Netlify  
+### Netlify
 
-1. Drag `dist/` folder to Netlify
-2. Or connect GitHub for auto-deploy
+1. Connect GitHub repo to Netlify
+2. Configure build command: `npm run build` and publish directory `dist`
 3. Add environment variables in settings
 
-### Manual Static Hosting
+### Manual static hosting
 
 1. Run `npm run build`
 2. Upload `dist/` folder contents to any web server
-3. Configure server for single-page app (redirect all routes to index.html)
+3. Configure server for single-page app routing (redirect all routes to index.html)
 
-## Environment Variables
+## Environment variables
 
-### Required Variables
+### Required variables (local & production)
 
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `VITE_FIREBASE_API_KEY` | Firebase API Key | `AIzaSyC...` |
 | `VITE_FIREBASE_AUTH_DOMAIN` | Auth domain | `project.firebaseapp.com` |
-| `VITE_FIREBASE_PROJECT_ID` | Project ID | `wallet-tracker-123` |
+| `VITE_FIREBASE_PROJECT_ID` | Project ID | `smart-wallet-123` |
 | `VITE_FIREBASE_STORAGE_BUCKET` | Storage bucket | `project.appspot.com` |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Sender ID | `123456789` |
 | `VITE_FIREBASE_APP_ID` | App ID | `1:123:web:abc123` |
 
-### Optional Variables
+### Optional variables
 
 | Variable | Description |
 |----------|-------------|
 | `VITE_OPENROUTER_API_KEY` | For AI transaction parsing |
 
-## Security Checklist
+## Security checklist
 
-- [ ] Firebase security rules enabled
+- [ ] Firebase security rules published
 - [ ] API keys restricted to your domain
 - [ ] HTTPS enforced
 - [ ] Authentication properly configured
@@ -129,33 +119,37 @@ service cloud.firestore {
 
 ## Troubleshooting
 
-### Build Fails
-```bash
+### Build fails
+
+```powershell
 # Clear cache and rebuild
-rm -rf node_modules dist
+rimraf node_modules dist
 npm install
 npm run build
 ```
 
-### Firebase Deploy Issues
-```bash
-# Check Firebase project
-firebase projects:list
-firebase use your-project-id
+### Firebase deploy issues
 
-# Re-initialize if needed
+```powershell
+# Check Firebase project and active project
+firebase projects:list
+firebase use <your-project-id>
+
+# Re-initialize hosting if needed
 firebase init hosting
 ```
 
-### Authentication Not Working
+### Authentication not working
+
 - Check Firebase Auth is enabled
 - Verify environment variables
 - Check browser console for errors
 
-### Firestore Permission Denied
+### Firestore permission denied
+
 - Verify security rules are published
-- Check user is authenticated
-- Ensure rules match your user structure
+- Check the user is authenticated
+- Ensure rules match your user document structure
 
 ## Monitoring
 
@@ -169,7 +163,7 @@ After deployment, monitor:
 
 To update your deployed app:
 
-```bash
+```powershell
 # Make your changes
 git add .
 git commit -m "Update feature"

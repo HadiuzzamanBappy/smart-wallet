@@ -1,0 +1,53 @@
+// Firestore security rules for Wallet-Tracker
+// - Enforce that users can only access their own documents under users/{uid}
+// - Disallow writing of plaintext sensitive fields (fields without _encrypted suffix)
+// - Allow read/write of encrypted fields and permitted metadata
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users root: only authenticated user can read/write their own user doc
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Prevent clients from deleting the entire user document.
+      // If you need to support account deletion, handle via Cloud Function or Admin SDK.
+      allow delete: if false;
+
+      // Allow create/update only by owner and disallow writes of plaintext-sensitive fields
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && isValidUserWrite();
+
+      // Transactions subcollection: enforce ownership and encrypted fields
+      match /transactions/{txId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+
+        allow create, update, delete: if request.auth != null
+          && request.auth.uid == userId
+          && isValidTransactionWrite();
+      }
+    }
+
+    // Helper functions (rule-language compatible)
+    function isValidUserWrite() {
+      // Disallow known plaintext-sensitive fields in the incoming write
+      return !hasPlaintextSensitiveFields();
+    }
+
+    function isValidTransactionWrite() {
+      // Disallow known plaintext-sensitive fields in transactions
+      return !hasPlaintextSensitiveFields();
+    }
+
+    function hasPlaintextSensitiveFields() {
+      // Check keys present in the incoming object for forbidden plaintext names.
+      // request.resource.data.keys() returns a list-like object supporting hasAny().
+      let forbidden = ['amount', 'description', 'message', 'originalMessage', 'originalMessage_encrypted'];
+      let numericForbidden = ['balance', 'totalIncome', 'totalExpense', 'monthlyBudget', 'totalCreditGiven', 'totalLoanTaken'];
+
+      return request.resource.data.keys().hasAny(forbidden) || request.resource.data.keys().hasAny(numericForbidden);
+    }
+  }
+}

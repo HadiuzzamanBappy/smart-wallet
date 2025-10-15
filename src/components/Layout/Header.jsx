@@ -93,7 +93,7 @@ const Header = ({
                         <div className="flex items-center space-x-3">
                             <img
                                 src="/favicon/favicon.svg"
-                                alt="Wallet Tracker Logo"
+                                alt="Smart Wallet Logo"
                                 className="w-8 h-8"
                                 onError={(e) => {
                                     // Fallback to Wallet icon if logo fails to load
@@ -104,7 +104,7 @@ const Header = ({
                             <Wallet className="w-6 h-6 text-white" style={{ display: 'none' }} />
                             <div>
                                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                                    Wallet Tracker
+                                    Smart Wallet
                                 </h1>
                                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                     <span>Balance:</span>

@@ -9,7 +9,7 @@ const CTASection = ({ onGetStarted }) => {
           Ready to take control of your finances?
         </h2>
         <p className="text-xl text-teal-100 mb-8">
-          Join thousands of users who trust Wallet Tracker to keep their financial data private and secure.
+          Join thousands of users who trust Smart Wallet to keep their financial data private and secure.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -20,7 +20,7 @@ const CTASection = ({ onGetStarted }) => {
             Get Started for Free
           </button>
           <a
-            href="https://github.com/HadiuzzamanBappy/Wallet-Tracker"
+            href="https://github.com/HadiuzzamanBappy/Smart-Wallet"
             target="_blank"
             rel="noopener noreferrer" 
             className="flex items-center justify-center space-x-2 px-8 py-4 border-2 border-white text-white rounded-xl font-semibold hover:bg-white hover:text-teal-600 transition-all duration-200"

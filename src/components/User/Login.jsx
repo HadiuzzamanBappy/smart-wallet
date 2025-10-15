@@ -66,7 +66,7 @@ const Login = ({ onBack }) => {
         {/* Left: Illustration / Brand */}
         <div className="hidden md:flex flex-col justify-center items-start p-8 rounded-2xl bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm border border-white/5 shadow-lg">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white">Wallet Tracker</h1>
+            <h1 className="text-3xl font-bold text-white">Smart Wallet</h1>
             <p className="text-sm text-gray-300 mt-2">Track expenses, manage budgets, and stay on top of your money.</p>
           </div>
           <div className="w-full mt-6 grid grid-cols-2 gap-3">

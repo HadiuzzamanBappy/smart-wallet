@@ -1,4 +1,4 @@
-## Wallet-Tracker — Copilot / AI agent instructions
+## Smart-Wallet — Copilot / AI agent instructions
 
 This file gives focused, actionable context so an AI coding agent can be productive quickly in this repository.
 

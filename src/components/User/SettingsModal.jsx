@@ -121,7 +121,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         
         const link = document.createElement('a');
         link.href = url;
-        link.download = `wallet-tracker-data-${new Date().toISOString().split('T')[0]}.json`;
+        link.download = `smart-wallet-data-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

@@ -9,7 +9,7 @@ const LandingNav = ({ onGetStarted }) => {
           <div className="flex items-center space-x-3">
             <img
               src="/favicon/favicon.svg"
-              alt="Wallet Tracker Logo"
+              alt="Smart Wallet Logo"
               className="w-8 h-8"
               onError={(e) => {
                 // Fallback to Wallet icon if logo fails to load
@@ -18,12 +18,12 @@ const LandingNav = ({ onGetStarted }) => {
               }}
             />
             <Wallet className="w-6 h-6 text-teal-600 dark:text-teal-400" style={{ display: 'none' }} />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">Wallet Tracker</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">Smart Wallet</span>
           </div>
           
           <div className="flex items-center space-x-4">
             <a 
-              href="https://github.com/HadiuzzamanBappy/Wallet-Tracker" 
+              href="https://github.com/HadiuzzamanBappy/Smart-Wallet" 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center space-x-2 px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"

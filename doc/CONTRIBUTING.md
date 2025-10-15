@@ -1,77 +1,82 @@
-# Contributing to Wallet Tracker
+# Contributing to Smart Wallet
 
-## Development Setup
+Thanks for contributing! The instructions below explain the standard developer workflow for this repository.
 
-```bash
+## Development setup
+
+```powershell
 # 1. Fork and clone
-git clone your-fork-url
+git clone <your-fork-url>
 cd Wallet-Tracker
 
 # 2. Install dependencies
 npm install
 
-# 3. Create .env.local with Firebase config
-cp .env.example .env.local
-# Add your Firebase keys
+# 3. Create local env file from example
+copy .env.example .env.local
+# Edit .env.local and add your Firebase keys (do NOT commit this file)
 
-# 4. Start development
+# 4. Start development server
 npm run dev
 ```
 
-## Code Standards
+Notes:
 
-- **ESLint**: Run `npm run lint` before committing
-- **Components**: Use functional components with hooks
-- **Naming**: camelCase for variables, PascalCase for components
-- **Imports**: Absolute imports from `src/`
+- The project reads environment variables via Vite (`import.meta.env`). Use `.env.local` for local overrides.
 
-## File Structure
+## Code standards
 
-```
+- **ESLint**: Run `npm run lint` before committing.
+- **Components**: Prefer functional components with hooks.
+- **Naming**: Use camelCase for variables, PascalCase for component names.
+- **Imports**: Use absolute imports from `src/` where convenient.
+
+## File structure (high level)
+
+```text
 src/
 ├── components/     # React components
-├── services/       # API calls and business logic
+├── services/       # Business logic (auth, transactions, budgets)
 ├── hooks/          # Custom React hooks
-├── context/        # State management
-├── utils/          # Helper functions
-└── config/         # Configuration files
+├── context/        # React context providers
+├── utils/          # Helpers (encryption, ai parser)
+└── config/         # Config and firebase initialization
 ```
 
-## Making Changes
+## Making changes
 
-1. **Create branch**: `git checkout -b feature/your-feature`
-2. **Make changes**: Follow the coding standards
-3. **Test locally**: `npm run dev` and test your changes
-4. **Lint code**: `npm run lint` 
-5. **Commit**: Use clear commit messages
-6. **Push**: `git push origin feature/your-feature`
-7. **Pull Request**: Create PR with description
+1. Create a branch: `git checkout -b feat/your-feature`
+2. Implement your changes and add tests where appropriate.
+3. Run the dev server and test locally: `npm run dev`.
+4. Lint your changes: `npm run lint`.
+5. Commit with a clear message and push: `git push origin feat/your-feature`.
+6. Open a Pull Request describing the change, how to test, and any impact.
 
-## Pull Request Guidelines
+## Pull request guidelines
 
-- **Title**: Clear, descriptive title
-- **Description**: What changes were made and why
-- **Testing**: Describe how you tested the changes
-- **Screenshots**: Include for UI changes
+- Title: short and descriptive.
+- Description: explain what, why, and how to test.
+- Include screenshots for UI changes.
 
-## Important Notes
+## Important notes
 
-- **Security**: Never commit API keys or sensitive data
-- **Encryption**: All sensitive user data must be encrypted client-side
-- **Firebase Rules**: Test security rules before deploying
-- **Dependencies**: Keep dependencies updated and lightweight
+- **Security**: Never commit `.env.local` or any secrets.
+- **Encryption**: Sensitive user data is encrypted client-side — keep encryption helpers intact.
+- **Firestore rules**: Test security rules with the emulator before publishing.
+- **Dependencies**: Keep third-party dependencies minimal and browser-compatible.
 
-## Getting Help
+## Getting help
 
-- **Issues**: Check existing issues first
-- **Questions**: Create a discussion
-- **Bugs**: Create an issue with reproduction steps
+- Search existing issues first.
+- Open a discussion for design/architecture questions.
+- File issues with reproduction steps for bugs.
 
-## Development Commands
+## Development commands
 
-```bash
-npm run dev         # Development server
-npm run build       # Production build
-npm run lint        # Code linting
-npm run deploy      # Deploy to Firebase
+```powershell
+npm run dev         # Start development server with HMR
+npm run build       # Build production bundle
+npm run preview     # Preview production build locally
+npm run lint        # Run ESLint
+npm run deploy      # Build and deploy via Firebase CLI (predeploy builds)
 ```

@@ -9,7 +9,7 @@ const LandingFooter = () => {
           <div className="flex items-center space-x-3 mb-4 md:mb-0">
             <img
               src="/favicon/favicon.svg"
-              alt="Wallet Tracker Logo"
+              alt="Smart Wallet Logo"
               className="w-8 h-8"
               onError={(e) => {
                 // Fallback to Wallet icon if logo fails to load
@@ -18,12 +18,12 @@ const LandingFooter = () => {
               }}
             />
             <Wallet className="w-6 h-6 text-teal-400" style={{ display: 'none' }} />
-            <span className="text-xl font-bold text-white">Wallet Tracker</span>
+            <span className="text-xl font-bold text-white">Smart Wallet</span>
           </div>
           
           <div className="flex items-center space-x-6 text-gray-400">
             <a 
-              href="https://github.com/HadiuzzamanBappy/Wallet-Tracker" 
+              href="https://github.com/HadiuzzamanBappy/Smart-Wallet" 
               className="hover:text-white transition-colors"
             >
               GitHub

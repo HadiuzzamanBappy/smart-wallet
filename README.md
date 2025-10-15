@@ -1,4 +1,4 @@
-# 💰 Wallet Tracker
+# 💰 Smart Wallet
 
 A simple, secure personal finance tracker with client-side encryption.
 
@@ -6,7 +6,7 @@ A simple, secure personal finance tracker with client-side encryption.
 
 ![Home Preview](/public/img/demo.png)
 
-Try the live demo: [Open the live demo](https://wallet-tracker-bro.vercel.app/)
+Try the live demo: [Open the live demo](https://smart-wallet-bro.vercel.app/)
 
 ---
 
@@ -28,7 +28,14 @@ npm install
 npm run dev
 ```
 
-1. Create a `.env.local` file with your Firebase configuration (example keys):
+1. Create a `.env.local` file with your Firebase configuration (example keys). You can copy the included `.env.example` and then edit the file:
+
+```powershell
+copy .env.example .env.local
+# edit .env.local and fill in values
+```
+
+Example values (for reference):
 
 ```env
 VITE_FIREBASE_API_KEY=your_key
@@ -82,6 +89,11 @@ src/
 
 See the `doc/` folder for additional documentation: `ARCHITECTURE.md`, `MVP.md`, `MIGRATION.md`.
 
+More docs:
+
+- `doc/CONTRIBUTING.md` — development & contribution guidelines
+- `doc/DEPLOYMENT.md` — deployment and hosting notes (includes rules deploy)
+
 ---
 
 ## 🔧 Development scripts
@@ -94,6 +106,7 @@ npm run build   # Build production bundle
 npm run preview # Preview production build locally
 npm run lint    # Run ESLint
 npm run deploy  # Deploy (project uses Firebase CLI for hosting)
+npm run deploy:rules # Deploy only Firestore rules
 ```
 
 ---

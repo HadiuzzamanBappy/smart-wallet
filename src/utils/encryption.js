@@ -3,23 +3,44 @@
  * Uses AES-256-GCM encryption for secure data storage
  */
 
-// Simple encryption key derivation (in production, use proper key management)
+// Key derivation using PBKDF2. Read secret/salt/iterations from Vite env vars
+// In development these fall back to the existing values, but in production
+// you should provide `VITE_ENC_SECRET` and `VITE_ENC_SALT` in your environment.
+const DEFAULT_SECRET = 'wallet-tracker-secure-key-2025';
+const DEFAULT_SALT = 'wallet-salt-2025';
+const DEFAULT_ITERATIONS = 100000;
+
+const getEnv = (name, fallback) => {
+  try {
+    // Vite exposes env vars on import.meta.env
+    const val = import.meta && import.meta.env ? import.meta.env[name] : undefined;
+    return val || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 const getEncryptionKey = async () => {
+  const secret = String(getEnv('VITE_ENC_SECRET', DEFAULT_SECRET));
+  const saltStr = String(getEnv('VITE_ENC_SALT', DEFAULT_SALT));
+  const iterationsRaw = getEnv('VITE_ENC_ITERATIONS', DEFAULT_ITERATIONS);
+  const iterations = Number.isFinite(Number(iterationsRaw)) ? Number(iterationsRaw) : DEFAULT_ITERATIONS;
+
   const keyMaterial = await window.crypto.subtle.importKey(
     'raw',
-    new TextEncoder().encode('wallet-tracker-secure-key-2025'),
+    new TextEncoder().encode(secret),
     'PBKDF2',
     false,
     ['deriveBits', 'deriveKey']
   );
 
-  const salt = new TextEncoder().encode('wallet-salt-2025');
-  
+  const salt = new TextEncoder().encode(saltStr);
+
   return await window.crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
       salt: salt,
-      iterations: 100000,
+      iterations: iterations,
       hash: 'SHA-256',
     },
     keyMaterial,
