@@ -24,9 +24,14 @@ service cloud.firestore {
       match /transactions/{txId} {
         allow read: if request.auth != null && request.auth.uid == userId;
 
-        allow create, update, delete: if request.auth != null
+        // Validate create and update writes (these have request.resource)
+        allow create, update: if request.auth != null
           && request.auth.uid == userId
           && isValidTransactionWrite();
+
+        // Allow owners to delete their transactions. Delete requests do not
+        // include request.resource, so they must not call isValidTransactionWrite().
+        allow delete: if request.auth != null && request.auth.uid == userId;
       }
     }
 

@@ -230,9 +230,10 @@ export const parseTransaction = async (message) => {
   return { success: true, data: validTransactions };
 };
 
+// eslint-disable-next-line no-unused-vars
 export const learnFromCorrection = (originalMessage, aiResult, userCorrection) => {
-  // keep simple - log corrections; you can persist to localStorage later
-  console.log('correction', { originalMessage, aiResult, userCorrection });
+  // Future: persist corrections to localStorage or backend for continuous improvement
+  // console.log('correction', { originalMessage, aiResult, userCorrection });
   return { success: true };
 };
 

@@ -6,8 +6,8 @@
 // Key derivation using PBKDF2. Read secret/salt/iterations from Vite env vars
 // In development these fall back to the existing values, but in production
 // you should provide `VITE_ENC_SECRET` and `VITE_ENC_SALT` in your environment.
-const DEFAULT_SECRET = 'wallet-tracker-secure-key-2025';
-const DEFAULT_SALT = 'wallet-salt-2025';
+const DEFAULT_SECRET = 'smart-wallet-secure-key-2025';
+const DEFAULT_SALT = 'smart-wallet-salt-2025';
 const DEFAULT_ITERATIONS = 100000;
 
 const getEnv = (name, fallback) => {

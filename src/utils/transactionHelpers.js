@@ -102,15 +102,13 @@ export const computeTransactionFingerprint = async (transaction) => {
 
 /**
  * Compute the effect of a transaction on user totals
- * Handles both normal transactions and repayments
- * @param {Object} transaction - Transaction object with type, amount, isRepayment, repaymentFor
+ * Handles normal transactions and repayments/collections
+ * @param {Object} transaction - Transaction object with type, amount, category
  * @returns {Object} Effects object with balance and total changes
  */
 export const computeTransactionEffects = (transaction) => {
   const amount = Number(transaction.amount || 0);
   const type = transaction.type;
-  const isRepayment = !!transaction.isRepayment || !!transaction.adjustmentTag;
-  const repaymentFor = transaction.repaymentFor;
   
   // Default effects (no change)
   const effects = {
@@ -121,22 +119,7 @@ export const computeTransactionEffects = (transaction) => {
     totalLoanTaken: 0
   };
   
-  // Repayments only affect balance, not totals
-  if (isRepayment) {
-    if (repaymentFor === 'loan') {
-      // Loan repayment: money leaves user's wallet
-      effects.balance = -amount;
-    } else if (repaymentFor === 'credit') {
-      // Credit collection: money enters user's wallet
-      effects.balance = amount;
-    } else {
-      // Fallback: infer from type
-      effects.balance = (type === 'income') ? amount : -amount;
-    }
-    return effects;
-  }
-  
-  // Normal transactions affect both balance and totals
+  // Handle different transaction types
   switch (type) {
     case 'income':
       effects.balance = amount;
@@ -153,6 +136,14 @@ export const computeTransactionEffects = (transaction) => {
     case 'loan':
       effects.balance = amount;
       effects.totalLoanTaken = amount;
+      break;
+    case 'repayment':
+      // Loan repayment: money leaves wallet, but doesn't count as expense
+      effects.balance = -amount;
+      break;
+    case 'collection':
+      // Credit collection: money enters wallet, but doesn't count as income
+      effects.balance = amount;
       break;
     default:
       // Unknown type: treat as expense
@@ -207,7 +198,7 @@ export const reverseTransactionEffects = (transaction) => {
  * @throws {Error} If validation fails
  */
 export const validateTransaction = (transaction) => {
-  const validTypes = ['income', 'expense', 'credit', 'loan'];
+  const validTypes = ['income', 'expense', 'credit', 'loan', 'repayment', 'collection'];
   
   if (!validTypes.includes(transaction.type)) {
     throw new Error(`Invalid transaction type: ${transaction.type}`);

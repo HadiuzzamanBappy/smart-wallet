@@ -821,17 +821,14 @@ export const markLoanAsRepaid = async (userId, loanId, repaymentAmount, descript
     
     const numRepaymentAmount = Number(repaymentAmount);
     
-    // Create repayment transaction (expense)
+    // Create repayment transaction with type='repayment'
     const repaymentTransaction = {
-      type: 'expense',
+      type: 'repayment',
       amount: numRepaymentAmount,
       description: description || `Loan repayment - ${decryptedLoan.description}`,
-      category: 'repayment',
+      category: decryptedLoan.category || 'loan',
       date: new Date().toISOString().split('T')[0],
       linkedTransactionId: loanId,
-      isRepayment: true,
-      repaymentFor: 'loan',
-      adjustmentTag: 'loan-repayment',
       originalAmount: Number(decryptedLoan.amount || 0),
       originalDescription: decryptedLoan.description || ''
     };
@@ -896,17 +893,14 @@ export const markCreditAsCollected = async (userId, creditId, collectionAmount, 
     
     const numCollectionAmount = Number(collectionAmount);
     
-    // Create collection transaction (income)
+    // Create collection transaction with type='collection'
     const collectionTransaction = {
-      type: 'income',
+      type: 'collection',
       amount: numCollectionAmount,
       description: description || `Credit collected - ${decryptedCredit.description}`,
-      category: 'collection',
+      category: decryptedCredit.category || 'credit',
       date: new Date().toISOString().split('T')[0],
       linkedTransactionId: creditId,
-      isRepayment: true,
-      repaymentFor: 'credit',
-      adjustmentTag: 'credit-collection',
       originalAmount: Number(decryptedCredit.amount || 0),
       originalDescription: decryptedCredit.description || ''
     };
@@ -1160,7 +1154,7 @@ export const reconcileUserTotals = async (userId) => {
 
     transactions.forEach(tx => {
       // Skip repayment/collection transactions - they only affect balance, not totals
-      if (tx.isRepayment) return;
+      if (tx.type === 'repayment' || tx.type === 'collection') return;
       
       const amt = Number(tx.amount || 0);
       if (tx.type === 'income') totalIncome += amt;

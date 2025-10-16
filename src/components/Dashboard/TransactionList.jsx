@@ -152,9 +152,11 @@ const TransactionList = ({ onTransactionUpdate }) => {
     switch (type) {
       case 'income':
       case 'loan':
+      case 'collection':
         return <TrendingUp className="w-4 h-4 text-green-500" />;
       case 'expense':
       case 'credit':
+      case 'repayment':
         return <TrendingDown className="w-4 h-4 text-red-500" />;
       default:
         return <div className="w-4 h-4 bg-gray-400 rounded-full" />;
@@ -165,21 +167,21 @@ const TransactionList = ({ onTransactionUpdate }) => {
     switch (type) {
       case 'income':
       case 'loan':
+      case 'collection':
         return 'text-green-600 dark:text-green-400';
       case 'expense':
       case 'credit':
+      case 'repayment':
         return 'text-red-600 dark:text-red-400';
       default:
         return 'text-gray-600 dark:text-gray-400';
     }
   };
 
-  const getDisplayCategory = (transaction) => transaction.adjustmentTag || transaction.category;
-  const getDisplayCategoryLabel = (transaction) => (
-    transaction.adjustmentTag === 'loan-repayment' ? 'Repayment'
-      : transaction.adjustmentTag === 'credit-collection' ? 'Collection'
-      : getDisplayCategory(transaction)
-  );
+  const getDisplayCategory = (transaction) => transaction.category;
+  const getDisplayCategoryLabel = (transaction) => {
+    return transaction.category;
+  };
 
   if (transactionLoading) {
     return <TransactionListSkeleton />;
@@ -225,6 +227,8 @@ const TransactionList = ({ onTransactionUpdate }) => {
                 <option value="expense">Expense</option>
                 <option value="credit">Credit</option>
                 <option value="loan">Loan</option>
+                <option value="repayment">Repayment</option>
+                <option value="collection">Collection</option>
               </select>
 
               {/* Category Filter */}
@@ -289,7 +293,7 @@ const TransactionList = ({ onTransactionUpdate }) => {
                       <div className="flex items-center space-x-2 ml-2">
                         <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} flex items-center`}>
                           {getTransactionIcon(transaction.type)}
-                          <span className="ml-1">{(transaction.type === 'income' || transaction.type === 'loan') ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</span>
+                          <span className="ml-1">{(transaction.type === 'income' || transaction.type === 'loan' || transaction.type === 'collection') ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</span>
                         </div>
                       </div>
                     </div>
@@ -299,13 +303,13 @@ const TransactionList = ({ onTransactionUpdate }) => {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCategoryColor(dc)}`}>{dcl}</span>
                         <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{transaction.type}</span>
                         {transaction.source === 'chat' && (<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">AI</span>)}
-                        {transaction.adjustmentTag && (
+                        {(transaction.type === 'repayment' || transaction.type === 'collection') && (
                           <button type="button" onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }} className="p-1 ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" title="View adjustment details"><Eye className="w-4 h-4" /></button>
                         )}
                       </div>
 
                       <div className="flex items-center space-x-1">
-                        {!transaction.isRepayment && !transaction.adjustmentTag && (
+                        {transaction.type !== 'repayment' && transaction.type !== 'collection' && (
                           <button onClick={() => setEditingTransaction(transaction)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors" title="Edit"><Edit3 className="w-3.5 h-3.5" /></button>
                         )}
                         <button onClick={() => handlePrepareDelete(transaction)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -329,13 +333,13 @@ const TransactionList = ({ onTransactionUpdate }) => {
                         <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap" title={`Created: ${formatDate(transaction.createdAt)}`}>{formatDate(transaction.createdAt)}</span>
                         <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{transaction.type}</span>
                         {transaction.source === 'chat' && (<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">AI Parsed</span>)}
-                        {transaction.adjustmentTag && (<button type="button" onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }} className="p-2 ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg" title="View adjustment details"><Eye className="w-4 h-4" /></button>)}
+                        {(transaction.type === 'repayment' || transaction.type === 'collection') && (<button type="button" onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }} className="p-2 ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg" title="View adjustment details"><Eye className="w-4 h-4" /></button>)}
                       </div>
                     </div>
 
                     <div className="flex items-center space-x-2 flex-shrink-0">
-                      <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} whitespace-nowrap`}>{(transaction.type === 'income' || transaction.type === 'loan') ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</div>
-                      {!transaction.isRepayment && !transaction.adjustmentTag && (<button onClick={() => setEditingTransaction(transaction)} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="Edit transaction"><Edit3 className="w-4 h-4" /></button>)}
+                      <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} whitespace-nowrap`}>{(transaction.type === 'income' || transaction.type === 'loan' || transaction.type === 'collection') ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</div>
+                      {transaction.type !== 'repayment' && transaction.type !== 'collection' && (<button onClick={() => setEditingTransaction(transaction)} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="Edit transaction"><Edit3 className="w-4 h-4" /></button>)}
                       <button onClick={() => handlePrepareDelete(transaction)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Delete transaction"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
@@ -385,14 +389,14 @@ const TransactionList = ({ onTransactionUpdate }) => {
               <div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">Adjustment</div>
                 <div className="mt-1 text-2xl font-semibold flex items-center">
-                  <span className={`${(adjustmentDetail.adjustmentTag === 'credit-collection' || (adjustmentDetail.type === 'income')) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {(adjustmentDetail.type === 'income' || adjustmentDetail.type === 'loan') ? '+' : '-'}{formatCurrency(adjustmentDetail.amount, currency)}
+                  <span className={`${adjustmentDetail.type === 'collection' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {adjustmentDetail.type === 'collection' ? '+' : '-'}{formatCurrency(adjustmentDetail.amount, currency)}
                   </span>
                 </div>
               </div>
               <div className="text-right">
-                <div className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-medium">
-                  {adjustmentDetail.adjustmentTag === 'loan-repayment' ? 'Loan Repayment' : adjustmentDetail.adjustmentTag === 'credit-collection' ? 'Credit Collection' : adjustmentDetail.adjustmentTag}
+                <div className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-medium capitalize">
+                  {adjustmentDetail.type === 'repayment' ? 'Loan Repayment' : 'Credit Collection'}
                 </div>
               </div>
             </div>
@@ -404,10 +408,10 @@ const TransactionList = ({ onTransactionUpdate }) => {
                   <div className="mt-1 font-medium">{formatCurrency(adjustmentDetail.originalAmount, currency)}</div>
                 </div>
               )}
-              {adjustmentDetail.repaymentFor && (
+              {adjustmentDetail.linkedTransactionId && (
                 <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
                   <div className="text-xs text-gray-500">Linked To</div>
-                  <div className="mt-1 font-medium">{adjustmentDetail.repaymentFor} {adjustmentDetail.linkedTransactionId ? `(${adjustmentDetail.linkedTransactionId})` : ''}</div>
+                  <div className="mt-1 font-medium">{adjustmentDetail.type === 'repayment' ? 'Loan' : 'Credit'} ({adjustmentDetail.linkedTransactionId})</div>
                 </div>
               )}
               <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded col-span-1 sm:col-span-2">

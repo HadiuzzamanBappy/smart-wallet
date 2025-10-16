@@ -63,29 +63,29 @@ export const TransactionProvider = ({ children }) => {
     });
   }, [transactions]);
 
-  // Exclude repayment/collection/adjustment transactions from income/expense aggregation
+  // Exclude repayment/collection transactions from income/expense aggregation
   const currentMonthIncome = React.useMemo(() => {
     return currentMonthTransactions
-      .filter(tx => !tx.isRepayment && !tx.adjustmentTag && tx.type === 'income')
+      .filter(tx => tx.type === 'income')
       .reduce((sum, tx) => sum + tx.amount, 0);
   }, [currentMonthTransactions]);
 
   const currentMonthExpense = React.useMemo(() => {
     return currentMonthTransactions
-      .filter(tx => !tx.isRepayment && !tx.adjustmentTag && tx.type === 'expense')
+      .filter(tx => tx.type === 'expense')
       .reduce((sum, tx) => sum + tx.amount, 0);
   }, [currentMonthTransactions]);
 
   // Aggregate totals excluding repayments/collections
   const totalIncome = React.useMemo(() => {
     return transactions
-      .filter(tx => !tx.isRepayment && !tx.adjustmentTag && tx.type === 'income')
+      .filter(tx => tx.type === 'income')
       .reduce((sum, tx) => sum + tx.amount, 0);
   }, [transactions]);
 
   const totalExpense = React.useMemo(() => {
     return transactions
-      .filter(tx => !tx.isRepayment && !tx.adjustmentTag && tx.type === 'expense')
+      .filter(tx => tx.type === 'expense')
       .reduce((sum, tx) => sum + tx.amount, 0);
   }, [transactions]);
 

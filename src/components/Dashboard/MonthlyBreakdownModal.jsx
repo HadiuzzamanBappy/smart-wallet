@@ -36,8 +36,8 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
 
     transactions.forEach(tx => {
       // Only include pure income/expense transactions in the monthly breakdown.
-      // Repayments/collections (tx.isRepayment) should not affect income/expense totals.
-      if (!tx || (tx.type !== 'income' && tx.type !== 'expense') || tx.isRepayment) return;
+      // Repayments/collections have their own types and should not affect income/expense totals.
+      if (!tx || (tx.type !== 'income' && tx.type !== 'expense')) return;
 
       // Use transaction.date for monthly grouping
       const txDate = new Date(tx.date || tx.createdAt);
