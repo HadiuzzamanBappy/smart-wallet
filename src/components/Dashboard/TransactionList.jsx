@@ -148,21 +148,6 @@ const TransactionList = ({ onTransactionUpdate }) => {
     return categories.sort();
   };
 
-  const getTransactionIcon = (type) => {
-    switch (type) {
-      case 'income':
-      case 'loan':
-      case 'collection':
-        return <TrendingUp className="w-4 h-4 text-green-500" />;
-      case 'expense':
-      case 'credit':
-      case 'repayment':
-        return <TrendingDown className="w-4 h-4 text-red-500" />;
-      default:
-        return <div className="w-4 h-4 bg-gray-400 rounded-full" />;
-    }
-  };
-
   const getAmountColor = (type) => {
     switch (type) {
       case 'income':
@@ -279,68 +264,50 @@ const TransactionList = ({ onTransactionUpdate }) => {
               const dc = getDisplayCategory(transaction);
               const dcl = getDisplayCategoryLabel(transaction);
               return (
-                <div key={transaction.id} className="p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  {/* Mobile Layout */}
-                  <div className="sm:hidden">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center space-x-2 flex-1 min-w-0">
-                        <div className="text-lg">{getCategoryEmoji(dc)}</div>
+                <div key={transaction.id} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-150">
+                  <div className="grid grid-cols-[auto_1fr_auto] gap-4 items-start sm:items-center">
+                    {/* Left: avatar with soft bg and small status indicator */}
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg">
+                        {getCategoryEmoji(dc)}
+                      </div>
+                      {/* small status badge (up/down) */}
+                      <div className={`absolute -right-1 -bottom-1 w-5 h-5 rounded-full flex items-center justify-center text-xs ${transaction.type === 'income' || transaction.type === 'collection' ? 'bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300'}`}>
+                        {(transaction.type === 'income' || transaction.type === 'collection') ? (
+                          <TrendingUp className="w-3 h-3" />
+                        ) : (
+                          <TrendingDown className="w-3 h-3" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Middle: description, date, badges */}
+                    <div className="min-w-0">
+                      <div className="flex items-center justify-between sm:justify-start gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{transaction.description}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(transaction.createdAt)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2 ml-2">
-                        <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} flex items-center`}>
-                          {getTransactionIcon(transaction.type)}
-                          <span className="ml-1">{(transaction.type === 'income' || transaction.type === 'loan' || transaction.type === 'collection') ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</span>
+                          <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${getCategoryColor(dc)}`}>{dcl}</span>
+                            <span>{formatDate(transaction.createdAt)}</span>
+                            <span className="hidden sm:inline">• {transaction.type}</span>
+                            {transaction.source === 'chat' && (<span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">AI</span>)}
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 flex-wrap">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCategoryColor(dc)}`}>{dcl}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{transaction.type}</span>
-                        {transaction.source === 'chat' && (<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">AI</span>)}
+                    {/* Right: amount and CTA (single row on desktop, stacked on mobile) */}
+                    <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-3">
+                      <div className={`text-sm font-semibold whitespace-nowrap ${getAmountColor(transaction.type)}`}>{(transaction.type === 'income' || transaction.type === 'collection') ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</div>
+                      <div className="flex gap-1 flex-wrap justify-end">
                         {(transaction.type === 'repayment' || transaction.type === 'collection') && (
-                          <button type="button" onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }} className="p-1 ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" title="View adjustment details"><Eye className="w-4 h-4" /></button>
+                          <button type="button" onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors" title="View details"><Eye className="w-4 h-4" /></button>
                         )}
-                      </div>
-
-                      <div className="flex items-center space-x-1">
                         {transaction.type !== 'repayment' && transaction.type !== 'collection' && (
-                          <button onClick={() => setEditingTransaction(transaction)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors" title="Edit"><Edit3 className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => setEditingTransaction(transaction)} className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors" title="Edit"><Edit3 className="w-4 h-4" /></button>
                         )}
-                        <button onClick={() => handlePrepareDelete(transaction)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handlePrepareDelete(transaction)} className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Desktop Layout */}
-                  <div className="hidden sm:flex items-center space-x-4">
-                    <div className="flex items-center space-x-2 flex-shrink-0">
-                      <div className="text-xl">{getCategoryEmoji(dc)}</div>
-                      {getTransactionIcon(transaction.type)}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate pr-4">{transaction.description}</p>
-                      </div>
-                      <div className="flex items-center space-x-3 flex-wrap">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCategoryColor(dc)}`}>{dcl}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap" title={`Created: ${formatDate(transaction.createdAt)}`}>{formatDate(transaction.createdAt)}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{transaction.type}</span>
-                        {transaction.source === 'chat' && (<span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">AI Parsed</span>)}
-                        {(transaction.type === 'repayment' || transaction.type === 'collection') && (<button type="button" onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }} className="p-2 ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg" title="View adjustment details"><Eye className="w-4 h-4" /></button>)}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 flex-shrink-0">
-                      <div className={`text-sm font-semibold ${getAmountColor(transaction.type)} whitespace-nowrap`}>{(transaction.type === 'income' || transaction.type === 'loan' || transaction.type === 'collection') ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</div>
-                      {transaction.type !== 'repayment' && transaction.type !== 'collection' && (<button onClick={() => setEditingTransaction(transaction)} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="Edit transaction"><Edit3 className="w-4 h-4" /></button>)}
-                      <button onClick={() => handlePrepareDelete(transaction)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Delete transaction"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 </div>

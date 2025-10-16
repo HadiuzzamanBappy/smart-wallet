@@ -11,11 +11,11 @@ export const CURRENCIES = {
   BDT: {
     code: 'BDT',
     name: 'Bangladeshi Taka',
-    symbol: '৳',
+    symbol: 'ট',
     locale: 'en-BD',
     decimals: 0,
     flag: '🇧🇩',
-    label: '৳ BDT'
+    label: 'ট BDT'
   },
   USD: {
     code: 'USD',

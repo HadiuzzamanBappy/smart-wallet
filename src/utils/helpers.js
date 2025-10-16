@@ -8,12 +8,17 @@ import { getCurrencyConfig, DEFAULTS, BUDGET_WARNING_LEVELS } from '../config/co
  */
 export const formatCurrency = (amount, currency = DEFAULTS.CURRENCY) => {
   const config = getCurrencyConfig(currency);
-  
-  return new Intl.NumberFormat(config.locale, {
-    style: 'currency',
-    currency: config.code,
-    minimumFractionDigits: config.decimals
+  // Use decimal formatting for numbers and prefix with configured symbol.
+  // This avoids relying on Intl currency formatting for non-standard/custom symbols.
+  const formattedNumber = new Intl.NumberFormat(config.locale, {
+    style: 'decimal',
+    minimumFractionDigits: config.decimals,
+    maximumFractionDigits: config.decimals
   }).format(amount || 0);
+
+  // Prefix symbol (e.g., '$' or 'ট') with a thin space for readability when symbol is non-ASCII
+  const space = config.symbol && config.symbol.length > 1 ? '\u00A0' : '\u00A0';
+  return `${config.symbol}${space}${formattedNumber}`;
 };
 
 /**

@@ -260,19 +260,35 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <span className="text-xs inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 min-w-[44px] justify-center">{unpaidCount} / {totalCount}</span>
-                            {hasFullyPaid && (
-                                <button
-                                    onClick={() => setShowAllItems(s => !s)}
-                                    className="p-2 rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                    title={showAllItems ? 'Show unpaid only' : 'Show all items'}
-                                >
-                                    {showAllItems ? (
-                                        <CheckCircle className="w-4 h-4 text-green-600" />
-                                    ) : (
-                                        <User className="w-4 h-4 text-gray-600" />
-                                    )}
-                                </button>
+                            {/* If there are fully paid items offer a toggle group, otherwise show a simple count */}
+                            {hasFullyPaid ? (
+                                <div className="inline-flex items-center rounded-md bg-gray-100 dark:bg-gray-800 p-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAllItems(false)}
+                                        aria-pressed={!showAllItems}
+                                        className={`flex items-center gap-2 px-3 py-1 rounded-md text-xs transition ${!showAllItems ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
+                                        title="Show unpaid only"
+                                    >
+                                        <User className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Unpaid</span>
+                                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full bg-white/30 dark:bg-gray-700 text-xs">{unpaidCount}</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAllItems(true)}
+                                        aria-pressed={showAllItems}
+                                        className={`flex items-center gap-2 px-3 py-1 rounded-md text-xs transition ${showAllItems ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
+                                        title="Show all items"
+                                    >
+                                        <CheckCircle className="w-4 h-4" />
+                                        <span className="hidden sm:inline">All</span>
+                                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full bg-white/30 dark:bg-gray-700 text-xs">{totalCount}</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <span className="text-xs inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 min-w-[44px] justify-center">{unpaidCount} / {totalCount}</span>
                             )}
                         </div>
                     </div>
