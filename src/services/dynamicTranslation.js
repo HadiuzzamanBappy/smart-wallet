@@ -5,6 +5,9 @@ class DynamicTranslationService {
     this.currentLanguage = 'en';
     this.isTranslating = false;
     this.isInitialized = false;
+    this.observer = null;
+    this.translationQueue = new Set();
+    this.isProcessingQueue = false;
     
     // Load cache from sessionStorage on initialization
     this.loadCache();
@@ -209,6 +212,9 @@ class DynamicTranslationService {
       this.currentLanguage = targetLanguage;
       console.log(`Page translation to ${targetLanguage} completed`);
 
+      // Start observing DOM changes for dynamic content
+      this.startObserving();
+
       // Do a second pass after a short delay to catch dynamically generated content
       setTimeout(async () => {
         if (!this.isTranslating && this.currentLanguage === targetLanguage) {
@@ -326,6 +332,15 @@ class DynamicTranslationService {
   async resetToEnglish() {
     console.log('Resetting page to English...');
     
+    // Stop observing DOM changes
+    this.stopObserving();
+    
+    // Clear the queue
+    this.translationQueue.clear();
+    if (this.queueTimer) {
+      clearTimeout(this.queueTimer);
+    }
+    
     // Clear current language state
     this.currentLanguage = 'en';
     this.isTranslating = false;
@@ -391,6 +406,165 @@ class DynamicTranslationService {
       const value = element.getAttribute(attribute);
       this.originalContent.attributes.set(key, { element, attribute, value });
     });
+  }
+
+  // Start observing DOM changes for dynamic content translation
+  startObserving() {
+    if (this.observer || this.currentLanguage === 'en') {
+      return;
+    }
+
+    console.log('[Translation] Starting DOM mutation observer');
+
+    this.observer = new MutationObserver((mutations) => {
+      // Add mutations to queue
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach(node => {
+            if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.TEXT_NODE) {
+              this.translationQueue.add(node);
+            }
+          });
+        } else if (mutation.type === 'characterData') {
+          this.translationQueue.add(mutation.target);
+        } else if (mutation.type === 'attributes' && 
+                   (mutation.attributeName === 'placeholder' || mutation.attributeName === 'title')) {
+          this.translationQueue.add(mutation.target);
+        }
+      });
+
+      // Process queue with debounce
+      this.processQueueDebounced();
+    });
+
+    // Observe the entire document for changes
+    this.observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['placeholder', 'title']
+    });
+  }
+
+  // Stop observing DOM changes
+  stopObserving() {
+    if (this.observer) {
+      console.log('[Translation] Stopping DOM mutation observer');
+      this.observer.disconnect();
+      this.observer = null;
+    }
+  }
+
+  // Debounced queue processing
+  processQueueDebounced() {
+    if (this.queueTimer) {
+      clearTimeout(this.queueTimer);
+    }
+
+    this.queueTimer = setTimeout(() => {
+      this.processQueue();
+    }, 100); // 100ms debounce
+  }
+
+  // Process the translation queue
+  async processQueue() {
+    if (this.isProcessingQueue || this.translationQueue.size === 0 || this.currentLanguage === 'en') {
+      return;
+    }
+
+    this.isProcessingQueue = true;
+    const nodesToProcess = Array.from(this.translationQueue);
+    this.translationQueue.clear();
+
+    console.log(`[Translation] Processing ${nodesToProcess.length} queued nodes`);
+
+    try {
+      for (const node of nodesToProcess) {
+        await this.translateNode(node, this.currentLanguage);
+      }
+    } catch (error) {
+      console.warn('[Translation] Queue processing error:', error);
+    } finally {
+      this.isProcessingQueue = false;
+    }
+  }
+
+  // Translate a single node (text node or element)
+  async translateNode(node, targetLanguage) {
+    try {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const originalText = node.nodeValue?.trim();
+        if (originalText && originalText.length > 1) {
+          // Skip numbers-only text
+          if (/^[\d\s$€£₹৳.,-/:% ]+$/.test(originalText)) {
+            return;
+          }
+
+          // Check if it looks like English text
+          const englishWords = /\b(the|and|or|to|for|of|in|on|at|with|by|from|about|spent|left|welcome|back|quick|snapshot|earned|expended|given|took|credit|loan|month|budget|alerts|currency|language|settings|save|export|delete|account|data|light|dark|system|theme|appearance|add|edit|remove|transaction|balance|income|expense|total|search|filter|category|date|amount|description|confirm|cancel|close|help|logout|profile|sign|login|password|email|name|phone|address|country|city|state|zip|code)\b/i;
+          
+          if (!englishWords.test(originalText)) {
+            return; // Skip if doesn't look like English
+          }
+
+          // Handle mixed text (with numbers/currency)
+          if (/\d/.test(originalText) && /[a-zA-Z]/.test(originalText)) {
+            const textParts = originalText.match(/[a-zA-Z][a-zA-Z\s]*/g);
+            if (textParts && textParts.length > 0) {
+              let translatedText = originalText;
+              for (const textPart of textParts) {
+                const cleanPart = textPart.trim();
+                if (cleanPart.length > 1) {
+                  const translated = await this.translateText(cleanPart, targetLanguage);
+                  if (translated !== cleanPart) {
+                    translatedText = translatedText.replace(cleanPart, translated);
+                  }
+                }
+              }
+              if (translatedText !== originalText) {
+                node.nodeValue = translatedText;
+              }
+            }
+          } else {
+            // Regular text translation
+            const translatedText = await this.translateText(originalText, targetLanguage);
+            if (translatedText && translatedText !== originalText) {
+              node.nodeValue = translatedText;
+            }
+          }
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        // Translate element's text nodes
+        const textNodes = this.getTextNodes(node);
+        for (const textNode of textNodes) {
+          await this.translateNode(textNode, targetLanguage);
+        }
+
+        // Translate element's attributes (placeholder, title)
+        if (node.hasAttribute('placeholder')) {
+          const placeholder = node.getAttribute('placeholder');
+          if (placeholder) {
+            const translated = await this.translateText(placeholder, targetLanguage);
+            if (translated && translated !== placeholder) {
+              node.setAttribute('placeholder', translated);
+            }
+          }
+        }
+
+        if (node.hasAttribute('title')) {
+          const title = node.getAttribute('title');
+          if (title) {
+            const translated = await this.translateText(title, targetLanguage);
+            if (translated && translated !== title) {
+              node.setAttribute('title', translated);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[Translation] Node translation error:', error);
+    }
   }
 }
 

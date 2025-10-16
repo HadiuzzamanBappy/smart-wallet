@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Wallet, Plus, RefreshCw, DollarSign, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency } from '../../utils/helpers';
 import UserMenuDropdown from '../User/UserMenuDropdown';
+import { getOutstandingCredits, getOutstandingLoans } from '../../services/transactionService';
 
 const Header = ({
     onAddTransaction,
@@ -13,7 +14,7 @@ const Header = ({
     isRefreshing = false,
     onRefresh
 }) => {
-    const { userProfile } = useAuth();
+    const { userProfile, user } = useAuth();
 
     const balance = userProfile?.balance || 0;
     // legacy modal state removed; using compact floating panel instead
@@ -22,6 +23,38 @@ const Header = ({
     const [isClosing, setIsClosing] = useState(false);
     const hideTimerRef = useRef(null);
     const closeTimerRef = useRef(null);
+    const [creditDue, setCreditDue] = useState(0);
+    const [loanDue, setLoanDue] = useState(0);
+
+    const refreshDues = useCallback(async () => {
+        try {
+            if (!user?.uid) return;
+            const [creditsResult, loansResult] = await Promise.all([
+                getOutstandingCredits(user.uid),
+                getOutstandingLoans(user.uid)
+            ]);
+
+            let cDue = 0;
+            let lDue = 0;
+
+            if (creditsResult.success && Array.isArray(creditsResult.data)) {
+                creditsResult.data.forEach(c => {
+                    cDue += Number(c.remainingAmount || 0);
+                });
+            }
+
+            if (loansResult.success && Array.isArray(loansResult.data)) {
+                loansResult.data.forEach(l => {
+                    lDue += Number(l.remainingAmount || 0);
+                });
+            }
+
+            setCreditDue(cDue);
+            setLoanDue(lDue);
+        } catch (err) {
+            console.warn('Header: failed to refresh dues', err);
+        }
+    }, [user?.uid]);
 
     const handleBalanceClick = async () => {
         // If a refresh handler is provided, call it first so balance is fresh
@@ -64,6 +97,27 @@ const Header = ({
             if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
         };
     }, []);
+
+    // Refresh dues on mount and when transactions change elsewhere
+    useEffect(() => {
+        refreshDues();
+
+        const handleTxUpdate = () => {
+            refreshDues();
+        };
+
+        window.addEventListener('wallet:transaction-added', handleTxUpdate);
+        window.addEventListener('wallet:transaction-edited', handleTxUpdate);
+        window.addEventListener('wallet:transaction-deleted', handleTxUpdate);
+        window.addEventListener('wallet:transactions-updated', handleTxUpdate);
+
+        return () => {
+            window.removeEventListener('wallet:transaction-added', handleTxUpdate);
+            window.removeEventListener('wallet:transaction-edited', handleTxUpdate);
+            window.removeEventListener('wallet:transaction-deleted', handleTxUpdate);
+            window.removeEventListener('wallet:transactions-updated', handleTxUpdate);
+        };
+    }, [refreshDues]);
 
     const handleFloatingClose = () => {
         // cancel any existing timers
@@ -170,10 +224,10 @@ const Header = ({
                                 </div>
                                 <div className="flex flex-col items-end space-y-2">
                                     <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full">
-                                        <span className="text-sm">Net: {formatCurrency(((userProfile?.totalCreditGiven || 0) - (userProfile?.totalLoanTaken || 0)), userProfile?.currency || 'BDT')}</span>
+                                            <span className="text-sm">Net Due: {formatCurrency((creditDue - loanDue), userProfile?.currency || 'BDT')}</span>
                                     </div>
-                                    <div className={`px-3 py-1 rounded-full text-xs ${((userProfile?.totalCreditGiven || 0) - (userProfile?.totalLoanTaken || 0)) > 0 ? 'bg-blue-100 text-blue-800' : ((userProfile?.totalCreditGiven || 0) - (userProfile?.totalLoanTaken || 0)) < 0 ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-                                        {((userProfile?.totalCreditGiven || 0) - (userProfile?.totalLoanTaken || 0)) > 0 ? 'You lent more' : ((userProfile?.totalCreditGiven || 0) - (userProfile?.totalLoanTaken || 0)) < 0 ? 'You borrowed more' : 'Balanced'}
+                                        <div className={`px-3 py-1 rounded-full text-xs ${(creditDue - loanDue) > 0 ? 'bg-blue-100 text-blue-800' : (creditDue - loanDue) < 0 ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
+                                        {(creditDue - loanDue) > 0 ? 'More due to you' : (creditDue - loanDue) < 0 ? 'You owe more' : 'Balanced'}
                                     </div>
                                 </div>
                             </div>

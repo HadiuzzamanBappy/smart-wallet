@@ -3,9 +3,10 @@ import { MessageSquare, Send, Loader2, Edit, Trash, Check, X } from 'lucide-reac
 import { parseTransaction } from '../../utils/aiTransactionParser';
 import { addTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
+import { formatCurrency } from '../../utils/helpers';
 
 const ChatWidget = ({ onTransactionAdded, className = '' }) => {
-  const { user, refreshUserProfile } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,6 +14,9 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
   const [parsedTransactions, setParsedTransactions] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const textareaRef = useRef(null);
+
+  // Get user's currency preference
+  const userCurrency = userProfile?.currency || 'BDT';
 
   // If the user removes all parsed items, automatically close the preview and show suggestions
   useEffect(() => {
@@ -31,7 +35,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
     setParsedTransactions(null);
 
     try {
-      const parseResult = await parseTransaction(message);
+      // Pass user's currency to parser for better context
+      const parseResult = await parseTransaction(message, userCurrency);
 
       if (parseResult.success) {
         setParsedTransactions(parseResult.data);
@@ -204,7 +209,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                             ? 'text-green-600 dark:text-green-400' 
                             : 'text-red-600 dark:text-red-400'
                         }`}>
-                          {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
+                          {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
+                          {formatCurrency(transaction.amount, userCurrency)}
                         </span>
                       </div>
                     ))}
@@ -221,7 +227,11 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="e.g., 'I bought groceries for 500 taka today'"
+                  placeholder={
+                    userCurrency === 'BDT' 
+                      ? "e.g., 'লাঞ্চে ২৫০ টাকা' or 'bought groceries for 500 taka'" 
+                      : `e.g., 'bought lunch for ${userCurrency === 'USD' ? '$25' : userCurrency === 'EUR' ? '€20' : userCurrency === 'GBP' ? '£18' : '₹200'}'`
+                  }
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent resize-y"
                   rows="3"
                   disabled={loading}
@@ -273,7 +283,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                           </div>
                           <div className="text-right">
                             <div className={`font-medium ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                              {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
+                              {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
+                              {formatCurrency(transaction.amount, userCurrency)}
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -351,20 +362,40 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                 <div className="space-y-2">
                   <div className="flex items-start justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
                     <div className="flex-1 pr-2">
-                          <div className="text-[11px] text-gray-600 dark:text-gray-300">Bought groceries for 500 BDT today</div>
+                          <div className="text-[11px] text-gray-600 dark:text-gray-300">
+                            {userCurrency === 'BDT' 
+                              ? 'Bought groceries for 500 taka today' 
+                              : `Bought groceries for ${userCurrency === 'USD' ? '50' : userCurrency === 'EUR' ? '45' : userCurrency === 'GBP' ? '40' : '500'} ${userCurrency === 'USD' ? 'dollars' : userCurrency === 'EUR' ? 'euros' : userCurrency === 'GBP' ? 'pounds' : userCurrency === 'INR' ? 'rupees' : 'taka'}`}
+                          </div>
                         </div>
                     <button
-                      onClick={() => { setMessage('Bought groceries for 500 BDT today'); textareaRef.current?.focus(); }}
+                      onClick={() => { 
+                        const exampleMsg = userCurrency === 'BDT' 
+                          ? 'Bought groceries for 500 taka today' 
+                          : `Bought groceries for ${userCurrency === 'USD' ? '50' : userCurrency === 'EUR' ? '45' : userCurrency === 'GBP' ? '40' : '500'} ${userCurrency === 'USD' ? 'dollars' : userCurrency === 'EUR' ? 'euros' : userCurrency === 'GBP' ? 'pounds' : userCurrency === 'INR' ? 'rupees' : 'taka'}`;
+                        setMessage(exampleMsg); 
+                        textareaRef.current?.focus(); 
+                      }}
                       className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
                     >Use</button>
                   </div>
 
                   <div className="flex items-start justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
                     <div className="flex-1 pr-2">
-                          <div className="text-[11px] text-gray-600 dark:text-gray-300">type:expense amount:250 currency:BDT category:food note:Lunch</div>
+                          <div className="text-[11px] text-gray-600 dark:text-gray-300">
+                            {userCurrency === 'BDT' 
+                              ? 'লাঞ্চে ২৫০ টাকা খরচ করেছি' 
+                              : 'type:expense amount:25 category:food note:Lunch'}
+                          </div>
                         </div>
                     <button
-                      onClick={() => { setMessage('type:expense amount:250 currency:BDT category:food note:Lunch'); textareaRef.current?.focus(); }}
+                      onClick={() => { 
+                        const exampleMsg = userCurrency === 'BDT' 
+                          ? 'লাঞ্চে ২৫০ টাকা খরচ করেছি' 
+                          : 'type:expense amount:25 category:food note:Lunch';
+                        setMessage(exampleMsg); 
+                        textareaRef.current?.focus(); 
+                      }}
                       className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
                     >Use</button>
                   </div>

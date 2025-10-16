@@ -235,8 +235,11 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
       const encryptedTx = { id: txSnap.id, ...txSnap.data() };
       const [decryptedTx] = await decryptTransactions([encryptedTx]);
 
-      const transactionAmount = Number((transactionData && transactionData.amount) ?? decryptedTx.amount) || 0;
-      const transactionType = (transactionData && transactionData.type) ?? decryptedTx.type;
+      // Always use decrypted data for critical operations to ensure data integrity
+      const transactionAmount = Number(decryptedTx.amount) || 0;
+      const transactionType = decryptedTx.type;
+
+      console.log(`[DELETE] Deleting transaction ${transactionId}: type=${transactionType}, amount=${transactionAmount}`);
 
       // Read user profile
       const userSnap = await tx.get(userRef);
@@ -264,8 +267,13 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
         repaymentFor: decryptedTx.repaymentFor
       });
 
+      console.log(`[DELETE] Reverse effects:`, reverseEffects);
+      console.log(`[DELETE] Current balance before reversal: ${currentTotals.balance}`);
+
       // Apply reversed effects
       currentTotals = applyEffectsToTotals(currentTotals, reverseEffects);
+
+      console.log(`[DELETE] New balance after reversal: ${currentTotals.balance}`);
 
       // If deleting a repayment, update the linked original's paidAmount
       if (decryptedTx.isRepayment && decryptedTx.linkedTransactionId) {
@@ -292,10 +300,13 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
 
       // Cascade-delete linked repayments and reverse their effects
       if (linkedRepayments.length > 0) {
+        console.log(`[DELETE] Cascade-deleting ${linkedRepayments.length} linked repayments`);
         for (const linked of linkedRepayments) {
           try {
             const linkedRef = doc(db, `users/${userId}/transactions/${linked.id}`);
             const [linkedDecrypted] = await decryptTransactions([{ id: linked.id, ...linked.data }]);
+            
+            console.log(`[DELETE] Cascade-delete linked: type=${linkedDecrypted.type}, amount=${linkedDecrypted.amount}`);
             
             // Reverse the linked repayment's effect
             const linkedReverseEffects = reverseTransactionEffects({
@@ -305,6 +316,8 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
               repaymentFor: linkedDecrypted.repaymentFor
             });
 
+            console.log(`[DELETE] Linked reverse effects:`, linkedReverseEffects);
+
             currentTotals = applyEffectsToTotals(currentTotals, linkedReverseEffects);
 
             // Delete the linked repayment
@@ -313,6 +326,7 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
             console.warn('Failed to cascade-delete linked repayment:', err?.message || err);
           }
         }
+        console.log(`[DELETE] Balance after cascade deletes: ${currentTotals.balance}`);
       }
 
       // Validate no negative totals
@@ -824,6 +838,8 @@ export const markLoanAsRepaid = async (userId, loanId, repaymentAmount, descript
     // Create repayment transaction with type='repayment'
     const repaymentTransaction = {
       type: 'repayment',
+      // mark as repayment so delete/update logic can detect linked adjustments
+      isRepayment: true,
       amount: numRepaymentAmount,
       description: description || `Loan repayment - ${decryptedLoan.description}`,
       category: decryptedLoan.category || 'loan',
@@ -896,6 +912,8 @@ export const markCreditAsCollected = async (userId, creditId, collectionAmount, 
     // Create collection transaction with type='collection'
     const collectionTransaction = {
       type: 'collection',
+      // mark as repayment/adjustment so delete logic can treat it accordingly
+      isRepayment: true,
       amount: numCollectionAmount,
       description: description || `Credit collected - ${decryptedCredit.description}`,
       category: decryptedCredit.category || 'credit',

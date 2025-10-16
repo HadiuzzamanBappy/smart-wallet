@@ -4,13 +4,17 @@ import Modal from '../UI/Modal';
 import { addTransaction } from '../../services/transactionService';
 import { parseTransaction } from '../../utils/aiTransactionParser';
 import { useAuth } from '../../hooks/useAuth';
+import { formatCurrency } from '../../utils/helpers';
 
 const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
-  const { user, refreshUserProfile } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const [mode, setMode] = useState('manual'); // 'chat' or 'manual'
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [lastResponse, setLastResponse] = useState(null);
+  
+  // Get user's currency preference
+  const userCurrency = userProfile?.currency || 'BDT';
   
   // Chat mode state
   const [chatMessage, setChatMessage] = useState('');
@@ -47,7 +51,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
     
     setAiLoading(true);
     try {
-      const result = await parseTransaction(chatMessage);
+      const result = await parseTransaction(chatMessage, userCurrency);
       if (result.success) {
         setParsedTransactions(result.data);
         // do not set a persistent success message here — hide parse-success badge and show the inline preview instead
@@ -257,7 +261,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                 ref={chatTextareaRef}
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
-                placeholder="e.g., I bought groceries for 500 taka today"
+                placeholder={`e.g., I bought groceries for ${userCurrency === 'BDT' ? '500 taka' : userCurrency === 'USD' ? '$50' : `50 ${userCurrency}`} today`}
                 className="input-field min-h-[100px]"
                 rows="3"
               />
@@ -282,10 +286,16 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                 <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
                   <div className="flex-1 pr-2">
                     <div className="font-medium">Natural</div>
-                    <div className="text-[11px] text-gray-600 dark:text-gray-300">Bought groceries for 500 BDT today</div>
+                    <div className="text-[11px] text-gray-600 dark:text-gray-300">
+                      {userCurrency === 'BDT' ? 'Bought groceries for 500 BDT today' : `Bought groceries for ${userCurrency === 'USD' ? '$50' : `50 ${userCurrency}`} today`}
+                    </div>
                   </div>
                   <button
-                    onClick={() => { setChatMessage('Bought groceries for 500 BDT today'); chatTextareaRef.current?.focus(); }}
+                    onClick={() => { 
+                      const template = userCurrency === 'BDT' ? 'Bought groceries for 500 BDT today' : `Bought groceries for ${userCurrency === 'USD' ? '$50' : `50 ${userCurrency}`} today`;
+                      setChatMessage(template); 
+                      chatTextareaRef.current?.focus(); 
+                    }}
                     className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
                   >Use</button>
                 </div>
@@ -293,10 +303,13 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                 <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
                   <div className="flex-1 pr-2">
                     <div className="font-medium">Tokenized</div>
-                    <div className="text-[11px] text-gray-600 dark:text-gray-300">type:expense amount:250 currency:BDT category:food note:Lunch</div>
+                    <div className="text-[11px] text-gray-600 dark:text-gray-300">type:expense amount:250 currency:{userCurrency} category:food note:Lunch</div>
                   </div>
                   <button
-                    onClick={() => { setChatMessage('type:expense amount:250 currency:BDT category:food note:Lunch'); chatTextareaRef.current?.focus(); }}
+                    onClick={() => { 
+                      setChatMessage(`type:expense amount:250 currency:${userCurrency} category:food note:Lunch`); 
+                      chatTextareaRef.current?.focus(); 
+                    }}
                     className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
                   >Use</button>
                 </div>
@@ -339,7 +352,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                         </div>
                         <div className="text-right">
                           <div className={`font-medium ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                            {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{transaction.amount} BDT
+                            {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{formatCurrency(transaction.amount, userCurrency)}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -452,7 +465,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
               {/* Amount */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Amount (BDT)
+                  Amount ({userCurrency})
                 </label>
                 <input
                   type="number"

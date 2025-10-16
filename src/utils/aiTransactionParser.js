@@ -14,48 +14,103 @@ const getModel = () => {
   return 'meta-llama/llama-3-8b-instruct';
 };
 
-const SYSTEM_PROMPT = `You are a strict financial transaction parser. You MUST return VALID JSON ONLY.
+const buildSystemPrompt = (userCurrency = 'BDT') => {
+  const currencySymbols = {
+    'BDT': '৳',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'INR': '₹'
+  };
+  const currencySymbol = currencySymbols[userCurrency] || '৳';
+  const currencyName = userCurrency === 'BDT' ? 'taka' : userCurrency;
+
+  return `You are an advanced multilingual financial transaction parser. You MUST return VALID JSON ONLY.
+
+LANGUAGE SUPPORT:
+- English: "bought lunch for 250", "spent $50 on groceries"
+- Bengali: "২৫০ টাকা দিয়ে লাঞ্চ কিনেছি", "৫০০ টাকা খরচ"
+- Banglish (Bengali in English script): "250 taka diye lunch kinechi", "500 taka khoroch"
+- Mixed: "lunch er jonno 250 taka", "দুপুরের খাবারে ৳250"
+- Any language with numbers or currency
 
 CRITICAL VALIDATION RULES:
-1. If NO EXPLICIT AMOUNT is found in the input, return: [{"error": "missing_amount", "message": "Please specify the amount"}]
-2. An amount must be a NUMBER, currency symbol, or amount word (fifty, hundred, etc.)
-3. DO NOT guess or assume amounts from context clues
+1. If NO EXPLICIT AMOUNT is found, return: [{"error": "missing_amount", "message": "Please specify the amount"}]
+2. Valid amounts: numbers (50, 250.50), currency symbols (${currencySymbol}250, $50), words (fifty, hundred, lakh, crore)
+3. DO NOT guess amounts from context ("lunch" alone is invalid)
 4. DO NOT invent amounts based on typical costs
 
 RESPONSE FORMAT:
-- Multiple transactions: JSON array of transaction objects
-- Single transaction: JSON array with one transaction object  
-- Missing amount: JSON array with one error object
-- NEVER return plain objects, always arrays
+- Always return JSON array (even for single transaction)
+- Multiple transactions: [tx1, tx2, ...]
+- Single transaction: [tx1]
+- Error: [{"error": "missing_amount", "message": "..."}]
 
-TRANSACTION TYPES (be precise):
-- "income": Money received BY user (salary, refund, payment received, gift received)
-- "expense": Money spent BY user (purchases, bills, services consumed)
-- "credit": Money GIVEN BY user to others (lending, loan given to someone)
-- "loan": Money BORROWED BY user from others (loan taken, borrowed money)
+TRANSACTION TYPES:
+- "income": Money IN (salary, বেতন, payment received, refund, gift)
+- "expense": Money OUT (খরচ, khoroch, purchase, bills, shopping)
+- "credit": Money LENT to others (ধার দিয়েছি, dhar diyechi, loan given)
+- "loan": Money BORROWED (ধার নিয়েছি, dhar niyechi, loan taken)
 
-VALID AMOUNT INDICATORS:
-✓ Numbers: "50", "250.50", "1,500"
-✓ Currency: "$50", "৳250", "50 BDT", "100 taka"  
-✓ Words: "fifty taka", "two hundred", "5k", "1 lakh"
-✗ Context only: "lunch" (without amount)
-✗ Descriptions: "expensive meal" (without amount)
+AMOUNT RECOGNITION (examples):
+✓ "250" → 250
+✓ "৳250" or "${currencySymbol}250" → 250
+✓ "250 taka" or "২৫০ টাকা" → 250
+✓ "two hundred fifty" → 250
+✓ "5k" → 5000
+✓ "1 lakh" or "১ লক্ষ" → 100000
+✓ "2.5 crore" → 25000000
+✗ "lunch" (no amount)
+✗ "expensive meal" (no amount)
 
-TRANSACTION OBJECT SCHEMA:
+BENGALI/BANGLISH KEYWORDS:
+- খরচ, khoroch, khorcha = expense
+- আয়, income, payment = income
+- বেতন, salary, beton = income/salary category
+- লাঞ্চ, lunch, দুপুরের খাবার = food category
+- যাতায়াত, jatayat, transport, গাড়ি = transport
+- বিল, bill, bills = bills category
+- ধার দিয়েছি, dhar diyechi, lent = credit
+- ধার নিয়েছি, dhar niyechi, borrowed = loan
+
+DESCRIPTION GUIDELINES:
+- Create clear, semantic descriptions that explain what the transaction is for
+- DO NOT just repeat the user's input verbatim
+- Normalize and clean up descriptions (e.g., "lunch kinechi 250" → "Lunch purchase", "২৫০ টাকা খরচ করেছি লাঞ্চে" → "Lunch expense")
+- Include relevant context from the message but make it concise and professional
+- For Bengali/Banglish input, you can provide English descriptions or keep original language based on clarity
+- Examples:
+  * "bought groceries for 500" → "Grocery shopping"
+  * "lunch er jonno 250 taka" → "Lunch"
+  * "বেতন পেয়েছি ৫০০০০" → "Salary received" or "বেতন"
+  * "taxi bhara 120" → "Taxi fare"
+  * "ধার দিয়েছি রহিমকে 5000" → "Loan given to Rahim" or "Credit to Rahim"
+
+TRANSACTION SCHEMA:
 {
   "type": "income|expense|credit|loan",
-  "amount": number (positive, no currency symbols),
-  "description": "clear description of transaction",
+  "amount": number (positive, no symbols),
+  "description": "clear, normalized description (not verbatim user input)",
   "category": "food|transport|entertainment|shopping|bills|health|education|salary|freelance|investment|other",
-  "date": "YYYY-MM-DD" (optional, default to today)
+  "date": "YYYY-MM-DD" (optional, defaults to today)
 }
 
-EXAMPLES:
-Input: "bought lunch for 250" → [{"type":"expense","amount":250,"description":"bought lunch","category":"food","date":"2025-10-07"}]
-Input: "type:expense category:food note:lunch" → [{"error":"missing_amount","message":"Please specify the amount"}]
-Input: "salary 50000 received today" → [{"type":"income","amount":50000,"description":"salary received","category":"salary","date":"2025-10-07"}]
+EXAMPLES (user currency: ${userCurrency}):
+Input: "lunch kinechi 250 taka" → [{"type":"expense","amount":250,"description":"Lunch","category":"food"}]
+Input: "২৫০ টাকা খরচ করেছি লাঞ্চে" → [{"type":"expense","amount":250,"description":"Lunch expense","category":"food"}]
+Input: "received salary 50000" → [{"type":"income","amount":50000,"description":"Salary received","category":"salary"}]
+Input: "বেতন পেয়েছি ৫০০০০" → [{"type":"income","amount":50000,"description":"Salary","category":"salary"}]
+Input: "taxi bhara 120 taka" → [{"type":"expense","amount":120,"description":"Taxi fare","category":"transport"}]
+Input: "ধার দিয়েছি রহিমকে 5000" → [{"type":"credit","amount":5000,"description":"Loan to Rahim","category":"other"}]
+Input: "type:expense note:lunch" → [{"error":"missing_amount","message":"Please specify the amount"}]
 
-Support English and Bengali. Convert Bengali numerals to English. NEVER invent amounts.`;
+IMPORTANT:
+- Convert Bengali numerals (০-৯) to English (0-9)
+- Recognize "taka", "টাকা", "${currencyName}" as currency indicators
+- Default currency is ${userCurrency}
+- Be flexible with language mixing
+- NEVER invent amounts`};
+
 
 // Convert Bengali numerals to Latin digits
 const convertBengali = s => typeof s === 'string' ? s.replace(/[০১২৩৪৫৬৭৮৯]/g, ch => '০১২৩৪৫৬৭৮৯'.indexOf(ch)) : s;
@@ -94,11 +149,11 @@ const extractJSON = (text) => {
   return null;
 };
 
-export const parseTransaction = async (message) => {
+export const parseTransaction = async (message, userCurrency = 'BDT') => {
   if (!message || typeof message !== 'string') return { success: false, error: 'Empty message' };
   
   // Pre-check: Look for any amount indication in the message
-  const hasAmountPattern = /(?:\d+(?:\.\d+)?|\d{1,3}(?:,\d{3})*(?:\.\d{2})?|৳|taka|tk|bdt|টাকা|\$|hundred|thousand|lakh|লক্ষ|crore|কোটি|k\b)/i;
+  const hasAmountPattern = /(?:\d+(?:\.\d+)?|\d{1,3}(?:,\d{3})*(?:\.\d{2})?|৳|taka|tk|bdt|টাকা|\$|€|£|₹|hundred|thousand|lakh|লক্ষ|crore|কোটি|k\b)/i;
   if (!hasAmountPattern.test(convertBengali(message))) {
     return { success: false, error: 'Please specify the amount for this transaction (e.g., "50", "$50", "৳100")' };
   }
@@ -106,6 +161,9 @@ export const parseTransaction = async (message) => {
   const apiKey = getAPIKey();
   if (!apiKey) return { success: false, error: 'API key missing' };
   const model = getModel();
+  
+  // Build prompt with user's currency context
+  const SYSTEM_PROMPT = buildSystemPrompt(userCurrency);
 
   const payload = {
     model,

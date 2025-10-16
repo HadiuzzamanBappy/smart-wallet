@@ -139,7 +139,7 @@ const BudgetProgress = ({ onSettingsClick }) => {
             </div>
 
             <div className={`mt-2 flex items-center justify-between text-xs ${colors.textColor}`}>
-                <div>BDT {formatCurrency(spent, currency).replace(/[^0-9.,]/g, '')} spent</div>
+                <div>{formatCurrency(spent, currency)} spent</div>
                 <div>{budgetStatus.exceeded ? `Over by ${formatCurrency(spent - (budgetStatus.budget || 0), currency)}` : `${formatCurrency(remaining, currency)} left`}</div>
             </div>
         </div>
