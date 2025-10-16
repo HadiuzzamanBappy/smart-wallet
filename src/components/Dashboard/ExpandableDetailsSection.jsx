@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, BarChart3, FileText, PieChart, Calendar, List, TrendingUp } from 'lucide-react';
+import Skeleton from '../UI/SkeletonLoader';
 import TransactionList from './TransactionList';
 import SpendingAnalytics from './SpendingAnalytics';
 
@@ -164,7 +165,9 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
                 </p>
               </div>
               {isActive && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                <div className="absolute -top-1 -right-1">
+                  <Skeleton width="w-3" height="h-3" rounded="rounded-full" />
+                </div>
               )}
             </button>
           );

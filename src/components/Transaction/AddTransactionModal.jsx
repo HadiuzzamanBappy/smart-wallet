@@ -5,6 +5,7 @@ import { addTransaction } from '../../services/transactionService';
 import { parseTransaction } from '../../utils/aiTransactionParser';
 import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency } from '../../utils/helpers';
+import { APP_EVENTS } from '../../config/constants';
 
 const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -133,7 +134,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
 
       // Notify other UI components (analytics/summary) that transactions were added
       try {
-        window.dispatchEvent(new CustomEvent('wallet:transaction-added', { detail: { addedIds, count: addedIds.length, source: 'chat' } }));
+  window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_ADDED, { detail: { addedIds, count: addedIds.length, source: 'chat' } }));
       } catch {
         // ignore dispatch errors on older browsers
       }
@@ -168,7 +169,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         await refreshUserProfile();
         // Notify other components
         try {
-          window.dispatchEvent(new CustomEvent('wallet:transaction-added', { detail: { addedIds: [result.id], count: 1, source: 'manual' } }));
+          window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_ADDED, { detail: { addedIds: [result.id], count: 1, source: 'manual' } }));
         } catch {
           // ignore dispatch errors
         }

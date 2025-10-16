@@ -35,6 +35,7 @@ import {
   applyEffectsToTotals,
   normalizeLoanCreditNumbers
 } from '../utils/transactionHelpers';
+import { APP_EVENTS } from '../config/constants';
 
 /**
  * Add a new transaction to the user's account
@@ -239,7 +240,7 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
       const transactionAmount = Number(decryptedTx.amount) || 0;
       const transactionType = decryptedTx.type;
 
-      console.log(`[DELETE] Deleting transaction ${transactionId}: type=${transactionType}, amount=${transactionAmount}`);
+  console.debug(`[DELETE] Deleting transaction ${transactionId}: type=${transactionType}, amount=${transactionAmount}`);
 
       // Read user profile
       const userSnap = await tx.get(userRef);
@@ -267,13 +268,13 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
         repaymentFor: decryptedTx.repaymentFor
       });
 
-      console.log(`[DELETE] Reverse effects:`, reverseEffects);
-      console.log(`[DELETE] Current balance before reversal: ${currentTotals.balance}`);
+  console.debug(`[DELETE] Reverse effects:`, reverseEffects);
+  console.debug(`[DELETE] Current balance before reversal: ${currentTotals.balance}`);
 
       // Apply reversed effects
       currentTotals = applyEffectsToTotals(currentTotals, reverseEffects);
 
-      console.log(`[DELETE] New balance after reversal: ${currentTotals.balance}`);
+  console.debug(`[DELETE] New balance after reversal: ${currentTotals.balance}`);
 
       // If deleting a repayment, update the linked original's paidAmount
       if (decryptedTx.isRepayment && decryptedTx.linkedTransactionId) {
@@ -300,13 +301,13 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
 
       // Cascade-delete linked repayments and reverse their effects
       if (linkedRepayments.length > 0) {
-        console.log(`[DELETE] Cascade-deleting ${linkedRepayments.length} linked repayments`);
+  console.debug(`[DELETE] Cascade-deleting ${linkedRepayments.length} linked repayments`);
         for (const linked of linkedRepayments) {
           try {
             const linkedRef = doc(db, `users/${userId}/transactions/${linked.id}`);
             const [linkedDecrypted] = await decryptTransactions([{ id: linked.id, ...linked.data }]);
             
-            console.log(`[DELETE] Cascade-delete linked: type=${linkedDecrypted.type}, amount=${linkedDecrypted.amount}`);
+            console.debug(`[DELETE] Cascade-delete linked: type=${linkedDecrypted.type}, amount=${linkedDecrypted.amount}`);
             
             // Reverse the linked repayment's effect
             const linkedReverseEffects = reverseTransactionEffects({
@@ -316,7 +317,7 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
               repaymentFor: linkedDecrypted.repaymentFor
             });
 
-            console.log(`[DELETE] Linked reverse effects:`, linkedReverseEffects);
+            console.debug(`[DELETE] Linked reverse effects:`, linkedReverseEffects);
 
             currentTotals = applyEffectsToTotals(currentTotals, linkedReverseEffects);
 
@@ -326,7 +327,7 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
             console.warn('Failed to cascade-delete linked repayment:', err?.message || err);
           }
         }
-        console.log(`[DELETE] Balance after cascade deletes: ${currentTotals.balance}`);
+  console.debug(`[DELETE] Balance after cascade deletes: ${currentTotals.balance}`);
       }
 
       // Validate no negative totals
@@ -352,7 +353,7 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
     });
 
     // Emit event after commit
-    const event = new CustomEvent('wallet:transaction-deleted', {
+    const event = new CustomEvent(APP_EVENTS.TRANSACTION_DELETED, {
       detail: deletedTransactionInfo
     });
     window.dispatchEvent(event);
@@ -535,8 +536,8 @@ export const updateTransaction = async (transactionId, updates) => {
     });
 
     // Emit event for UI refresh
-    const event = new CustomEvent('wallet:transaction-edited', { detail: { transactionId, updates: rest } });
-    window.dispatchEvent(event);
+  const event = new CustomEvent(APP_EVENTS.TRANSACTION_EDITED, { detail: { transactionId, updates: rest } });
+  window.dispatchEvent(event);
 
     return { success: true };
   } catch (error) {

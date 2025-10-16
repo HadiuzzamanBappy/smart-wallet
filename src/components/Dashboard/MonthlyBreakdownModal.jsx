@@ -3,32 +3,13 @@ import Modal from '../UI/Modal';
 import { TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
+import { formatCurrencyWithUser } from '../../utils/helpers';
 import LoadingSpinner from '../UI/LoadingSpinner';
 
 const MonthlyBreakdownModal = ({ open, onClose }) => {
   const { userProfile } = useAuth();
   const { transactions, loading } = useTransactions();
   const [selectedMonth, setSelectedMonth] = useState('');
-
-  const currency = userProfile?.currency || 'BDT';
-
-  const formatCurrency = (amount) => {
-    const currencyLocales = {
-      BDT: 'en-BD',
-      USD: 'en-US',
-      EUR: 'en-DE',
-      GBP: 'en-GB',
-      INR: 'en-IN'
-    };
-
-    const locale = currencyLocales[currency] || 'en-BD';
-
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: currency === 'BDT' ? 0 : 2
-    }).format(amount || 0);
-  };
 
   // Group transactions by month (YYYY-MM) and calculate totals
   const monthlyData = useMemo(() => {
@@ -126,7 +107,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                   <span className="text-sm font-medium text-green-600 dark:text-green-400">Income</span>
                 </div>
                 <div className="text-lg font-semibold text-green-600 dark:text-green-400">
-                  {formatCurrency(selectedData.income)}
+                  {formatCurrencyWithUser(selectedData.income, userProfile)}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {selectedData.incomeCount} transaction{selectedData.incomeCount !== 1 ? 's' : ''}
@@ -139,7 +120,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                   <span className="text-sm font-medium text-red-600 dark:text-red-400">Expense</span>
                 </div>
                 <div className="text-lg font-semibold text-red-600 dark:text-red-400">
-                  {formatCurrency(selectedData.expense)}
+                  {formatCurrencyWithUser(selectedData.expense, userProfile)}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {selectedData.expenseCount} transaction{selectedData.expenseCount !== 1 ? 's' : ''}
@@ -153,7 +134,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                 <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Net Change</span>
                 <span className={`text-lg font-semibold ${selectedData.income - selectedData.expense >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {selectedData.income - selectedData.expense >= 0 ? '+' : ''}
-                  {formatCurrency(selectedData.income - selectedData.expense)}
+                  {formatCurrencyWithUser(selectedData.income - selectedData.expense, userProfile)}
                 </span>
               </div>
             </div>
@@ -176,7 +157,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                         </div>
                       </div>
                       <div className={`font-semibold ml-2 whitespace-nowrap ${tx.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                        {tx.type === 'income' ? '+' : '-'}{formatCurrencyWithUser(tx.amount, userProfile)}
                       </div>
                     </div>
                   ))}

@@ -4,10 +4,12 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus, Eye, BarChart3 } from 'lucide-react';
 import { isCreditCategory, isLoanCategory } from '../../utils/aiTransactionParser';
 import { getOutstandingLoans, getOutstandingCredits } from '../../services/transactionService';
+import { formatCurrencyWithUser } from '../../utils/helpers';
 import AddTransactionModal from '../Transaction/AddTransactionModal';
 import LoanCreditModal from '../Transaction/LoanCreditModal';
 import MonthlyBreakdownModal from './MonthlyBreakdownModal';
 import { CompactSummarySkeleton } from '../UI/SkeletonLoader';
+import { APP_EVENTS } from '../../config/constants';
 
 const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -28,27 +30,6 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [showMonthlyBreakdown, setShowMonthlyBreakdown] = useState(false);
-
-
-
-  const formatCurrency = (amount) => {
-    const currency = userProfile?.currency || 'BDT';
-    const currencyLocales = {
-      BDT: 'en-BD',
-      USD: 'en-US',
-      EUR: 'en-DE',
-      GBP: 'en-GB',
-      INR: 'en-IN'
-    };
-
-    const locale = currencyLocales[currency] || 'en-BD';
-
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: currency === 'BDT' ? 0 : 2
-    }).format(amount || 0);
-  };
 
   const refreshData = async () => {
     if (refreshing) return;
@@ -208,7 +189,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   // Listen for transaction updates from other components
   useEffect(() => {
     const handleTransactionUpdate = async () => {
-      console.log('CompactSummary: Refreshing due to transaction update');
+      console.debug('CompactSummary: Refreshing due to transaction update');
 
       // If this is a repayment/collection event, also refresh user profile
       // to get updated balance since loan/credit repayments affect balance
@@ -223,16 +204,16 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     };
 
     // Add event listeners
-    window.addEventListener('wallet:transaction-added', handleTransactionUpdate);
-    window.addEventListener('wallet:transaction-edited', handleTransactionUpdate);
-    window.addEventListener('wallet:transaction-deleted', handleTransactionUpdate);
-    window.addEventListener('wallet:transactions-updated', handleTransactionUpdate);
+  window.addEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTransactionUpdate);
+  window.addEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTransactionUpdate);
+  window.addEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTransactionUpdate);
+  window.addEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTransactionUpdate);
 
     return () => {
-      window.removeEventListener('wallet:transaction-added', handleTransactionUpdate);
-      window.removeEventListener('wallet:transaction-edited', handleTransactionUpdate);
-      window.removeEventListener('wallet:transaction-deleted', handleTransactionUpdate);
-      window.removeEventListener('wallet:transactions-updated', handleTransactionUpdate);
+  window.removeEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTransactionUpdate);
+  window.removeEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTransactionUpdate);
+  window.removeEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTransactionUpdate);
+  window.removeEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTransactionUpdate);
     };
   }, [loadData, stableRefreshUserProfile]);
 
@@ -244,7 +225,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   const summaryCards = [
     {
       label: 'Earned',
-      value: formatCurrency(currentMonthIncome),
+      value: formatCurrencyWithUser(currentMonthIncome, userProfile),
       icon: TrendingUp,
       color: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
@@ -252,7 +233,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     },
     {
       label: 'Expended',
-      value: formatCurrency(currentMonthExpense),
+      value: formatCurrencyWithUser(currentMonthExpense, userProfile),
       icon: TrendingDown,
       color: 'text-red-600 dark:text-red-400',
       bgColor: 'bg-red-50 dark:bg-red-900/20',
@@ -262,8 +243,8 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       label: 'Given Credit (Outstanding)',
       // render value and due separately so we can style the due amount
       value: {
-        total: formatCurrency(stats.allTimeCreditGiven || 0),
-        due: formatCurrency(stats.creditDue || 0),
+        total: formatCurrencyWithUser(stats.allTimeCreditGiven || 0, userProfile),
+        due: formatCurrencyWithUser(stats.creditDue || 0, userProfile),
         rawDue: stats.creditDue || 0
       },
       icon: Wallet,
@@ -278,8 +259,8 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     {
       label: 'Took Loan (Outstanding)',
       value: {
-        total: formatCurrency(stats.allTimeLoanTaken || 0),
-        due: formatCurrency(stats.loanDue || 0),
+        total: formatCurrencyWithUser(stats.allTimeLoanTaken || 0, userProfile),
+        due: formatCurrencyWithUser(stats.loanDue || 0, userProfile),
         rawDue: stats.loanDue || 0
       },
       icon: DollarSign,

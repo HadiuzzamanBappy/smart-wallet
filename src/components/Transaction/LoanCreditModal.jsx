@@ -7,6 +7,7 @@ import {
     markLoanAsRepaid,
     markCreditAsCollected
 } from '../../services/transactionService';
+import { formatCurrencyWithUser, formatDate } from '../../utils/helpers';
 import Modal from '../UI/Modal';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import Toast from '../UI/Toast';
@@ -19,6 +20,7 @@ import {
     AlertCircle,
     X
 } from 'lucide-react';
+import { APP_EVENTS } from '../../config/constants';
 
 const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
     const { user, userProfile } = useAuth();
@@ -53,39 +55,6 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
     // totals for header summary (based on displayed items)
     const totalOriginalAmount = displayedItems.reduce((s, it) => s + (Number(it.amount) || 0), 0);
     const totalRemaining = displayedItems.reduce((s, it) => s + (Number(it.remainingAmount) || 0), 0);
-
-    const formatCurrency = (amount) => {
-        const currency = userProfile?.currency || 'BDT';
-        const currencyLocales = {
-            BDT: 'en-BD',
-            USD: 'en-US',
-            EUR: 'en-DE',
-            GBP: 'en-GB',
-            INR: 'en-IN'
-        };
-
-        const locale = currencyLocales[currency] || 'en-BD';
-
-        return new Intl.NumberFormat(locale, {
-            style: 'currency',
-            currency: currency,
-            minimumFractionDigits: currency === 'BDT' ? 0 : 2
-        }).format(amount || 0);
-    };
-
-    const formatDate = (timestamp) => {
-        if (!timestamp) return 'N/A';
-        try {
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        } catch {
-            return 'N/A';
-        }
-    };
 
     const loadData = React.useCallback(async () => {
         if (!user?.uid) return;
@@ -157,13 +126,13 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
 
             if (result.success) {
                 const actionText = isLoans ? 'repayment' : 'collection';
-                showToast(`${formatCurrency(amount)} ${actionText} recorded successfully`);
+                showToast(`${formatCurrencyWithUser(amount, userProfile)} ${actionText} recorded successfully`);
                 setShowPaymentModal(null);
                 if (paymentAmountRef.current) paymentAmountRef.current.value = '';
                 setPaymentDescription('');
 
                 // Dispatch transaction added event to notify other components
-                window.dispatchEvent(new CustomEvent('wallet:transaction-added', {
+                window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_ADDED, {
                     detail: {
                         transactionId: result.repaymentTransactionId || result.collectionTransactionId,
                         type: isLoans ? 'expense' : 'income',
@@ -215,7 +184,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                 Original Amount
                             </label>
                             <div className="text-lg font-semibold text-gray-600 dark:text-gray-300">
-                                {formatCurrency(showPaymentModal.amount)}
+                                {formatCurrencyWithUser(showPaymentModal.amount, userProfile)}
                             </div>
                         </div>
 
@@ -224,7 +193,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                 Remaining Amount
                             </label>
                             <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
-                                {formatCurrency(showPaymentModal.remainingAmount)}
+                                {formatCurrencyWithUser(showPaymentModal.remainingAmount, userProfile)}
                             </div>
                         </div>
 
@@ -283,26 +252,29 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         <>
             <Modal isOpen={open} onClose={onClose} title={title}>
                 {/* Header totals summary with toggle */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-4">
-                        <div className="text-sm text-gray-600 dark:text-gray-300">Total: <span className="font-semibold">{formatCurrency(totalOriginalAmount)}</span></div>
-                        <div className="text-sm text-orange-600 dark:text-orange-400">Due: <span className="font-semibold">{formatCurrency(totalRemaining)}</span></div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">{unpaidCount} / {totalCount}</span>
-                        {hasFullyPaid && (
-                            <button
-                                onClick={() => setShowAllItems(s => !s)}
-                                className="p-2 rounded-md border border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                title={showAllItems ? 'Show unpaid only' : 'Show all items'}
-                            >
-                                {showAllItems ? (
-                                    <CheckCircle className="w-4 h-4 text-green-600" />
-                                ) : (
-                                    <User className="w-4 h-4 text-gray-600" />
-                                )}
-                            </button>
-                        )}
+                <div className="mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <div className="text-sm text-gray-600 dark:text-gray-300 truncate">Total: <span className="font-semibold ml-1">{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</span></div>
+                            <div className="text-sm text-orange-600 dark:text-orange-400 truncate">Due: <span className="font-semibold ml-1">{formatCurrencyWithUser(totalRemaining, userProfile)}</span></div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 min-w-[44px] justify-center">{unpaidCount} / {totalCount}</span>
+                            {hasFullyPaid && (
+                                <button
+                                    onClick={() => setShowAllItems(s => !s)}
+                                    className="p-2 rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    title={showAllItems ? 'Show unpaid only' : 'Show all items'}
+                                >
+                                    {showAllItems ? (
+                                        <CheckCircle className="w-4 h-4 text-green-600" />
+                                    ) : (
+                                        <User className="w-4 h-4 text-gray-600" />
+                                    )}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
                 {loading ? (
@@ -352,7 +324,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                             Original Amount
                                         </div>
                                         <div className="text-lg font-semibold">
-                                            {formatCurrency(item.amount)}
+                                            {formatCurrencyWithUser(item.amount, userProfile)}
                                         </div>
                                     </div>
                                     <div>
@@ -360,7 +332,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                             Remaining
                                         </div>
                                         <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
-                                            {formatCurrency(item.remainingAmount)}
+                                            {formatCurrencyWithUser(item.remainingAmount, userProfile)}
                                         </div>
                                     </div>
                                 </div>
@@ -371,7 +343,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                             {isLoans ? 'Paid So Far' : 'Collected So Far'}
                                         </div>
                                         <div className="text-sm text-gray-600 dark:text-gray-300">
-                                            {formatCurrency(item.paidAmount)}
+                                            {formatCurrencyWithUser(item.paidAmount, userProfile)}
                                             {item.lastPaymentDate && (
                                                 <span className="text-xs text-gray-400 ml-2">
                                                     (Last: {formatDate(item.lastPaymentDate)})

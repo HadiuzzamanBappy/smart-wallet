@@ -21,6 +21,7 @@ import ProfileModal from './components/User/ProfileModal';
 import SettingsModal from './components/User/SettingsModal';
 import { ToastContainer } from './components/UI/Toast';
 import './App.css';
+import { APP_EVENTS } from './config/constants';
 
 const AppContent = () => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -55,7 +56,7 @@ const AppContent = () => {
       }
       // Notify other components that transactions have been refreshed
       try {
-        window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { source: 'header-refresh' } }));
+        window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { source: 'header-refresh' } }));
       } catch {
         // ignore dispatch errors
       }
@@ -74,7 +75,7 @@ const AppContent = () => {
     try {
       await refreshUserProfile();
       try {
-        window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { source: 'profile-refresh' } }));
+        window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { source: 'profile-refresh' } }));
       } catch {
         // ignore
       }
@@ -88,7 +89,7 @@ const AppContent = () => {
   // Initialize translation based on user's language preference
   React.useEffect(() => {
     if (userProfile?.language) {
-      console.log('User preferred language:', userProfile.language);
+      console.debug('User preferred language:', userProfile.language);
       setCurrentLanguage(userProfile.language);
       dynamicTranslator.initializeForUser(userProfile.language);
     }
@@ -133,13 +134,13 @@ const AppContent = () => {
   const handleTransactionUpdate = () => {
     refreshTransactions();
     success('Transaction updated successfully!');
-  try { window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { source: 'transaction-update' } })); } catch { /* ignore */ }
+  try { window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { source: 'transaction-update' } })); } catch { /* ignore */ }
   };
 
   const handleTransactionAdded = () => {
     refreshTransactions();
     success('Transaction added successfully!');
-  try { window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { source: 'transaction-add' } })); } catch { /* ignore */ }
+  try { window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { source: 'transaction-add' } })); } catch { /* ignore */ }
   };
 
   // Handle authentication flow

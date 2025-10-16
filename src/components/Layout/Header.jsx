@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Wallet, Plus, RefreshCw, DollarSign, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import useLocalRefresh from '../../hooks/useLocalRefresh';
 import { formatCurrency } from '../../utils/helpers';
 import UserMenuDropdown from '../User/UserMenuDropdown';
 import { getOutstandingCredits, getOutstandingLoans } from '../../services/transactionService';
+import Skeleton, { HeaderSkeleton } from '../UI/SkeletonLoader';
+import { APP_EVENTS } from '../../config/constants';
 
 const Header = ({
     onAddTransaction,
@@ -11,8 +14,7 @@ const Header = ({
     onOpenSettings,
     currentLanguage,
     onLanguageToggle,
-    isRefreshing = false,
-    onRefresh
+    isRefreshing = false
 }) => {
     const { userProfile, user } = useAuth();
 
@@ -25,6 +27,7 @@ const Header = ({
     const closeTimerRef = useRef(null);
     const [creditDue, setCreditDue] = useState(0);
     const [loanDue, setLoanDue] = useState(0);
+    const { isRefreshing: isLocalRefreshing, run: runLocalRefresh } = useLocalRefresh(350);
 
     const refreshDues = useCallback(async () => {
         try {
@@ -57,14 +60,15 @@ const Header = ({
     }, [user?.uid]);
 
     const handleBalanceClick = async () => {
-        // If a refresh handler is provided, call it first so balance is fresh
-        if (onRefresh) {
+        // Only refresh local dues (no global summary refresh) and show floating panel
+        await runLocalRefresh(async () => {
             try {
-                await onRefresh();
+                await refreshDues();
             } catch (err) {
-                console.warn('Header: onRefresh failed', err);
+                console.warn('Header: refreshDues failed', err);
             }
-        }
+        });
+
         // Show compact floating balance under header and auto-hide
         // Reset any closing state and timers
         if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -106,16 +110,16 @@ const Header = ({
             refreshDues();
         };
 
-        window.addEventListener('wallet:transaction-added', handleTxUpdate);
-        window.addEventListener('wallet:transaction-edited', handleTxUpdate);
-        window.addEventListener('wallet:transaction-deleted', handleTxUpdate);
-        window.addEventListener('wallet:transactions-updated', handleTxUpdate);
+    window.addEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTxUpdate);
+    window.addEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTxUpdate);
+    window.addEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTxUpdate);
+    window.addEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTxUpdate);
 
         return () => {
-            window.removeEventListener('wallet:transaction-added', handleTxUpdate);
-            window.removeEventListener('wallet:transaction-edited', handleTxUpdate);
-            window.removeEventListener('wallet:transaction-deleted', handleTxUpdate);
-            window.removeEventListener('wallet:transactions-updated', handleTxUpdate);
+            window.removeEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTxUpdate);
+            window.removeEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTxUpdate);
+            window.removeEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTxUpdate);
+            window.removeEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTxUpdate);
         };
     }, [refreshDues]);
 
@@ -163,14 +167,21 @@ const Header = ({
                                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                     <span>Balance:</span>
                                     {isRefreshing ? (
+                                        // global refresh skeleton (provided by parent)
                                         <div className="flex items-center gap-2">
-                                            <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-4 w-20 rounded"></div>
+                                            <Skeleton width="w-20" height="h-4" />
+                                            <RefreshCw className="w-3 h-3 animate-spin text-teal-500" />
+                                        </div>
+                                    ) : isLocalRefreshing ? (
+                                        // show a compact inline skeleton for the balance while refreshing
+                                        <div className="inline-flex items-center gap-2">
+                                            <Skeleton width="w-20" height="h-4" />
                                             <RefreshCw className="w-3 h-3 animate-spin text-teal-500" />
                                         </div>
                                     ) : (
                                         <button
                                             onClick={handleBalanceClick}
-                                            className="font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors cursor-pointer flex items-center gap-1 group"
+                                            className="font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors cursor-pointer flex items-center gap-2 group"
                                             title="Click to refresh balance"
                                         >
                                             {formatCurrency(balance, userProfile?.currency || 'BDT')}

@@ -1,13 +1,4 @@
-/**
- * Currency locale mappings
- */
-const CURRENCY_LOCALES = {
-  BDT: 'en-BD',
-  USD: 'en-US',
-  EUR: 'en-DE',
-  GBP: 'en-GB',
-  INR: 'en-IN'
-};
+import { getCurrencyConfig, DEFAULTS, BUDGET_WARNING_LEVELS } from '../config/constants';
 
 /**
  * Format currency amount with dynamic currency
@@ -15,13 +6,13 @@ const CURRENCY_LOCALES = {
  * @param {string} currency - Currency code (BDT, USD, EUR, GBP, INR)
  * @returns {string} Formatted currency string
  */
-export const formatCurrency = (amount, currency = 'BDT') => {
-  const locale = CURRENCY_LOCALES[currency] || 'en-BD';
+export const formatCurrency = (amount, currency = DEFAULTS.CURRENCY) => {
+  const config = getCurrencyConfig(currency);
   
-  return new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat(config.locale, {
     style: 'currency',
-    currency: currency,
-    minimumFractionDigits: currency === 'BDT' ? 0 : 2
+    currency: config.code,
+    minimumFractionDigits: config.decimals
   }).format(amount || 0);
 };
 
@@ -32,7 +23,7 @@ export const formatCurrency = (amount, currency = 'BDT') => {
  * @returns {string} Formatted currency string
  */
 export const formatCurrencyWithUser = (amount, userProfile) => {
-  const currency = userProfile?.currency || 'BDT';
+  const currency = userProfile?.currency || DEFAULTS.CURRENCY;
   return formatCurrency(amount, currency);
 };
 
@@ -52,7 +43,7 @@ export const calculateBudgetStatus = (monthlyBudget, currentSpending) => {
       percentage: 0,
       remaining: 0,
       exceeded: false,
-      warningLevel: 'none', // none, warning, danger
+      warningLevel: 'none',
       status: 'No budget set'
     };
   }
@@ -61,17 +52,17 @@ export const calculateBudgetStatus = (monthlyBudget, currentSpending) => {
   const remaining = Math.max(0, budget - spending);
   const exceeded = spending > budget;
   
-  let warningLevel = 'safe';
+  let warningLevel = BUDGET_WARNING_LEVELS.SAFE;
   let status = 'On track';
   
   if (percentage >= 100) {
-    warningLevel = 'danger';
+    warningLevel = BUDGET_WARNING_LEVELS.DANGER;
     status = 'Budget exceeded';
   } else if (percentage >= 80) {
-    warningLevel = 'warning';
+    warningLevel = BUDGET_WARNING_LEVELS.WARNING;
     status = 'Near budget limit';
   } else if (percentage >= 60) {
-    warningLevel = 'caution';
+    warningLevel = BUDGET_WARNING_LEVELS.CAUTION;
     status = 'Moderate spending';
   }
   
@@ -115,12 +106,24 @@ export const getCurrentMonthSpending = (transactions) => {
  * @param {Date} date - Date to format
  * @returns {string} Formatted date string
  */
+/**
+ * Format date for display
+ * @param {Date|Timestamp|string|number} date - Date to format (supports Firestore Timestamp)
+ * @returns {string} Formatted date string
+ */
 export const formatDate = (date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  }).format(new Date(date));
+  if (!date) return 'N/A';
+  try {
+    // Handle Firestore Timestamp objects
+    const dateObj = date.toDate ? date.toDate() : new Date(date);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(dateObj);
+  } catch {
+    return 'N/A';
+  }
 };
 
 /**

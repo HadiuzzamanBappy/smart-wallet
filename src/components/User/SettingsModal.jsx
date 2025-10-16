@@ -23,6 +23,7 @@ import {
 import { exportUserData, deleteAllUserData, importUserData } from '../../services/transactionService';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useTheme } from '../../hooks/useTheme';
+import { APP_EVENTS, PROFILE_EVENTS } from '../../config/constants';
 
 const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -206,7 +207,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
         // Dispatch a global event so components listening for transaction updates refresh their views
         try {
-          window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { importResult: res } }));
+          window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { importResult: res } }));
         } catch {
           // ignore
         }
@@ -307,7 +308,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
         // Notify other parts of the app that the profile changed (so UI updates immediately)
         try {
-          window.dispatchEvent(new CustomEvent('wallet:profile-updated', { detail: { uid: user.uid, profile: { balance: 0, totalIncome: 0, totalExpense: 0, transactionsCount: 0 } } }));
+          window.dispatchEvent(new CustomEvent(PROFILE_EVENTS.PROFILE_UPDATED, { detail: { uid: user.uid, profile: { balance: 0, totalIncome: 0, totalExpense: 0, transactionsCount: 0 } } }));
         } catch (err) {
           console.warn('Failed to dispatch wallet:profile-updated event', err);
         }
@@ -329,7 +330,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
       // Dispatch an event so components can refresh
       try {
-        window.dispatchEvent(new CustomEvent('wallet:transactions-updated', { detail: { erased: true } }));
+        window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { erased: true } }));
       } catch (err) {
         // Non-fatal: some environments may restrict CustomEvent or window dispatch
         console.warn('Failed to dispatch wallet:transactions-updated event', err);

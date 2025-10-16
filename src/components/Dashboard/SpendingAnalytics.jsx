@@ -306,38 +306,7 @@ const SpendingAnalytics = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Left: chart placeholder */}
-          <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="h-64 sm:h-80 flex flex-col gap-4">
-              <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-              <div className="flex-1 bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-lg p-4 flex items-center justify-center">
-                <div className="w-full h-full border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center">
-                  <div className="w-3/4 h-3/4 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: stat placeholders */}
-          <div className="space-y-3">
-            {[1,2,3].map(i => (
-              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div className="w-32 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                  <div className="w-20 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                </div>
-                <div className="mt-3 w-full h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <AnalyticsSkeleton />;
 
   if (transactions.length === 0) {
     return (

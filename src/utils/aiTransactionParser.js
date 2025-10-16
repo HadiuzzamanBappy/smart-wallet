@@ -1,6 +1,8 @@
 // AI-backed transaction parser — returns an array of 1 or more transactions
 // Uses OpenRouter (model from env or default). Exports parseTransaction (async) and learnFromCorrection.
 
+import { getCategoryConfig } from '../config/constants.js';
+
 const getAPIKey = () => {
   if (typeof import.meta !== 'undefined' && import.meta.env) return import.meta.env.VITE_OPENROUTER_API_KEY;
   try { const proc = typeof globalThis !== 'undefined' ? globalThis.process : undefined; if (proc && proc.env) return proc.env.VITE_OPENROUTER_API_KEY || proc.env.OPENROUTER_API_KEY; } catch (err) { void err; }
@@ -326,22 +328,7 @@ export const formatTransactionMessage = (transaction) => {
  * @returns {string} Emoji
  */
 export const getCategoryEmoji = (category) => {
-  const emojiMap = {
-    food: '🍔',
-    transport: '🚗',
-    entertainment: '🎬',
-    shopping: '🛍️',
-    bills: '📄',
-    health: '🏥',
-    education: '📚',
-    salary: '💼',
-    freelance: '💻',
-    investment: '📈',
-    other: '📦',
-    other_income: '💰'
-  };
-  
-  return emojiMap[category] || '📦';
+  return getCategoryConfig(category).emoji;
 };
 
 /**
@@ -350,22 +337,7 @@ export const getCategoryEmoji = (category) => {
  * @returns {string} Tailwind CSS classes
  */
 export const getCategoryColor = (category) => {
-  const colorMap = {
-    food: 'bg-orange-100 text-orange-800',
-    transport: 'bg-blue-100 text-blue-800',
-    entertainment: 'bg-purple-100 text-purple-800',
-    shopping: 'bg-pink-100 text-pink-800',
-    bills: 'bg-red-100 text-red-800',
-    health: 'bg-green-100 text-green-800',
-    education: 'bg-indigo-100 text-indigo-800',
-    salary: 'bg-emerald-100 text-emerald-800',
-    freelance: 'bg-cyan-100 text-cyan-800',
-    investment: 'bg-yellow-100 text-yellow-800',
-    other: 'bg-gray-100 text-gray-800',
-    other_income: 'bg-lime-100 text-lime-800'
-  };
-  
-  return colorMap[category] || 'bg-gray-100 text-gray-800';
+  return getCategoryConfig(category).color;
 };
 
 /**

@@ -148,7 +148,7 @@ class DynamicTranslationService {
     }
 
     this.isTranslating = true;
-    console.log(`Translating page to ${targetLanguage}...`);
+  console.debug(`Translating page to ${targetLanguage}...`);
 
     // Show visual indicator
     document.body.style.cursor = 'wait';
@@ -209,16 +209,16 @@ class DynamicTranslationService {
         }
       }
 
-      this.currentLanguage = targetLanguage;
-      console.log(`Page translation to ${targetLanguage} completed`);
+  this.currentLanguage = targetLanguage;
+  console.debug(`Page translation to ${targetLanguage} completed`);
 
       // Start observing DOM changes for dynamic content
       this.startObserving();
 
       // Do a second pass after a short delay to catch dynamically generated content
-      setTimeout(async () => {
+          setTimeout(async () => {
         if (!this.isTranslating && this.currentLanguage === targetLanguage) {
-          console.log('Second pass translation scan...');
+          console.debug('Second pass translation scan...');
           await this.scanAndTranslateNew(targetLanguage);
         }
       }, 500);
@@ -235,8 +235,8 @@ class DynamicTranslationService {
   // Scan for new/updated text nodes and translate them
   async scanAndTranslateNew(targetLanguage) {
     try {
-      const textNodes = this.getTextNodes();
-      console.log(`Second pass: found ${textNodes.length} text nodes`);
+  const textNodes = this.getTextNodes();
+  console.debug(`Second pass: found ${textNodes.length} text nodes`);
 
       for (const node of textNodes) {
         const originalText = node.nodeValue.trim();
@@ -289,8 +289,8 @@ class DynamicTranslationService {
       const cachedData = sessionStorage.getItem('translationCache');
       if (cachedData) {
         const parsedCache = JSON.parse(cachedData);
-        this.cache = new Map(parsedCache);
-        console.log('Loaded translation cache:', this.cache.size, 'entries');
+  this.cache = new Map(parsedCache);
+  console.debug('Loaded translation cache:', this.cache.size, 'entries');
       }
     } catch (error) {
       console.warn('Failed to load translation cache:', error);
@@ -313,7 +313,7 @@ class DynamicTranslationService {
       return;
     }
 
-    console.log('Initializing translation for user language:', userLanguage);
+  console.debug('Initializing translation for user language:', userLanguage);
     
     if (userLanguage && userLanguage !== 'en') {
       await this.translatePage(userLanguage);
@@ -330,7 +330,7 @@ class DynamicTranslationService {
 
   // Reset page back to English
   async resetToEnglish() {
-    console.log('Resetting page to English...');
+  console.debug('Resetting page to English...');
     
     // Stop observing DOM changes
     this.stopObserving();
@@ -374,7 +374,7 @@ class DynamicTranslationService {
       this.cache.clear();
       this.clearCache();
       
-      console.log('Successfully reset to English');
+  console.debug('Successfully reset to English');
     } catch (error) {
       console.error('Error resetting to English:', error);
       // Fallback to page reload
@@ -414,7 +414,7 @@ class DynamicTranslationService {
       return;
     }
 
-    console.log('[Translation] Starting DOM mutation observer');
+  console.debug('[Translation] Starting DOM mutation observer');
 
     this.observer = new MutationObserver((mutations) => {
       // Add mutations to queue
@@ -450,7 +450,7 @@ class DynamicTranslationService {
   // Stop observing DOM changes
   stopObserving() {
     if (this.observer) {
-      console.log('[Translation] Stopping DOM mutation observer');
+  console.debug('[Translation] Stopping DOM mutation observer');
       this.observer.disconnect();
       this.observer = null;
     }
@@ -477,7 +477,7 @@ class DynamicTranslationService {
     const nodesToProcess = Array.from(this.translationQueue);
     this.translationQueue.clear();
 
-    console.log(`[Translation] Processing ${nodesToProcess.length} queued nodes`);
+  console.debug(`[Translation] Processing ${nodesToProcess.length} queued nodes`);
 
     try {
       for (const node of nodesToProcess) {
