@@ -42,15 +42,17 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         ? 'No loans found'
         : 'No credits found';
 
-    // By default show only items that are not fully paid/collected. User can toggle to show all.
-    const displayedItems = showAllItems ? items : items.filter(it => (Number(it.remainingAmount) || 0) > 0);
+    // By default show only items that are not fully paid/collected. User can toggle to show fully paid only.
+    const displayedItems = showAllItems
+        ? items.filter(it => (Number(it.remainingAmount) || 0) <= 0)  // Show only fully paid/collected
+        : items.filter(it => (Number(it.remainingAmount) || 0) > 0);   // Show only unpaid
 
     // whether any item is fully paid/collected (remainingAmount <= 0)
     const hasFullyPaid = items.some(it => (Number(it.remainingAmount) || 0) <= 0);
 
     // counts for badge
     const unpaidCount = items.filter(it => (Number(it.remainingAmount) || 0) > 0).length;
-    const totalCount = items.length;
+    const paidCount = items.filter(it => (Number(it.remainingAmount) || 0) <= 0).length;
 
     // totals for header summary (based on displayed items)
     const totalOriginalAmount = displayedItems.reduce((s, it) => s + (Number(it.amount) || 0), 0);
@@ -280,15 +282,15 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                         onClick={() => setShowAllItems(true)}
                                         aria-pressed={showAllItems}
                                         className={`flex items-center gap-2 px-3 py-1 rounded-md text-xs transition ${showAllItems ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
-                                        title="Show all items"
+                                        title="Show fully paid/collected items"
                                     >
                                         <CheckCircle className="w-4 h-4" />
-                                        <span className="hidden sm:inline">All</span>
-                                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full bg-white/30 dark:bg-gray-700 text-xs">{totalCount}</span>
+                                        <span className="hidden sm:inline">Paid</span>
+                                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full bg-white/30 dark:bg-gray-700 text-xs">{paidCount}</span>
                                     </button>
                                 </div>
                             ) : (
-                                <span className="text-xs inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 min-w-[44px] justify-center">{unpaidCount} / {totalCount}</span>
+                                <span className="text-xs inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 min-w-[44px] justify-center">{unpaidCount}</span>
                             )}
                         </div>
                     </div>
@@ -312,8 +314,8 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-start gap-3">
                                         <div className={`p-2 rounded-lg ${isLoans
-                                                ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
-                                                : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                                            ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+                                            : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
                                             }`}>
                                             {isLoans ? <CreditCard className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
                                         </div>
@@ -373,10 +375,10 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                     onClick={() => handleMarkAsPaid(item)}
                                     disabled={processing[item.id] || item.remainingAmount <= 0}
                                     className={`w-full px-4 py-2 rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${item.remainingAmount <= 0
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700'
-                                            : isLoans
-                                                ? 'bg-red-600 text-white hover:bg-red-700'
-                                                : 'bg-green-600 text-white hover:bg-green-700'
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700'
+                                        : isLoans
+                                            ? 'bg-red-600 text-white hover:bg-red-700'
+                                            : 'bg-green-600 text-white hover:bg-green-700'
                                         }`}
                                 >
                                     {processing[item.id] && <LoadingSpinner size="sm" />}
