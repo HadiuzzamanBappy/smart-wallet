@@ -152,7 +152,8 @@ export const APP_EVENTS = {
   TRANSACTION_EDITED: 'wallet:transaction-edited', // alias for in-place edits
   TRANSACTION_DELETED: 'wallet:transaction-deleted',
   TRANSACTIONS_UPDATED: 'wallet:transactions-updated', // bulk/refresh event
-  CURRENCY_CHANGED: 'wallet:currency-changed'
+  CURRENCY_CHANGED: 'wallet:currency-changed',
+  SALARY_PLAN_UPDATED: 'salary-plan-updated'
 };
 
 // Backwards-compatible alias for profile updates

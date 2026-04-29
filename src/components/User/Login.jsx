@@ -45,17 +45,14 @@ const Login = ({ onBack }) => {
   };
 
   const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError('');
-
     try {
-      const result = await loginWithGoogle();
-      if (!result.success) {
-        setError(result.error);
-      }
-    } catch {
-      setError('Google login failed');
-    } finally {
+      setLoading(true);
+      setError('');
+      await loginWithGoogle();
+      // Page will redirect away for Google sign-in
+    } catch (err) {
+      console.error('Google login failed:', err);
+      setError('Google login failed. Please try again.');
       setLoading(false);
     }
   };

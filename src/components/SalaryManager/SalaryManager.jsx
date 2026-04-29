@@ -42,7 +42,8 @@ export default function SalaryManager({ userId, onClose }) {
   const handleSave = async (planData, formData, aiAdvice) => {
     try {
       await saveSalaryPlan(userId, planData, formData, aiAdvice);
-      // Optional: show success toast here if your app has a global toast
+      // Dispatch event for components to refresh
+      window.dispatchEvent(new CustomEvent('salary-plan-updated'));
       onClose(); // Close the modal upon saving
     } catch (err) {
       console.error("Failed to save plan", err);
