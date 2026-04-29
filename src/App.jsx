@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { inject } from '@vercel/analytics';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { TransactionProvider } from './context/TransactionContext';
@@ -25,30 +26,32 @@ import { ToastContainer } from './components/UI/Toast';
 import './App.css';
 import { APP_EVENTS } from './config/constants';
 
+inject();
+
 const AppContent = () => {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const { refreshTransactions } = useTransactions();
   const [currentLanguage, setCurrentLanguage] = React.useState('en');
-  
+
   // Page navigation states
   const [showLogin, setShowLogin] = useState(false);
-  
+
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSalaryManager, setShowSalaryManager] = useState(false);
-  
+
   // Refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // Toast functionality
   const { toasts, success, removeToast } = useToast();
 
   // Refresh handler for header balance
   const handleRefresh = async () => {
     if (isRefreshing) return;
-    
+
     setIsRefreshing(true);
     try {
       await refreshTransactions();
@@ -102,12 +105,12 @@ const AppContent = () => {
 
   const handleLanguageToggle = async () => {
     const newLanguage = currentLanguage === 'en' ? 'bn' : 'en';
-    
+
     if (newLanguage === 'en') {
       // Reset to English properly
       await dynamicTranslator.resetToEnglish();
       setCurrentLanguage('en');
-      
+
       // Update user preferences
       if (user) {
         try {
@@ -121,7 +124,7 @@ const AppContent = () => {
       // Switch to Bengali
       setCurrentLanguage('bn');
       await dynamicTranslator.translatePage('bn');
-      
+
       // Update user preferences
       if (user) {
         try {
@@ -137,13 +140,13 @@ const AppContent = () => {
   const handleTransactionUpdate = () => {
     refreshTransactions();
     success('Transaction updated successfully!');
-  try { window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { source: 'transaction-update' } })); } catch { /* ignore */ }
+    try { window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { source: 'transaction-update' } })); } catch { /* ignore */ }
   };
 
   const handleTransactionAdded = () => {
     refreshTransactions();
     success('Transaction added successfully!');
-  try { window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { source: 'transaction-add' } })); } catch { /* ignore */ }
+    try { window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { source: 'transaction-add' } })); } catch { /* ignore */ }
   };
 
   // Handle authentication flow
@@ -185,7 +188,7 @@ const AppContent = () => {
         </main>
 
         {/* Chat Widget */}
-        <ChatWidget 
+        <ChatWidget
           onTransactionAdded={handleTransactionAdded}
         />
       </div>
@@ -212,14 +215,14 @@ const AppContent = () => {
       />
 
       {showSalaryManager && (
-        <SalaryManager 
-          userId={user.uid} 
-          onClose={() => setShowSalaryManager(false)} 
+        <SalaryManager
+          userId={user.uid}
+          onClose={() => setShowSalaryManager(false)}
         />
       )}
 
       {/* Toast Container */}
-      <ToastContainer 
+      <ToastContainer
         toasts={toasts}
         removeToast={removeToast}
       />

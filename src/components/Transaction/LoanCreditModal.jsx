@@ -5,7 +5,8 @@ import {
     getAllLoans,
     getAllCredits,
     markLoanAsRepaid,
-    markCreditAsCollected
+    markCreditAsCollected,
+    adjustLoanCreditAmount
 } from '../../services/transactionService';
 import { formatCurrencyWithUser, formatDate } from '../../utils/helpers';
 import Modal from '../UI/Modal';
@@ -18,7 +19,8 @@ import {
     User,
     CheckCircle,
     AlertCircle,
-    X
+    X,
+    Edit3
 } from 'lucide-react';
 import { APP_EVENTS } from '../../config/constants';
 
@@ -29,10 +31,14 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState({});
     const [showPaymentModal, setShowPaymentModal] = useState(null);
+    const [showAdjustmentModal, setShowAdjustmentModal] = useState(null);
     // useRef to keep the input uncontrolled so cursor doesn't jump on re-renders
     const paymentAmountRef = useRef(null);
+    const adjustmentAmountRef = useRef(null);
     const [paymentInputHasValue, setPaymentInputHasValue] = useState(false);
+    const [adjustmentInputHasValue, setAdjustmentInputHasValue] = useState(false);
     const [paymentDescription, setPaymentDescription] = useState('');
+    const [adjustmentReason, setAdjustmentReason] = useState('');
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [showAllItems, setShowAllItems] = useState(false);
 
@@ -42,15 +48,17 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         ? 'No loans found'
         : 'No credits found';
 
-    // By default show only items that are not fully paid/collected. User can toggle to show all.
-    const displayedItems = showAllItems ? items : items.filter(it => (Number(it.remainingAmount) || 0) > 0);
+    // By default show only items that are not fully paid/collected. User can toggle to show fully paid only.
+    const displayedItems = showAllItems
+        ? items.filter(it => (Number(it.remainingAmount) || 0) <= 0)  // Show only fully paid/collected
+        : items.filter(it => (Number(it.remainingAmount) || 0) > 0);   // Show only unpaid
 
     // whether any item is fully paid/collected (remainingAmount <= 0)
     const hasFullyPaid = items.some(it => (Number(it.remainingAmount) || 0) <= 0);
 
     // counts for badge
     const unpaidCount = items.filter(it => (Number(it.remainingAmount) || 0) > 0).length;
-    const totalCount = items.length;
+    const paidCount = items.filter(it => (Number(it.remainingAmount) || 0) <= 0).length;
 
     // totals for header summary (based on displayed items)
     const totalOriginalAmount = displayedItems.reduce((s, it) => s + (Number(it.amount) || 0), 0);
@@ -88,6 +96,11 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         setPaymentDescription('');
     };
 
+    const handleAdjust = (item) => {
+        setShowAdjustmentModal(item);
+        setAdjustmentReason('');
+    };
+
     // When payment modal opens, populate the uncontrolled input with remaining amount
     useEffect(() => {
         if (showPaymentModal && paymentAmountRef.current) {
@@ -95,6 +108,14 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
             setPaymentInputHasValue(Boolean(String(paymentAmountRef.current.value).trim()));
         }
     }, [showPaymentModal]);
+
+    // When adjustment modal opens, clear the input
+    useEffect(() => {
+        if (showAdjustmentModal && adjustmentAmountRef.current) {
+            adjustmentAmountRef.current.value = '';
+            setAdjustmentInputHasValue(false);
+        }
+    }, [showAdjustmentModal]);
 
     const handlePaymentSubmit = async () => {
         if (!showPaymentModal) return;
@@ -149,6 +170,64 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         } catch (error) {
             console.error('Error processing payment:', error);
             showToast(`Failed to record ${isLoans ? 'repayment' : 'collection'}`, 'error');
+        } finally {
+            setProcessing(prev => ({ ...prev, [itemId]: false }));
+        }
+    };
+
+    const handleAdjustmentSubmit = async () => {
+        if (!showAdjustmentModal) return;
+
+        const raw = adjustmentAmountRef.current?.value;
+        if (!raw || raw.trim() === '') {
+            showToast('Please enter an adjustment amount', 'error');
+            return;
+        }
+
+        const adjustment = parseFloat(raw);
+        if (isNaN(adjustment) || adjustment === 0) {
+            showToast('Please enter a valid non-zero amount', 'error');
+            return;
+        }
+
+        const itemId = showAdjustmentModal.id;
+        const currentAmount = Number(showAdjustmentModal.amount || 0);
+        const newAmount = currentAmount + adjustment;
+
+        if (newAmount <= 0) {
+            showToast('Adjusted amount must be greater than zero', 'error');
+            return;
+        }
+
+        setProcessing(prev => ({ ...prev, [itemId]: true }));
+
+        try {
+            const result = await adjustLoanCreditAmount(user.uid, itemId, adjustment, adjustmentReason);
+
+            if (result.success) {
+                const actionText = adjustment > 0 ? 'increased' : 'decreased';
+                showToast(`Amount ${actionText} by ${formatCurrencyWithUser(Math.abs(adjustment), userProfile)}`);
+                setShowAdjustmentModal(null);
+                if (adjustmentAmountRef.current) adjustmentAmountRef.current.value = '';
+                setAdjustmentReason('');
+
+                // Dispatch transaction edited event to notify other components (summary, analytics, etc.)
+                window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_EDITED, {
+                    detail: {
+                        transactionId: itemId,
+                        type: isLoans ? 'loan' : 'credit',
+                        adjustment: adjustment
+                    }
+                }));
+
+                // Refresh data and transactions to update summary
+                await Promise.all([loadData(), refreshTransactions()]);
+            } else {
+                showToast(result.error || 'Failed to adjust amount', 'error');
+            }
+        } catch (error) {
+            console.error('Error adjusting amount:', error);
+            showToast('Failed to adjust amount', 'error');
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
         }
@@ -248,6 +327,86 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         );
     };
 
+    const AdjustmentModal = () => {
+        if (!showAdjustmentModal) return null;
+
+        return (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold">
+                            Adjust {isLoans ? 'Loan' : 'Credit'} Amount
+                        </h3>
+                        <button
+                            onClick={() => setShowAdjustmentModal(null)}
+                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Current Amount
+                            </label>
+                            <div className="text-lg font-semibold text-gray-600 dark:text-gray-300">
+                                {formatCurrencyWithUser(showAdjustmentModal.amount, userProfile)}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Adjustment Amount *
+                            </label>
+                            <input
+                                ref={adjustmentAmountRef}
+                                type="number"
+                                className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                                placeholder="Enter amount (+ to increase, - to decrease)"
+                                step="0.01"
+                                onInput={(e) => setAdjustmentInputHasValue(String(e.target.value).trim() !== '')}
+                            />
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Use positive numbers to increase, negative to decrease
+                            </p>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Reason (optional)
+                            </label>
+                            <input
+                                type="text"
+                                value={adjustmentReason}
+                                onChange={(e) => setAdjustmentReason(e.target.value)}
+                                className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                                placeholder="Why are you adjusting this amount?"
+                            />
+                        </div>
+
+                        <div className="flex gap-3 pt-4">
+                            <button
+                                onClick={() => setShowAdjustmentModal(null)}
+                                className="flex-1 px-4 py-2 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAdjustmentSubmit}
+                                disabled={!adjustmentInputHasValue || processing[showAdjustmentModal.id]}
+                                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {processing[showAdjustmentModal.id] && <LoadingSpinner size="sm" />}
+                                Adjust Amount
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <>
             <Modal isOpen={open} onClose={onClose} title={title}>
@@ -280,15 +439,15 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                         onClick={() => setShowAllItems(true)}
                                         aria-pressed={showAllItems}
                                         className={`flex items-center gap-2 px-3 py-1 rounded-md text-xs transition ${showAllItems ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
-                                        title="Show all items"
+                                        title="Show fully paid/collected items"
                                     >
                                         <CheckCircle className="w-4 h-4" />
-                                        <span className="hidden sm:inline">All</span>
-                                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full bg-white/30 dark:bg-gray-700 text-xs">{totalCount}</span>
+                                        <span className="hidden sm:inline">Paid</span>
+                                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full bg-white/30 dark:bg-gray-700 text-xs">{paidCount}</span>
                                     </button>
                                 </div>
                             ) : (
-                                <span className="text-xs inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 min-w-[44px] justify-center">{unpaidCount} / {totalCount}</span>
+                                <span className="text-xs inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 min-w-[44px] justify-center">{unpaidCount}</span>
                             )}
                         </div>
                     </div>
@@ -310,10 +469,10 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                 className="border rounded-lg p-4 dark:border-gray-700"
                             >
                                 <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-start gap-3">
+                                    <div className="flex items-start gap-3 flex-1">
                                         <div className={`p-2 rounded-lg ${isLoans
-                                                ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
-                                                : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                                            ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+                                            : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
                                             }`}>
                                             {isLoans ? <CreditCard className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
                                         </div>
@@ -332,6 +491,16 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                             </div>
                                         </div>
                                     </div>
+                                    {item.remainingAmount > 0 && (
+                                        <button
+                                            onClick={() => handleAdjust(item)}
+                                            disabled={processing[item.id]}
+                                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50"
+                                            title="Adjust amount"
+                                        >
+                                            <Edit3 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4 mb-4">
@@ -369,14 +538,39 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                     </div>
                                 )}
 
+                                {item.adjustmentHistory && item.adjustmentHistory.length > 0 && (
+                                    <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/10 rounded-md border border-purple-200 dark:border-purple-800">
+                                        <div className="text-xs font-medium text-purple-700 dark:text-purple-300 uppercase tracking-wide mb-2">
+                                            Adjustment History
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            {item.adjustmentHistory.map((adj, idx) => {
+                                                const adjustDate = adj.date ? new Date(adj.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date';
+                                                const isIncrease = adj.amount > 0;
+                                                return (
+                                                    <div key={idx} className="text-xs text-gray-600 dark:text-gray-300 flex items-start gap-2">
+                                                        <span className={`font-medium ${isIncrease ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                                            {isIncrease ? '+' : ''}{formatCurrencyWithUser(adj.amount, userProfile)}
+                                                        </span>
+                                                        <span className="flex-1">
+                                                            {adj.reason || (isIncrease ? 'Amount increased' : 'Amount decreased')}
+                                                            <span className="text-gray-400 dark:text-gray-500"> on {adjustDate}</span>
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <button
                                     onClick={() => handleMarkAsPaid(item)}
                                     disabled={processing[item.id] || item.remainingAmount <= 0}
                                     className={`w-full px-4 py-2 rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${item.remainingAmount <= 0
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700'
-                                            : isLoans
-                                                ? 'bg-red-600 text-white hover:bg-red-700'
-                                                : 'bg-green-600 text-white hover:bg-green-700'
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700'
+                                        : isLoans
+                                            ? 'bg-red-600 text-white hover:bg-red-700'
+                                            : 'bg-green-600 text-white hover:bg-green-700'
                                         }`}
                                 >
                                     {processing[item.id] && <LoadingSpinner size="sm" />}
@@ -396,6 +590,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
             </Modal>
 
             <PaymentModal />
+            <AdjustmentModal />
 
             <Toast
                 show={toast.show}
