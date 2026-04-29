@@ -1,29 +1,29 @@
-import { doc, setDoc, getDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteField } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { encryptData, decryptData } from "../utils/encryption";
 
-const COLLECTION = "salaryPlans";
-
 /**
  * Save a salary plan to Firestore, encrypting the sensitive data.
+ * It stores the plan inside the user's main profile document 
+ * to align with existing security rules without requiring a deploy.
  */
 export async function saveSalaryPlan(userId, planData, formData, aiAdvice) {
-  const ref = doc(db, COLLECTION, userId);
+  const ref = doc(db, 'users', userId);
   
   // Package the sensitive payload
   const payload = {
     plan: planData,
     form: formData,
-    aiAdvice: aiAdvice
+    aiAdvice: aiAdvice,
+    savedAt: new Date().toISOString(),
+    version: 1,
   };
 
   // Encrypt the entire payload as a single JSON string
   const encryptedPayload = await encryptData(JSON.stringify(payload));
 
-  await setDoc(ref, {
-    data_encrypted: encryptedPayload,
-    savedAt: serverTimestamp(),
-    version: 1,
+  await updateDoc(ref, {
+    salaryPlan_encrypted: encryptedPayload
   });
 }
 
@@ -31,40 +31,31 @@ export async function saveSalaryPlan(userId, planData, formData, aiAdvice) {
  * Get a saved salary plan from Firestore, decrypting the data.
  */
 export async function getSalaryPlan(userId) {
-  const ref = doc(db, COLLECTION, userId);
+  const ref = doc(db, 'users', userId);
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
 
   const docData = snap.data();
-  if (docData.data_encrypted) {
+  if (docData.salaryPlan_encrypted) {
     try {
-      const decryptedString = await decryptData(docData.data_encrypted);
+      const decryptedString = await decryptData(docData.salaryPlan_encrypted);
       const payload = JSON.parse(decryptedString);
-      return {
-        ...payload,
-        savedAt: docData.savedAt,
-        version: docData.version
-      };
+      return payload;
     } catch (e) {
       console.error("Failed to decrypt salary plan", e);
       return null;
     }
   }
 
-  // Fallback for unencrypted legacy data if it exists
-  return {
-    plan: docData.plan,
-    form: docData.form,
-    aiAdvice: docData.aiAdvice,
-    savedAt: docData.savedAt,
-    version: docData.version
-  };
+  return null;
 }
 
 /**
  * Delete the saved salary plan.
  */
 export async function deleteSalaryPlan(userId) {
-  const ref = doc(db, COLLECTION, userId);
-  await deleteDoc(ref);
+  const ref = doc(db, 'users', userId);
+  await updateDoc(ref, {
+    salaryPlan_encrypted: deleteField()
+  });
 }
