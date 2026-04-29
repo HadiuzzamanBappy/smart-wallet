@@ -15,6 +15,8 @@ import CompactSummary from './components/Dashboard/CompactSummary';
 import BudgetProgress from './components/Dashboard/BudgetProgress';
 import ExpandableDetailsSection from './components/Dashboard/ExpandableDetailsSection';
 import TransactionList from './components/Dashboard/TransactionList';
+import SalaryHomeCard from './components/Dashboard/SalaryHomeCard';
+import SalaryManager from './components/SalaryManager/SalaryManager';
 import ChatWidget from './components/Dashboard/ChatWidget';
 import AddTransactionModal from './components/Transaction/AddTransactionModal';
 import ProfileModal from './components/User/ProfileModal';
@@ -35,6 +37,7 @@ const AppContent = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSalaryManager, setShowSalaryManager] = useState(false);
   
   // Refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -173,6 +176,9 @@ const AppContent = () => {
             {/* Open Profile modal from the budget card so users can set their monthly budget there */}
             <BudgetProgress onSettingsClick={() => setShowProfileModal(true)} />
 
+            {/* Salary Manager Card */}
+            <SalaryHomeCard userId={user.uid} onOpen={() => setShowSalaryManager(true)} />
+
             {/* Expandable Details Section */}
             <ExpandableDetailsSection onTransactionChange={handleTransactionUpdate} />
           </div>
@@ -204,6 +210,13 @@ const AppContent = () => {
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
       />
+
+      {showSalaryManager && (
+        <SalaryManager 
+          userId={user.uid} 
+          onClose={() => setShowSalaryManager(false)} 
+        />
+      )}
 
       {/* Toast Container */}
       <ToastContainer 
