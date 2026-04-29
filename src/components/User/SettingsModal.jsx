@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  Settings, 
-  Moon, 
-  Sun, 
-  Monitor, 
-  Globe, 
-  Download, 
+import {
+  Settings,
+  Moon,
+  Sun,
+  Monitor,
+  Globe,
+  Download,
   Trash2,
   AlertCircle,
   CheckCircle
@@ -13,12 +13,12 @@ import {
 import Modal from '../UI/Modal';
 import ConfirmDialog from '../UI/ConfirmDialog';
 import { useAuth } from '../../hooks/useAuth';
-import { 
-  updateUserProfile, 
-  reauthenticateUser, 
+import {
+  updateUserProfile,
+  reauthenticateUser,
   reauthenticateWithGoogle,
   isGoogleUser,
-  confirmEmailForDeletion 
+  confirmEmailForDeletion
 } from '../../services/authService';
 import { exportUserData, deleteAllUserData, importUserData } from '../../services/transactionService';
 import { useTransactions } from '../../hooks/useTransactions';
@@ -37,7 +37,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isUserGoogleAuth, setIsUserGoogleAuth] = useState(false);
   const [showEraseComplete, setShowEraseComplete] = useState(false);
-  
+
   const { theme: currentTheme, setTheme } = useTheme();
 
   const [settings, setSettings] = useState({
@@ -119,14 +119,14 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         const dataStr = JSON.stringify(result.data, null, 2);
         const dataBlob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(dataBlob);
-        
+
         const link = document.createElement('a');
         link.href = url;
         link.download = `smart-wallet-data-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         URL.revokeObjectURL(url);
       }
     } catch (error) {
@@ -351,7 +351,33 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Settings" size="md">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Settings"
+        size="md"
+        footer={
+          <div className="flex gap-3 w-full">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveSettings}
+              disabled={loading}
+              className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              Save Settings
+            </button>
+          </div>
+        }
+      >
         <div className="space-y-6">
           {/* Theme Settings */}
           <div>
@@ -366,16 +392,15 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                   <button
                     key={theme.value}
                     onClick={() => {
-                        // Only update the local selection; actual application occurs when the user clicks Save
-                        setSettings(prev => ({ ...prev, theme: theme.value }));
-                        // Mark as unsaved
-                        setPersistStatus('idle');
-                      }}
-                    className={`p-3 rounded-lg border-2 transition-colors ${
-                      settings.theme === theme.value
+                      // Only update the local selection; actual application occurs when the user clicks Save
+                      setSettings(prev => ({ ...prev, theme: theme.value }));
+                      // Mark as unsaved
+                      setPersistStatus('idle');
+                    }}
+                    className={`p-3 rounded-lg border-2 transition-colors ${settings.theme === theme.value
                         ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
                         : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-5 h-5 mx-auto mb-1 text-gray-600 dark:text-gray-400" />
                     <div className="text-xs text-center text-gray-600 dark:text-gray-400">
@@ -404,11 +429,10 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                 <button
                   key={language.value}
                   onClick={() => setSettings(prev => ({ ...prev, language: language.value }))}
-                  className={`p-3 rounded-lg border-2 transition-colors ${
-                    settings.language === language.value
+                  className={`p-3 rounded-lg border-2 transition-colors ${settings.language === language.value
                       ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
                       : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
+                    }`}
                 >
                   <div className="text-lg mb-1">{language.flag}</div>
                   <div className="text-sm text-center text-gray-600 dark:text-gray-400">
@@ -462,8 +486,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                   <div className="text-xs text-gray-500 dark:text-gray-400">Download all your data as JSON</div>
                 </div>
               </button>
-              
-                <div className="relative">
+
+              <div className="relative">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -486,10 +510,26 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                   )}
                 </button>
               </div>
-              
+
               {/* Import Modal */}
               {showImportModal && (
-                <Modal isOpen={showImportModal} onClose={() => setShowImportModal(false)} title="Import Data" size="md">
+                <Modal
+                  isOpen={showImportModal}
+                  onClose={() => setShowImportModal(false)}
+                  title="Import Data"
+                  size="md"
+                  footer={
+                    <div className="flex justify-end gap-3 w-full">
+                      <button onClick={() => setShowImportModal(false)} className="px-3 py-2 rounded border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+                      <button onClick={startImport} disabled={importLoading} className="px-3 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded disabled:opacity-50 flex items-center gap-2">
+                        {importLoading && (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        )}
+                        Start Import
+                      </button>
+                    </div>
+                  }
+                >
                   <div className="space-y-4">
                     <div className="text-sm text-gray-700 dark:text-gray-300">
                       Preview: {importPreview?.totalTransactions || 0} transactions. Sample (up to 5):
@@ -502,55 +542,46 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                       ))}
                     </div>
 
-                        <div className="flex flex-col gap-3">
-                          {/* Preserve IDs toggle */}
-                          <label className="flex items-center space-x-3 cursor-pointer">
-                            <div className="relative">
-                              <input
-                                type="checkbox"
-                                checked={preserveIds}
-                                onChange={(e) => setPreserveIds(e.target.checked)}
-                                className="sr-only"
-                                aria-label="Preserve original IDs"
-                              />
-                              <div
-                                onClick={() => setPreserveIds(p => !p)}
-                                className={`w-10 h-6 rounded-full transition-colors ${preserveIds ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                              />
-                              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${preserveIds ? 'translate-x-4' : ''}`} />
-                            </div>
-                            <span className="text-sm">Preserve original document IDs (overwrite if exists)</span>
-                          </label>
-
-                          {/* Dedupe toggle */}
-                          <label className="flex items-center space-x-3 cursor-pointer">
-                            <div className="relative">
-                              <input
-                                type="checkbox"
-                                checked={dedupe}
-                                onChange={(e) => setDedupe(e.target.checked)}
-                                className="sr-only"
-                                aria-label="Skip duplicates"
-                              />
-                              <div
-                                onClick={() => setDedupe(d => !d)}
-                                className={`w-10 h-6 rounded-full transition-colors ${dedupe ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                              />
-                              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${dedupe ? 'translate-x-4' : ''}`} />
-                            </div>
-                            <span className="text-sm">Skip already-imported transactions (dedupe by originalId)</span>
-                          </label>
+                    <div className="flex flex-col gap-3">
+                      {/* Preserve IDs toggle */}
+                      <label className="flex items-center space-x-3 cursor-pointer">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={preserveIds}
+                            onChange={(e) => setPreserveIds(e.target.checked)}
+                            className="sr-only"
+                            aria-label="Preserve original IDs"
+                          />
+                          <div
+                            onClick={() => setPreserveIds(p => !p)}
+                            className={`w-10 h-6 rounded-full transition-colors ${preserveIds ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                          />
+                          <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${preserveIds ? 'translate-x-4' : ''}`} />
                         </div>
+                        <span className="text-sm">Preserve original document IDs (overwrite if exists)</span>
+                      </label>
 
-                    <div className="flex justify-end space-x-3">
-                      <button onClick={() => setShowImportModal(false)} className="px-3 py-2 rounded border">Cancel</button>
-                      <button onClick={startImport} disabled={importLoading} className="px-3 py-2 bg-teal-500 text-white rounded disabled:opacity-50 flex items-center gap-2">
-                        {importLoading && (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        )}
-                        Start Import
-                      </button>
+                      {/* Dedupe toggle */}
+                      <label className="flex items-center space-x-3 cursor-pointer">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={dedupe}
+                            onChange={(e) => setDedupe(e.target.checked)}
+                            className="sr-only"
+                            aria-label="Skip duplicates"
+                          />
+                          <div
+                            onClick={() => setDedupe(d => !d)}
+                            className={`w-10 h-6 rounded-full transition-colors ${dedupe ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                          />
+                          <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${dedupe ? 'translate-x-4' : ''}`} />
+                        </div>
+                        <span className="text-sm">Skip already-imported transactions (dedupe by originalId)</span>
+                      </label>
                     </div>
+
                   </div>
                 </Modal>
               )}
@@ -605,45 +636,25 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                   )}
                 </div>
               )}
-              
+
               <button
                 onClick={handleDeleteAccount}
                 className="w-full flex items-center space-x-3 p-3 text-left border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
                 <Trash2 className="w-5 h-5 text-red-500" />
                 <div>
-              <div className="text-sm font-medium text-red-600 dark:text-red-400">Erase My Data</div>
-              <div className="text-xs text-red-500 dark:text-red-400">Permanently erase all accounting data from this account (your auth account will remain)</div>
+                  <div className="text-sm font-medium text-red-600 dark:text-red-400">Erase My Data</div>
+                  <div className="text-xs text-red-500 dark:text-red-400">Permanently erase all accounting data from this account (your auth account will remain)</div>
                 </div>
               </button>
             </div>
           </div>
 
-          {/* Save Button */}
-          <div className="flex space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveSettings}
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {loading && (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
-              Save Settings
-            </button>
-          </div>
         </div>
       </Modal>
 
-  {/* Clear importResult when modal closes to ensure a fresh state next open */}
-  { !isOpen && importResult && setImportResult(null) }
+      {/* Clear importResult when modal closes to ensure a fresh state next open */}
+      {!isOpen && importResult && setImportResult(null)}
 
       {/* Delete Confirmation */}
       <ConfirmDialog
@@ -657,8 +668,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
       />
 
       {/* Reauthentication Dialog */}
-      <Modal 
-        isOpen={showReauthDialog} 
+      <Modal
+        isOpen={showReauthDialog}
         onClose={() => {
           setShowReauthDialog(false);
           setPassword('');
@@ -666,6 +677,35 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         }}
         title="Confirm Erase My Data"
         size="sm"
+        footer={
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={() => {
+                setShowReauthDialog(false);
+                setPassword('');
+                setEmailConfirmation('');
+              }}
+              disabled={deleteLoading}
+              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleReauthAndDelete}
+              disabled={
+                (isUserGoogleAuth && !emailConfirmation) ||
+                (!isUserGoogleAuth && !password) ||
+                deleteLoading
+              }
+              className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {deleteLoading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              {isUserGoogleAuth ? 'Authenticate' : 'Erase Data'}
+            </button>
+          </div>
+        }
       >
         <div className="space-y-4">
           <div className="flex items-start space-x-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
@@ -675,13 +715,13 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                 This action is permanent
               </p>
               <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                {isUserGoogleAuth 
-                  ? 'Type your email address to confirm erasing data. If the email matches your account, no further reauthentication is needed; otherwise you will be prompted to sign in with Google.' 
+                {isUserGoogleAuth
+                  ? 'Type your email address to confirm erasing data. If the email matches your account, no further reauthentication is needed; otherwise you will be prompted to sign in with Google.'
                   : 'Type your account email to confirm erasing data (matching email will skip reauthentication), or enter your password to reauthenticate.'}
               </p>
             </div>
           </div>
-          
+
           {isUserGoogleAuth ? (
             <input
               type="email"
@@ -702,33 +742,6 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
             />
           )}
 
-          <div className="flex space-x-3">
-            <button
-              onClick={() => {
-                setShowReauthDialog(false);
-                setPassword('');
-                setEmailConfirmation('');
-              }}
-              disabled={deleteLoading}
-              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleReauthAndDelete}
-              disabled={
-                (isUserGoogleAuth && !emailConfirmation) || 
-                (!isUserGoogleAuth && !password) || 
-                deleteLoading
-              }
-              className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {deleteLoading && (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
-              {isUserGoogleAuth ? 'Authenticate' : 'Erase Data'}
-            </button>
-          </div>
         </div>
       </Modal>
 

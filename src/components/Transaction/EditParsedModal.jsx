@@ -83,9 +83,42 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
 
   if (!transaction) return null;
 
+  const formId = 'edit-transaction-form';
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Transaction" size="md">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title="Edit Transaction" 
+      size="md"
+      footer={
+        <div className="flex gap-3 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+          >
+            <X className="w-4 h-4" />
+            <span>Cancel</span>
+          </button>
+          <button
+            type="submit"
+            form={formId}
+            disabled={loading || !editData.amount || !editData.description}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span>Save Changes</span>
+          </button>
+        </div>
+      }
+    >
+      <form id={formId} onSubmit={handleSubmit} className="space-y-4">
         {/* Transaction Type */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -176,30 +209,6 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
 
         {/* Original message display removed for privacy — we do not store or show user-entered messages */}
 
-        {/* Action Buttons */}
-        <div className="flex space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
-          >
-            <X className="w-4 h-4" />
-            <span>Cancel</span>
-          </button>
-          <button
-            type="submit"
-            disabled={loading || !editData.amount || !editData.description}
-            className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            <span>Save Changes</span>
-          </button>
-        </div>
       </form>
     </Modal>
   );

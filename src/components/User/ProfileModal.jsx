@@ -89,9 +89,39 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     }));
   };
 
+  const formId = 'profile-settings-form';
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Profile Settings" size="md">
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title="Profile Settings" 
+      size="md"
+      footer={
+        <div className="flex gap-3 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form={formId}
+            disabled={loading}
+            className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading && (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            Save Changes
+          </button>
+        </div>
+      }
+    >
+      <form id={formId} onSubmit={handleSubmit} className="space-y-6">
         {/* User Info */}
         <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white text-lg font-semibold">
@@ -182,27 +212,6 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
           </label>
         </div>
 
-        {/* Actions */}
-        <div className="flex space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {loading && (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            )}
-            Save Changes
-          </button>
-        </div>
       </form>
     </Modal>
   );

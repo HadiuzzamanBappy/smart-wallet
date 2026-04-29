@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSalaryPlan, saveSalaryPlan } from '../../services/salaryService';
 import { calculatePlan } from '../../utils/salaryCalculator';
-import SalaryWizard from './SalaryWizard';
+import SalaryFormModal from './SalaryFormModal';
 import SalaryResult from './SalaryResult';
 import { RefreshCw } from 'lucide-react';
 
@@ -68,18 +68,18 @@ export default function SalaryManager({ userId, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-900/90 overflow-y-auto print:bg-white print:overflow-visible">
+    <>
       {view === 'wizard' && (
-        <div className="min-h-screen flex items-center justify-center p-0 sm:p-4 print:p-0 print:block">
-          <SalaryWizard 
-            initialData={currentForm} 
-            onComplete={handleWizardComplete} 
-            onCancel={onClose} 
-          />
-        </div>
+        <SalaryFormModal 
+          isOpen={true}
+          onClose={onClose}
+          initialData={currentForm} 
+          onComplete={handleWizardComplete} 
+        />
       )}
       {view === 'result' && currentPlan && (
         <SalaryResult 
+          isOpen={true}
           planData={currentPlan} 
           formData={currentForm}
           aiAdvice={currentAdvice}
@@ -88,6 +88,6 @@ export default function SalaryManager({ userId, onClose }) {
           onClose={onClose}
         />
       )}
-    </div>
+    </>
   );
 }
