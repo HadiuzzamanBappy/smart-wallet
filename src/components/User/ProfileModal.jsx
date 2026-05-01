@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Calendar } from 'lucide-react';
-import Modal from '../UI/Modal';
+import Modal from '../UI/base/Modal';
 import { useAuth } from '../../hooks/useAuth';
 import { updateUserProfile } from '../../services/authService';
 
@@ -56,19 +56,19 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
       };
 
       const result = await updateUserProfile(user.uid, updateData);
-      
+
       if (result.success) {
         // Refresh user profile to get updated data
         await refreshUserProfile();
-        
+
         // Dispatch custom event to notify other components about currency change
         if (formData.currency !== userProfile?.currency) {
-          const event = new CustomEvent('wallet:currency-changed', { 
-            detail: { newCurrency: formData.currency, oldCurrency: userProfile?.currency } 
+          const event = new CustomEvent('wallet:currency-changed', {
+            detail: { newCurrency: formData.currency, oldCurrency: userProfile?.currency }
           });
           window.dispatchEvent(event);
         }
-        
+
         onSave?.();
         onClose();
       } else {
@@ -92,10 +92,10 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
   const formId = 'profile-settings-form';
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      title="Profile Settings" 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Profile Settings"
       size="md"
       footer={
         <div className="flex gap-3 w-full">

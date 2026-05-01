@@ -1,18 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import { calculateBudgetStatus, getCurrentMonthSpending, formatCurrency } from '../../utils/helpers';
 import { AlertTriangle, CheckCircle, Target, TrendingUp, Settings } from 'lucide-react';
 import { BudgetSkeleton } from '../UI/SkeletonLoader';
+import { getSalaryPlan } from '../../services/salaryService';
 
 const BudgetProgress = ({ onSettingsClick }) => {
-    const { userProfile } = useAuth();
+    const { userProfile, user } = useAuth();
     const { transactions, loading: transactionLoading } = useTransactions();
     const [loading, setLoading] = useState(true);
+    const [planData, setPlanData] = useState(null);
+
+    const fetchPlan = useCallback(async () => {
+        if (!user?.uid) return;
+        try {
+            const data = await getSalaryPlan(user.uid);
+            setPlanData(data?.plan || null);
+        } catch (err) {
+            console.error("BudgetProgress: Failed to fetch salary plan", err);
+        }
+    }, [user?.uid]);
 
     useEffect(() => {
         setLoading(transactionLoading || !transactions);
-    }, [transactionLoading, transactions]);
+        if (user?.uid) {
+            fetchPlan();
+        }
+
+        const handleUpdate = () => fetchPlan();
+        window.addEventListener('salary-plan-updated', handleUpdate);
+        return () => window.removeEventListener('salary-plan-updated', handleUpdate);
+    }, [transactionLoading, transactions, user?.uid, fetchPlan]);
 
     if (loading) {
         return (
@@ -22,7 +41,11 @@ const BudgetProgress = ({ onSettingsClick }) => {
         );
     }
 
-    const currentSpending = getCurrentMonthSpending(transactions);
+    // Include fixed expenses from salary plan if available
+    const transactionSpending = getCurrentMonthSpending(transactions);
+    const fixedSpending = planData?.totalFixed || 0;
+    const currentSpending = transactionSpending + fixedSpending;
+    
     const budgetStatus = calculateBudgetStatus(userProfile?.monthlyBudget, currentSpending);
 
     if (!budgetStatus.hasValidBudget) {
@@ -132,8 +155,13 @@ const BudgetProgress = ({ onSettingsClick }) => {
             </div>
 
             <div className={`mt-2 flex items-center justify-between text-[11px] font-bold ${colors.textColor}`}>
-                <div>{formatCurrency(spent, currency)} used</div>
-                <div>{budgetStatus.exceeded ? `Exceeded by ${formatCurrency(spent - (budgetStatus.budget || 0), currency)}` : `${formatCurrency(remaining, currency)} available`}</div>
+                <div className="flex flex-col">
+                    <span>{formatCurrency(currentSpending, currency)} spent</span>
+                    {fixedSpending > 0 && (
+                        <span className="text-[9px] opacity-70 font-medium">Includes {formatCurrency(fixedSpending, currency)} fixed costs</span>
+                    )}
+                </div>
+                <div className="text-right">{budgetStatus.exceeded ? `Exceeded by ${formatCurrency(currentSpending - (budgetStatus.budget || 0), currency)}` : `${formatCurrency(remaining, currency)} available`}</div>
             </div>
         </div>
     );

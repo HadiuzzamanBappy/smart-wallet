@@ -5,7 +5,7 @@ import useLocalRefresh from '../../hooks/useLocalRefresh';
 import { formatCurrency } from '../../utils/helpers';
 import UserMenuDropdown from '../User/UserMenuDropdown';
 import { getOutstandingCredits, getOutstandingLoans } from '../../services/transactionService';
-import Skeleton, { HeaderSkeleton } from './SkeletonLoader';
+import Skeleton, { HeaderSkeleton } from '../UI/SkeletonLoader';
 import { APP_EVENTS } from '../../config/constants';
 
 const Header = ({

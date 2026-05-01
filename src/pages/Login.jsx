@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { registerUser, loginUser, loginWithGoogle } from '../../services/authService';
+import { registerUser, loginUser, loginWithGoogle } from '../services/authService';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, ShieldCheck, Globe, Zap } from 'lucide-react';
 
 const Login = ({ onBack }) => {

@@ -5,8 +5,8 @@ import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus, Eye, Bar
 import { isCreditCategory, isLoanCategory } from '../../utils/aiTransactionParser';
 import { getOutstandingLoans, getOutstandingCredits } from '../../services/transactionService';
 import { formatCurrencyWithUser } from '../../utils/helpers';
-import AddTransactionModal from '../Transaction/AddTransactionModal';
-import LoanCreditModal from '../Transaction/LoanCreditModal';
+import AddTransactionModal from '../UI/AddTransactionModal';
+import LoanCreditModal from './LoanCreditModal';
 import MonthlyBreakdownModal from './MonthlyBreakdownModal';
 import { CompactSummarySkeleton } from '../UI/SkeletonLoader';
 import { APP_EVENTS } from '../../config/constants';
@@ -118,7 +118,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
         transactions.forEach(tx => {
           const transactionType = (tx.type || '').toString().toLowerCase().trim();
           const amount = parseFloat(tx.amount) || 0;
-          
+
           if (isCreditCategory(transactionType) && tx.isFullyPaid) {
             allTimeCreditGiven += amount;
           }
@@ -204,16 +204,16 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
     };
 
     // Add event listeners
-  window.addEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTransactionUpdate);
-  window.addEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTransactionUpdate);
-  window.addEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTransactionUpdate);
-  window.addEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTransactionUpdate);
+    window.addEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTransactionUpdate);
+    window.addEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTransactionUpdate);
+    window.addEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTransactionUpdate);
+    window.addEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTransactionUpdate);
 
     return () => {
-  window.removeEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTransactionUpdate);
-  window.removeEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTransactionUpdate);
-  window.removeEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTransactionUpdate);
-  window.removeEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTransactionUpdate);
+      window.removeEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTransactionUpdate);
+      window.removeEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTransactionUpdate);
+      window.removeEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTransactionUpdate);
+      window.removeEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTransactionUpdate);
     };
   }, [loadData, stableRefreshUserProfile]);
 
@@ -310,10 +310,10 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
               const IconComponent = card.icon;
               const spanClass = index >= 2 ? 'col-span-2 md:col-span-1' : '';
               const isClickable = card.hasAction && card.hasAmount;
-              
+
               return (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   onClick={isClickable ? card.onAction : undefined}
                   className={`${spanClass} relative flex items-center gap-2 p-2.5 rounded-2xl transition-all duration-300 bg-white/[0.03] dark:bg-gray-800/40 border ${card.border || 'border-white/10'} ${isClickable ? 'cursor-pointer hover:bg-white/[0.06] hover:border-white/20 active:scale-[0.98]' : ''} group overflow-hidden`}
                 >
@@ -335,7 +335,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
                       <div className="text-sm font-black text-gray-900 dark:text-white truncate">{card.value}</div>
                     )}
                   </div>
-                  
+
                   {isClickable && (
                     <div
                       className={`absolute top-1.5 right-1.5 p-1 rounded-lg transition-all bg-white/10 text-white`}
@@ -344,7 +344,7 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
                       <Eye className="w-3 h-3" />
                     </div>
                   )}
-                  
+
                   {/* Subtle decorative background gradient */}
                   <div className={`absolute -bottom-4 -right-4 w-10 h-10 rounded-full blur-2xl opacity-10 ${card.bgColor.replace('/10', '/30')}`} />
                 </div>

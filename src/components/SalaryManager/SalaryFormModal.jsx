@@ -1,5 +1,5 @@
 import { X, Plus, Trash2, Wallet2, Building2, PiggyBank, ShieldCheck, Target, ChevronRight, Sparkles, Receipt, ChevronLeft, Briefcase, Home, CreditCard, Activity, Wallet, ArrowRight } from 'lucide-react';
-import Modal from '../UI/Modal';
+import Modal from '../UI/base/Modal';
 import React, { useState } from 'react';
 import { calculatePlan } from '../../utils/salaryCalculator';
 
@@ -478,7 +478,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
                 <span className="text-gray-500">Total Price</span>
                 <span className="font-mono text-white">{c(goalVal)}</span>
               </div>
-              
+
               <div className="flex justify-between items-center text-[10px]">
                 <span className="text-emerald-500/70">Applied Assets</span>
                 <span className="font-mono text-emerald-400">-{c(selectedAssets)}</span>

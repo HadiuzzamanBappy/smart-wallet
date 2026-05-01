@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Edit3, Save, X, Loader2 } from 'lucide-react';
-import Modal from '../UI/Modal';
+import Modal from './base/Modal';
 import { updateTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
 

@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom styles for the wallet app */
+.chat-widget {
+  z-index: 1000;
+}
+
 /* Global Styles for Smart Wallet */
 body {
   margin: 0;
@@ -41,21 +46,25 @@ html.dark {
   .animate-in {
     animation: animate-in 0.2s ease-out;
   }
-  
+
   .fade-in {
     animation: fade-in 0.3s ease-out;
   }
-  
+
   .slide-in-from-top {
     animation: slide-in-from-top 0.2s ease-out;
   }
 
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
+
   .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
+    display: none;
+    /* Chrome, Safari and Opera */
   }
 }
 
@@ -64,6 +73,7 @@ html.dark {
     opacity: 0;
     transform: translateY(-4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -74,6 +84,7 @@ html.dark {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -84,6 +95,7 @@ html.dark {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -95,15 +107,15 @@ html.dark {
   .btn-primary {
     @apply bg-teal-500 hover:bg-teal-600 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
-  
+
   .btn-secondary {
     @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
-  
+
   .card {
     @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700;
   }
-  
+
   .input-field {
     @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent transition-colors duration-200;
   }

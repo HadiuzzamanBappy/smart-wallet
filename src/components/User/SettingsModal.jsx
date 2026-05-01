@@ -10,7 +10,7 @@ import {
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
-import Modal from '../UI/Modal';
+import Modal from '../UI/base/Modal';
 import ConfirmDialog from '../UI/ConfirmDialog';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -397,8 +397,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                       setPersistStatus('idle');
                     }}
                     className={`p-3 rounded-lg border-2 transition-colors ${settings.theme === theme.value
-                        ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                   >
                     <Icon className="w-5 h-5 mx-auto mb-1 text-gray-600 dark:text-gray-400" />
@@ -429,8 +429,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                   key={language.value}
                   onClick={() => setSettings(prev => ({ ...prev, language: language.value }))}
                   className={`p-3 rounded-lg border-2 transition-colors ${settings.language === language.value
-                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                 >
                   <div className="text-lg mb-1">{language.flag}</div>

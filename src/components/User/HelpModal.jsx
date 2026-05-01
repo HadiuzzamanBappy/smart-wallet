@@ -1,6 +1,6 @@
 import React from 'react';
 import { HelpCircle, MessageCircle, Zap, BarChart3, Shield, Target, Calendar, CreditCard } from 'lucide-react';
-import Modal from '../UI/Modal';
+import Modal from '../UI/base/Modal';
 
 const HelpModal = ({ isOpen, onClose }) => {
   const features = [
@@ -36,7 +36,7 @@ const HelpModal = ({ isOpen, onClose }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Operational Intelligence" size="lg">
       <div className="space-y-6">
-        
+
         {/* Core Systems */}
         <div>
           <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -49,7 +49,7 @@ const HelpModal = ({ isOpen, onClose }) => {
                 <div key={index} className="p-4 bg-gray-50/50 dark:bg-gray-800/40 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm flex-shrink-0 border border-gray-100 dark:border-white/5">
-                        <Icon className="w-5 h-5 text-teal-500" />
+                      <Icon className="w-5 h-5 text-teal-500" />
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-tight">
@@ -75,10 +75,10 @@ const HelpModal = ({ isOpen, onClose }) => {
             {types.map((type, index) => (
               <div key={index} className="p-3 bg-gray-50/50 dark:bg-gray-800/40 rounded-xl border border-gray-100 dark:border-white/5">
                 <div className={`text-[9px] font-black uppercase tracking-widest ${type.color} mb-1`}>
-                    {type.label}
+                  {type.label}
                 </div>
                 <div className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">
-                    {type.desc}
+                  {type.desc}
                 </div>
               </div>
             ))}

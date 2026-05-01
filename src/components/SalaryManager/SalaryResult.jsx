@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, Printer, Save, RefreshCw, Target, PiggyBank, Home, Heart as WantsIcon, Zap, TrendingUp, AlertTriangle, ShieldCheck, Activity, BarChart3, Globe, Command } from 'lucide-react';
 import { useAIAdvice } from '../../hooks/useAIAdvice';
-import Modal from '../UI/Modal';
+import Modal from '../UI/base/Modal';
 
 export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onSave, onRecalculate, onClose }) {
   const { advice, loading, error, generate } = useAIAdvice();

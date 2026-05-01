@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getSalaryPlan, saveSalaryPlan } from '../../services/salaryService';
-import { calculatePlan } from '../../utils/salaryCalculator';
-import SalaryFormModal from './SalaryFormModal';
-import SalaryResult from './SalaryResult';
+import { getSalaryPlan, saveSalaryPlan } from '../services/salaryService';
+import { calculatePlan } from '../utils/salaryCalculator';
+import SalaryFormModal from '../components/SalaryManager/SalaryFormModal';
+import SalaryResult from '../components/SalaryManager/SalaryResult';
 import { RefreshCw } from 'lucide-react';
 
 export default function SalaryManager({ userId, onClose, initialView }) {
@@ -15,7 +15,7 @@ export default function SalaryManager({ userId, onClose, initialView }) {
     const fetchPlan = async () => {
       try {
         const plan = await getSalaryPlan(userId);
-        
+
         if (plan) {
           setCurrentForm(plan.form);
           const recalculated = {
@@ -24,7 +24,7 @@ export default function SalaryManager({ userId, onClose, initialView }) {
           };
           setCurrentPlan(recalculated);
           setCurrentAdvice(plan.aiAdvice);
-          
+
           // Respect initialView if provided, otherwise default to result
           setView(initialView || 'result');
         } else {
@@ -77,20 +77,20 @@ export default function SalaryManager({ userId, onClose, initialView }) {
   return (
     <>
       {view === 'wizard' && (
-        <SalaryFormModal 
+        <SalaryFormModal
           isOpen={true}
           onClose={onClose}
-          initialData={currentForm} 
-          onComplete={handleWizardComplete} 
+          initialData={currentForm}
+          onComplete={handleWizardComplete}
         />
       )}
       {view === 'result' && currentPlan && (
-        <SalaryResult 
+        <SalaryResult
           isOpen={true}
-          planData={currentPlan} 
+          planData={currentPlan}
           formData={currentForm}
           aiAdvice={currentAdvice}
-          onSave={handleSave} 
+          onSave={handleSave}
           onRecalculate={handleRecalculate}
           onClose={onClose}
         />

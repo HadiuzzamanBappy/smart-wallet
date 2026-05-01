@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, MessageSquare, Edit, Trash, Check, X, Loader2 } from 'lucide-react';
-import Modal from '../UI/Modal';
+import Modal from './base/Modal';
 import { addTransaction } from '../../services/transactionService';
 import { parseTransaction } from '../../utils/aiTransactionParser';
 import { useAuth } from '../../hooks/useAuth';
@@ -13,17 +13,17 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [lastResponse, setLastResponse] = useState(null);
-  
+
   // Get user's currency preference
   const userCurrency = userProfile?.currency || 'BDT';
-  
+
   // Chat mode state
   const [chatMessage, setChatMessage] = useState('');
   const [parsedTransactions, setParsedTransactions] = useState([]);
   const chatTextareaRef = useRef(null);
   const [editingIndex, setEditingIndex] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  
+
   // Manual mode state
   const [manualData, setManualData] = useState({
     type: 'expense',
@@ -49,7 +49,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleChatParse = async () => {
     if (!chatMessage.trim()) return;
-    
+
     setAiLoading(true);
     try {
       const result = await parseTransaction(chatMessage, userCurrency);
@@ -108,7 +108,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleAddParsedTransactions = async () => {
     if (parsedTransactions.length === 0) return;
-    
+
     setLoading(true);
     try {
       const addedIds = [];
@@ -120,7 +120,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
           date: transaction.date ? new Date(transaction.date) : new Date(),
           source: 'chat'
         });
-        
+
         if (!result.success) {
           console.error('Transaction add failed:', result.error);
           setLastResponse({ type: 'error', message: 'Failed to add some transactions' });
@@ -129,17 +129,17 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
           addedIds.push(result.id);
         }
       }
-      
+
       await refreshUserProfile();
 
       // Notify other UI components (analytics/summary) that transactions were added
       try {
-  window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_ADDED, { detail: { addedIds, count: addedIds.length, source: 'chat' } }));
+        window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_ADDED, { detail: { addedIds, count: addedIds.length, source: 'chat' } }));
       } catch {
         // ignore dispatch errors on older browsers
       }
 
-      setLastResponse({ type: 'success', message: `Added ${addedIds.length} transaction${addedIds.length>1?'s':''}` });
+      setLastResponse({ type: 'success', message: `Added ${addedIds.length} transaction${addedIds.length > 1 ? 's' : ''}` });
       setIsPreviewOpen(false);
       onSuccess?.();
       onClose();
@@ -155,7 +155,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     if (!manualData.amount || !manualData.description) return;
-    
+
     setLoading(true);
     try {
       const result = await addTransaction(user.uid, {
@@ -164,7 +164,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         date: new Date(manualData.date), // Ensure date is properly formatted
         source: 'manual'
       });
-      
+
       if (result.success) {
         await refreshUserProfile();
         // Notify other components
@@ -230,22 +230,20 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         <div className="flex bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl p-1">
           <button
             onClick={() => setMode('chat')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all ${
-              mode === 'chat'
-                ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm font-black'
-                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold'
-            } text-xs uppercase tracking-widest`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all ${mode === 'chat'
+              ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm font-black'
+              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold'
+              } text-xs uppercase tracking-widest`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
             <span>Smart Chat</span>
           </button>
           <button
             onClick={() => setMode('manual')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all ${
-              mode === 'manual'
-                ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm font-black'
-                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold'
-            } text-xs uppercase tracking-widest`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all ${mode === 'manual'
+              ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm font-black'
+              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold'
+              } text-xs uppercase tracking-widest`}
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Manual Entry</span>
@@ -284,52 +282,52 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
 
             {/* Quick suggestion templates */}
             {!isPreviewOpen && (
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              <p className="font-medium mb-2">Try these templates (tap to use):</p>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
-                  <div className="flex-1 pr-2">
-                    <div className="font-medium">Natural</div>
-                    <div className="text-[11px] text-gray-600 dark:text-gray-300">
-                      {userCurrency === 'BDT' ? 'Bought groceries for 500 BDT today' : `Bought groceries for ${userCurrency === 'USD' ? '$50' : `50 ${userCurrency}`} today`}
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <p className="font-medium mb-2">Try these templates (tap to use):</p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
+                    <div className="flex-1 pr-2">
+                      <div className="font-medium">Natural</div>
+                      <div className="text-[11px] text-gray-600 dark:text-gray-300">
+                        {userCurrency === 'BDT' ? 'Bought groceries for 500 BDT today' : `Bought groceries for ${userCurrency === 'USD' ? '$50' : `50 ${userCurrency}`} today`}
+                      </div>
                     </div>
+                    <button
+                      onClick={() => {
+                        const template = userCurrency === 'BDT' ? 'Bought groceries for 500 BDT today' : `Bought groceries for ${userCurrency === 'USD' ? '$50' : `50 ${userCurrency}`} today`;
+                        setChatMessage(template);
+                        chatTextareaRef.current?.focus();
+                      }}
+                      className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
+                    >Use</button>
                   </div>
-                  <button
-                    onClick={() => { 
-                      const template = userCurrency === 'BDT' ? 'Bought groceries for 500 BDT today' : `Bought groceries for ${userCurrency === 'USD' ? '$50' : `50 ${userCurrency}`} today`;
-                      setChatMessage(template); 
-                      chatTextareaRef.current?.focus(); 
-                    }}
-                    className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
-                  >Use</button>
-                </div>
 
-                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
-                  <div className="flex-1 pr-2">
-                    <div className="font-medium">Tokenized</div>
-                    <div className="text-[11px] text-gray-600 dark:text-gray-300">type:expense amount:250 currency:{userCurrency} category:food note:Lunch</div>
+                  <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
+                    <div className="flex-1 pr-2">
+                      <div className="font-medium">Tokenized</div>
+                      <div className="text-[11px] text-gray-600 dark:text-gray-300">type:expense amount:250 currency:{userCurrency} category:food note:Lunch</div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setChatMessage(`type:expense amount:250 currency:${userCurrency} category:food note:Lunch`);
+                        chatTextareaRef.current?.focus();
+                      }}
+                      className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
+                    >Use</button>
                   </div>
-                  <button
-                    onClick={() => { 
-                      setChatMessage(`type:expense amount:250 currency:${userCurrency} category:food note:Lunch`); 
-                      chatTextareaRef.current?.focus(); 
-                    }}
-                    className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
-                  >Use</button>
-                </div>
 
-                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
-                  <div className="flex-1 pr-2">
-                    <div className="font-medium">Multi-line</div>
-                    <div className="text-[11px] text-gray-600 dark:text-gray-300">Lunch 250\nTaxi 120\nSalary 50000 2025-10-01</div>
+                  <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/40 p-2 rounded">
+                    <div className="flex-1 pr-2">
+                      <div className="font-medium">Multi-line</div>
+                      <div className="text-[11px] text-gray-600 dark:text-gray-300">Lunch 250\nTaxi 120\nSalary 50000 2025-10-01</div>
+                    </div>
+                    <button
+                      onClick={() => { setChatMessage('Lunch 250\nTaxi 120\nSalary 50000 2025-10-01'); chatTextareaRef.current?.focus(); }}
+                      className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
+                    >Use</button>
                   </div>
-                  <button
-                    onClick={() => { setChatMessage('Lunch 250\nTaxi 120\nSalary 50000 2025-10-01'); chatTextareaRef.current?.focus(); }}
-                    className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs"
-                  >Use</button>
                 </div>
               </div>
-            </div>
             )}
 
             {/* Parsed Results */}
@@ -410,7 +408,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                     </div>
                   ))}
                 </div>
-                
+
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => { setIsPreviewOpen(false); setParsedTransactions([]); setLastResponse(null); }}

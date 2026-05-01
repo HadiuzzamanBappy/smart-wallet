@@ -9,9 +9,9 @@ import {
     adjustLoanCreditAmount
 } from '../../services/transactionService';
 import { formatCurrencyWithUser, formatDate } from '../../utils/helpers';
-import Modal from '../UI/Modal';
+import Modal from '../UI/base/Modal';
 import LoadingSpinner from '../UI/LoadingSpinner';
-import Toast from '../UI/Toast';
+import Toast from '../UI/base/Toast';
 import {
     CreditCard,
     DollarSign,
@@ -417,157 +417,157 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 <div className="flex flex-col h-full p-4 sm:p-5">
                     {/* Header totals summary with toggle */}
                     <div className="mb-4 flex-shrink-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-wrap">
-                            <div className="bg-white/5 px-3 py-2 rounded-xl border border-white/10">
-                                <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-0.5">Total</div>
-                                <div className="text-sm font-black text-gray-900 dark:text-white">{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</div>
-                            </div>
-                            <div className="bg-orange-500/10 px-3 py-2 rounded-xl border border-orange-500/20">
-                                <div className="text-[9px] font-black uppercase tracking-widest text-orange-500 mb-0.5">Due</div>
-                                <div className="text-sm font-black text-orange-600 dark:text-orange-400">{formatCurrencyWithUser(totalRemaining, userProfile)}</div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            {hasFullyPaid ? (
-                                <div className="inline-flex items-center rounded-2xl bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 p-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowAllItems(false)}
-                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!showAllItems ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-                                    >
-                                        <User className="w-3 h-3" />
-                                        <span>Unpaid</span>
-                                        <span className={`ml-1 px-1.5 py-0.5 rounded-lg text-[9px] ${!showAllItems ? 'bg-teal-500/10' : 'bg-gray-500/10'}`}>{unpaidCount}</span>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowAllItems(true)}
-                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${showAllItems ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-                                    >
-                                        <CheckCircle className="w-3 h-3" />
-                                        <span>Paid</span>
-                                        <span className={`ml-1 px-1.5 py-0.5 rounded-lg text-[9px] ${showAllItems ? 'bg-teal-500/10' : 'bg-gray-500/10'}`}>{paidCount}</span>
-                                    </button>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
+                                <div className="bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                                    <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-0.5">Total</div>
+                                    <div className="text-sm font-black text-gray-900 dark:text-white">{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</div>
                                 </div>
-                            ) : (
-                                <span className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-500">{unpaidCount} ACTIVE</span>
-                            )}
+                                <div className="bg-orange-500/10 px-3 py-2 rounded-xl border border-orange-500/20">
+                                    <div className="text-[9px] font-black uppercase tracking-widest text-orange-500 mb-0.5">Due</div>
+                                    <div className="text-sm font-black text-orange-600 dark:text-orange-400">{formatCurrencyWithUser(totalRemaining, userProfile)}</div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {hasFullyPaid ? (
+                                    <div className="inline-flex items-center rounded-2xl bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 p-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAllItems(false)}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!showAllItems ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                                        >
+                                            <User className="w-3 h-3" />
+                                            <span>Unpaid</span>
+                                            <span className={`ml-1 px-1.5 py-0.5 rounded-lg text-[9px] ${!showAllItems ? 'bg-teal-500/10' : 'bg-gray-500/10'}`}>{unpaidCount}</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAllItems(true)}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${showAllItems ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                                        >
+                                            <CheckCircle className="w-3 h-3" />
+                                            <span>Paid</span>
+                                            <span className={`ml-1 px-1.5 py-0.5 rounded-lg text-[9px] ${showAllItems ? 'bg-teal-500/10' : 'bg-gray-500/10'}`}>{paidCount}</span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <span className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-500">{unpaidCount} ACTIVE</span>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-                {loading ? (
-                    <div className="flex items-center justify-center py-8">
-                        <LoadingSpinner />
-                    </div>
-                ) : displayedItems.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500 bg-white/[0.02] rounded-2xl border border-dashed border-white/10">
-                        <AlertCircle className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-50">{showAllItems ? emptyMessage : `No active ${isLoans ? 'loans' : 'credits'}`}</p>
-                    </div>
-                ) : (
-                    <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent space-y-3">
-                        {displayedItems.map((item) => (
-                            <div
-                                key={item.id}
-                                className="relative group border border-white/10 rounded-2xl p-3 dark:bg-white/[0.02] hover:bg-white/[0.04] transition-all overflow-hidden"
-                            >
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-start gap-3 flex-1">
-                                        <div className={`p-2 rounded-xl shrink-0 ${isLoans
-                                            ? 'bg-red-500/10 text-red-500'
-                                            : 'bg-emerald-500/10 text-emerald-500'
-                                            }`}>
-                                            {isLoans ? <CreditCard className="w-4 h-4" /> : <DollarSign className="w-4 h-4" />}
+                    {loading ? (
+                        <div className="flex items-center justify-center py-8">
+                            <LoadingSpinner />
+                        </div>
+                    ) : displayedItems.length === 0 ? (
+                        <div className="text-center py-12 text-gray-500 bg-white/[0.02] rounded-2xl border border-dashed border-white/10">
+                            <AlertCircle className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                            <p className="text-[10px] font-black uppercase tracking-widest opacity-50">{showAllItems ? emptyMessage : `No active ${isLoans ? 'loans' : 'credits'}`}</p>
+                        </div>
+                    ) : (
+                        <div className="flex-1 overflow-y-auto pr-1 scrollbar-thumb-white/10 scrollbar-track-transparent space-y-3">
+                            {displayedItems.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="relative group border border-white/10 rounded-2xl p-3 dark:bg-white/[0.02] hover:bg-white/[0.04] transition-all overflow-hidden"
+                                >
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-start gap-3 flex-1">
+                                            <div className={`p-2 rounded-xl shrink-0 ${isLoans
+                                                ? 'bg-red-500/10 text-red-500'
+                                                : 'bg-emerald-500/10 text-emerald-500'
+                                                }`}>
+                                                {isLoans ? <CreditCard className="w-4 h-4" /> : <DollarSign className="w-4 h-4" />}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">
+                                                    {item.description}
+                                                </h4>
+                                                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide flex items-center gap-3 mt-0.5">
+                                                    <span className="flex items-center gap-1">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {formatDate(item.date)}
+                                                    </span>
+                                                    {item.category && (
+                                                        <span className="opacity-60">{item.category}</span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">
-                                                {item.description}
-                                            </h4>
-                                            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide flex items-center gap-3 mt-0.5">
-                                                <span className="flex items-center gap-1">
-                                                    <Calendar className="w-3 h-3" />
-                                                    {formatDate(item.date)}
-                                                </span>
-                                                {item.category && (
-                                                    <span className="opacity-60">{item.category}</span>
-                                                )}
+                                        {item.remainingAmount > 0 && (
+                                            <button
+                                                onClick={() => handleAdjust(item)}
+                                                disabled={processing[item.id]}
+                                                className="p-1.5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
+                                                title="Adjust amount"
+                                            >
+                                                <Edit3 className="w-3.5 h-3.5 text-gray-500" />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3 mb-3">
+                                        <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                                            <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-0.5">Original</div>
+                                            <div className="text-sm font-black text-gray-700 dark:text-gray-300">
+                                                {formatCurrencyWithUser(item.amount, userProfile)}
+                                            </div>
+                                        </div>
+                                        <div className="bg-orange-500/5 p-2 rounded-xl border border-orange-500/10">
+                                            <div className="text-[9px] text-orange-500 uppercase font-black tracking-widest mb-0.5">Remaining</div>
+                                            <div className="text-sm font-black text-orange-500">
+                                                {formatCurrencyWithUser(item.remainingAmount, userProfile)}
                                             </div>
                                         </div>
                                     </div>
-                                    {item.remainingAmount > 0 && (
-                                        <button
-                                            onClick={() => handleAdjust(item)}
-                                            disabled={processing[item.id]}
-                                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
-                                            title="Adjust amount"
-                                        >
-                                            <Edit3 className="w-3.5 h-3.5 text-gray-500" />
-                                        </button>
+
+                                    {item.adjustmentHistory && item.adjustmentHistory.length > 0 && (
+                                        <div className="mb-3 p-2 bg-purple-500/5 dark:bg-purple-900/10 rounded-xl border border-purple-500/10">
+                                            <div className="text-[9px] font-black text-purple-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                                <div className="w-1 h-1 rounded-full bg-purple-500" />
+                                                History
+                                            </div>
+                                            <div className="space-y-1">
+                                                {item.adjustmentHistory.slice(-2).map((adj, idx) => {
+                                                    const isIncrease = adj.amount > 0;
+                                                    return (
+                                                        <div key={idx} className="text-[10px] text-gray-500 flex items-center justify-between">
+                                                            <span className="truncate max-w-[70%]">{adj.reason || (isIncrease ? 'Increase' : 'Decrease')}</span>
+                                                            <span className={`font-bold ${isIncrease ? 'text-emerald-500' : 'text-red-500'}`}>
+                                                                {isIncrease ? '+' : ''}{formatCurrencyWithUser(adj.amount, userProfile)}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
                                     )}
+
+                                    <button
+                                        onClick={() => handleMarkAsPaid(item)}
+                                        disabled={processing[item.id] || item.remainingAmount <= 0}
+                                        className={`w-full h-10 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${item.remainingAmount <= 0
+                                            ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/20'
+                                            : isLoans
+                                                ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20'
+                                                : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
+                                            }`}
+                                    >
+                                        {processing[item.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                            item.remainingAmount <= 0 ? <CheckCircle className="w-4 h-4" /> : <Plus className="w-4 h-4" />
+                                        )}
+                                        {item.remainingAmount <= 0 ? `Fully ${isLoans ? 'Repaid' : 'Collected'}` : `Record ${isLoans ? 'Repayment' : 'Collection'}`}
+                                    </button>
+
+                                    {/* Subtle decorative background gradient */}
+                                    <div className={`absolute -bottom-6 -right-6 w-16 h-16 rounded-full blur-3xl opacity-10 ${isLoans ? 'bg-red-500' : 'bg-emerald-500'}`} />
                                 </div>
-
-                                <div className="grid grid-cols-2 gap-3 mb-3">
-                                    <div className="bg-white/5 p-2 rounded-xl border border-white/5">
-                                        <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-0.5">Original</div>
-                                        <div className="text-sm font-black text-gray-700 dark:text-gray-300">
-                                            {formatCurrencyWithUser(item.amount, userProfile)}
-                                        </div>
-                                    </div>
-                                    <div className="bg-orange-500/5 p-2 rounded-xl border border-orange-500/10">
-                                        <div className="text-[9px] text-orange-500 uppercase font-black tracking-widest mb-0.5">Remaining</div>
-                                        <div className="text-sm font-black text-orange-500">
-                                            {formatCurrencyWithUser(item.remainingAmount, userProfile)}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {item.adjustmentHistory && item.adjustmentHistory.length > 0 && (
-                                    <div className="mb-3 p-2 bg-purple-500/5 dark:bg-purple-900/10 rounded-xl border border-purple-500/10">
-                                        <div className="text-[9px] font-black text-purple-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                            <div className="w-1 h-1 rounded-full bg-purple-500" />
-                                            History
-                                        </div>
-                                        <div className="space-y-1">
-                                            {item.adjustmentHistory.slice(-2).map((adj, idx) => {
-                                                const isIncrease = adj.amount > 0;
-                                                return (
-                                                    <div key={idx} className="text-[10px] text-gray-500 flex items-center justify-between">
-                                                        <span className="truncate max-w-[70%]">{adj.reason || (isIncrease ? 'Increase' : 'Decrease')}</span>
-                                                        <span className={`font-bold ${isIncrease ? 'text-emerald-500' : 'text-red-500'}`}>
-                                                            {isIncrease ? '+' : ''}{formatCurrencyWithUser(adj.amount, userProfile)}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <button
-                                    onClick={() => handleMarkAsPaid(item)}
-                                    disabled={processing[item.id] || item.remainingAmount <= 0}
-                                    className={`w-full h-10 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${item.remainingAmount <= 0
-                                        ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/20'
-                                        : isLoans
-                                            ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20'
-                                            : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
-                                        }`}
-                                >
-                                    {processing[item.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                                        item.remainingAmount <= 0 ? <CheckCircle className="w-4 h-4" /> : <Plus className="w-4 h-4" />
-                                    )}
-                                    {item.remainingAmount <= 0 ? `Fully ${isLoans ? 'Repaid' : 'Collected'}` : `Record ${isLoans ? 'Repayment' : 'Collection'}`}
-                                </button>
-
-                                {/* Subtle decorative background gradient */}
-                                <div className={`absolute -bottom-6 -right-6 w-16 h-16 rounded-full blur-3xl opacity-10 ${isLoans ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                            </div>
-                        ))}
-                    </div>
-                )}
+                            ))}
+                        </div>
+                    )}
                 </div>
             </Modal>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import Modal from '../UI/Modal';
+import Modal from '../UI/base/Modal';
 import { TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
@@ -23,7 +23,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
       // Use transaction.date for monthly grouping
       const txDate = new Date(tx.date || tx.createdAt);
       const monthKey = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`;
-      
+
       if (!grouped[monthKey]) {
         grouped[monthKey] = {
           month: monthKey,
@@ -36,7 +36,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
       }
 
       const amount = parseFloat(tx.amount) || 0;
-      
+
       if (tx.type === 'income') {
         grouped[monthKey].income += amount;
         grouped[monthKey].incomeCount++;

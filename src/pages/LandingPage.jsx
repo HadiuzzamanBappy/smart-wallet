@@ -1,10 +1,10 @@
 import React from 'react';
-import LandingNav from './LandingNav';
-import HeroSection from './HeroSection';
-import FeaturesSection from './FeaturesSection';
-import DemoSection from './DemoSection';
-import CTASection from './CTASection';
-import LandingFooter from './LandingFooter';
+import LandingNav from '../components/Landing/LandingNav';
+import HeroSection from '../components/Landing/HeroSection';
+import FeaturesSection from '../components/Landing/FeaturesSection';
+import DemoSection from '../components/Landing/DemoSection';
+import CTASection from '../components/Landing/CTASection';
+import LandingFooter from '../components/Landing/LandingFooter';
 
 const LandingPage = ({ onGetStarted }) => {
   return (

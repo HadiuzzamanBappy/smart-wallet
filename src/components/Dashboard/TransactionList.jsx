@@ -14,9 +14,9 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { deleteTransaction, countLinkedRepayments } from '../../services/transactionService';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import { getCategoryEmoji, getCategoryColor } from '../../utils/aiTransactionParser';
-import EditParsedModal from '../Transaction/EditParsedModal';
+import EditParsedModal from '../UI/EditParsedModal';
 import ConfirmDialog from '../UI/ConfirmDialog';
-import Modal from '../UI/Modal';
+import Modal from '../UI/base/Modal';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { TransactionListSkeleton } from '../UI/SkeletonLoader';
 
@@ -327,18 +327,17 @@ const TransactionList = ({ onTransactionUpdate }) => {
               >
                 Prev
               </button>
-              
+
               {/* Desktop Page Numbers */}
               <div className="hidden sm:flex items-center gap-1">
                 {[...Array(totalPages)].map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setPage(i + 1)}
-                    className={`w-8 h-8 flex items-center justify-center rounded-md text-xs font-bold transition-all ${
-                      page === i + 1 
-                        ? 'bg-teal-500 text-white shadow-md shadow-teal-500/20' 
+                    className={`w-8 h-8 flex items-center justify-center rounded-md text-xs font-bold transition-all ${page === i + 1
+                        ? 'bg-teal-500 text-white shadow-md shadow-teal-500/20'
                         : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
+                      }`}
                   >
                     {i + 1}
                   </button>
