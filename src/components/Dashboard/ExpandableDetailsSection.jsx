@@ -113,10 +113,10 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   };
 
   return (
-    <div className="w-full space-y-4 sm:space-y-6">
+    <div className="w-full space-y-3">
       <div className="w-full">
         {/* Horizontal Button List - Responsive */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center items-stretch sm:items-center">
           {sections.map((section) => {
             const IconComponent = section.icon;
             const isActive = activeSection === section.id;
@@ -125,13 +125,13 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
               <button
               key={section.id}
               onClick={() => toggleSection(section.id)}
-              className={`group relative flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 rounded-xl transition-all duration-300 border w-full sm:w-auto ${
+              className={`group relative flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-300 border w-full sm:w-auto ${
                 isActive 
-                  ? `bg-gradient-to-r from-teal-500 to-blue-500 text-white border-teal-400 shadow-lg scale-[1.02]` 
+                  ? `bg-gradient-to-r from-teal-500 to-blue-500 text-white border-teal-400 shadow-lg scale-[1.01]` 
                   : `bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-teal-200 dark:border-teal-800 hover:border-teal-300 dark:hover:border-teal-700 shadow-sm`
               }`}
             >
-              <div className={`p-2 rounded-lg transition-colors ${
+              <div className={`p-2.5 rounded-xl transition-colors ${
                 isActive 
                   ? 'bg-white/20' 
                   : 'bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/10 dark:to-emerald-900/30'
@@ -185,9 +185,9 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
                   const IconComponent = section.icon;
                   return (
                     <>
-                      <div className="bg-gray-50 dark:bg-gray-800/80 p-3 border-x border-t border-teal-200 dark:border-teal-800 rounded-t-md">
+                      <div className="bg-gray-50 dark:bg-gray-800/80 p-3 border-x border-t border-teal-200 dark:border-teal-800 rounded-t-2xl">
                         <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-teal-50 dark:bg-teal-900/30 rounded-lg">
+                          <div className="p-1.5 bg-teal-50 dark:bg-teal-900/30 rounded-xl">
                             <IconComponent className="w-4 h-4 text-teal-500" />
                           </div>
                           <div>
@@ -195,7 +195,7 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
                           </div>
                         </div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 rounded-b-md">
+                      <div className="bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 rounded-b-2xl">
                         {renderSectionContent(activeSection)}
                       </div>
                     </>
@@ -210,7 +210,7 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
             {activeSection && (
               <div className="animate-in slide-in-from-top duration-300">
                 <div className="overflow-hidden">
-                  <div className="bg-gray-50 dark:bg-gray-800/80 p-3 border-x border-t border-teal-200 dark:border-teal-800 rounded-t-md">
+                  <div className="bg-gray-50 dark:bg-gray-800/80 p-3 border-x border-t border-teal-200 dark:border-teal-800 rounded-t-2xl">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {(() => {
@@ -218,7 +218,7 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
                           const IconComponent = section.icon;
                           return (
                             <>
-                              <div className="p-1.5 bg-teal-50 dark:bg-teal-900/30 rounded-lg">
+                              <div className="p-1.5 bg-teal-50 dark:bg-teal-900/30 rounded-xl">
                                 <IconComponent className="w-4 h-4 text-teal-500" />
                               </div>
                               <h2 className="text-sm font-bold text-gray-900 dark:text-white">{section.title}</h2>
@@ -228,13 +228,13 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
                       </div>
                       <button
                         onClick={() => toggleSection(activeSection)}
-                        className="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl transition-colors"
                       >
                         <ChevronUp className="w-4 h-4 text-gray-500" />
                       </button>
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 rounded-b-md">
+                  <div className="bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 rounded-b-2xl">
                     {renderSectionContent(activeSection)}
                   </div>
                 </div>

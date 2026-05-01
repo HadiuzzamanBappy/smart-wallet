@@ -11,7 +11,7 @@ import { db } from './config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import Login from './components/User/Login';
 import LandingPage from './components/Landing/LandingPage';
-import Header from './components/Layout/Header';
+import Header from './components/UI/Header';
 import CompactSummary from './components/Dashboard/CompactSummary';
 import BudgetProgress from './components/Dashboard/BudgetProgress';
 import ExpandableDetailsSection from './components/Dashboard/ExpandableDetailsSection';
@@ -172,7 +172,7 @@ const AppContent = () => {
         />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Summary Cards */}
             <CompactSummary onRefresh={handleRefresh} />
 
@@ -181,12 +181,12 @@ const AppContent = () => {
             <BudgetProgress onSettingsClick={() => setShowProfileModal(true)} />
 
             {/* Salary Manager Card */}
-            <SalaryHomeCard 
-              userId={user.uid} 
+            <SalaryHomeCard
+              userId={user.uid}
               onOpen={(mode) => {
                 setSalaryManagerMode(mode);
                 setShowSalaryManager(true);
-              }} 
+              }}
             />
 
             {/* Expandable Details Section */}

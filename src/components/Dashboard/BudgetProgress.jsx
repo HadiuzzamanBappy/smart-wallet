@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import { calculateBudgetStatus, getCurrentMonthSpending, formatCurrency } from '../../utils/helpers';
-import { AlertTriangle, CheckCircle, DollarSign, TrendingUp, Settings } from 'lucide-react';
-import { SummaryCardSkeleton, BudgetSkeleton } from '../UI/SkeletonLoader';
+import { AlertTriangle, CheckCircle, Target, TrendingUp, Settings } from 'lucide-react';
+import { BudgetSkeleton } from '../UI/SkeletonLoader';
 
 const BudgetProgress = ({ onSettingsClick }) => {
     const { userProfile } = useAuth();
@@ -11,13 +11,10 @@ const BudgetProgress = ({ onSettingsClick }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Transactions are managed by context, just update loading state
         setLoading(transactionLoading || !transactions);
     }, [transactionLoading, transactions]);
 
     if (loading) {
-        // Use the Budget-specific skeleton so width and progress placeholders
-        // match the real BudgetProgress card layout.
         return (
             <div className="w-full">
                 <BudgetSkeleton />
@@ -28,23 +25,21 @@ const BudgetProgress = ({ onSettingsClick }) => {
     const currentSpending = getCurrentMonthSpending(transactions);
     const budgetStatus = calculateBudgetStatus(userProfile?.monthlyBudget, currentSpending);
 
-    // Don't show if no budget is set
     if (!budgetStatus.hasValidBudget) {
         return (
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                            <DollarSign className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                            <h3 className="font-medium text-gray-900 dark:text-white text-sm">Set Monthly Budget</h3>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">Track your spending against a monthly budget</p>
+                            <h3 className="font-medium text-gray-900 dark:text-white text-sm">Set Lifestyle Ceiling</h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">Set a global monthly limit for all spending</p>
                         </div>
                     </div>
                     <button
                         onClick={onSettingsClick}
-                        title="Open Settings"
                         className="p-2 -m-2 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
                     >
                         <Settings className="w-4 h-4 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400" />
@@ -54,12 +49,10 @@ const BudgetProgress = ({ onSettingsClick }) => {
         );
     }
 
-    // Get appropriate colors and icon based on status
     const getStatusColors = (warningLevel) => {
         switch (warningLevel) {
             case 'danger':
                 return {
-                    // Light: strong red highlights, Dark: deeper red shades
                     bg: 'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/10 dark:to-red-900/30',
                     border: 'border-red-200 dark:border-red-800',
                     progressBg: 'bg-red-100 dark:bg-red-900/30',
@@ -88,7 +81,7 @@ const BudgetProgress = ({ onSettingsClick }) => {
                     icon: TrendingUp,
                     iconColor: 'text-sky-500'
                 };
-            default: // safe
+            default:
                 return {
                     bg: 'bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/8 dark:to-emerald-900/28',
                     border: 'border-emerald-200 dark:border-emerald-800',
@@ -104,43 +97,43 @@ const BudgetProgress = ({ onSettingsClick }) => {
     const colors = getStatusColors(budgetStatus.warningLevel);
     const IconComponent = colors.icon;
     const currency = userProfile?.currency || 'BDT';
-
-    // show compact monthly budget card (minimal presentation)
-    const clampedPct = Math.max(0, Math.min(100, Math.round(budgetStatus.percentage)));
+    const percentage = Math.max(0, Math.min(100, Math.round(budgetStatus.percentage)));
     const spent = budgetStatus.spending || 0;
     const remaining = Math.max(0, (budgetStatus.budget || 0) - spent);
 
     return (
-        <div className={`rounded-md p-3 bg-white dark:bg-gray-800 border ${colors.border}`}>
-            <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${colors.bg}`}>
-                        <IconComponent className={`w-4 h-4 ${colors.iconColor}`} />
+        <div className={`rounded-2xl p-3 bg-white dark:bg-gray-800 border ${colors.border} shadow-sm`}>
+            <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-xl ${colors.bg}`}>
+                        <IconComponent className={`w-5 h-5 ${colors.iconColor}`} />
                     </div>
                     <div>
-                        <div className={`text-xs font-medium ${colors.textColor}`}>{budgetStatus.status}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Monthly budget overview</div>
+                        <div className={`text-[10px] font-black uppercase tracking-widest ${colors.textColor}`}>
+                            Lifestyle Monitor: {budgetStatus.status}
+                        </div>
+                        <div className="text-[11px] text-gray-500 dark:text-gray-400">Monthly spending capacity</div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <div className={`text-sm font-semibold ${colors.textColor}`}>{clampedPct}%</div>
-                    <button onClick={onSettingsClick} title="Open settings" className="p-1 rounded hover:bg-white/10 transition-colors">
-                        <Settings className={`w-4 h-4 ${colors.textColor}`} />
+                <div className="flex items-center gap-1">
+                    <div className={`text-sm font-bold ${colors.textColor}`}>{percentage}%</div>
+                    <button onClick={onSettingsClick} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <Settings className={`w-3.5 h-3.5 text-gray-400`} />
                     </button>
                 </div>
             </div>
 
-            <div className={`w-full h-2 ${colors.progressBg} rounded-full overflow-hidden`}>
+            <div className={`w-full h-1.5 ${colors.progressBg} rounded-full overflow-hidden`}>
                 <div
-                    className={`h-2 rounded-full transition-all duration-500 ${colors.progressFill}`}
-                    style={{ width: `${clampedPct}%` }}
+                    className={`h-full rounded-full transition-all duration-700 ${colors.progressFill}`}
+                    style={{ width: `${percentage}%` }}
                 />
             </div>
 
-            <div className={`mt-2 flex items-center justify-between text-xs ${colors.textColor}`}>
-                <div>{formatCurrency(spent, currency)} spent</div>
-                <div>{budgetStatus.exceeded ? `Over by ${formatCurrency(spent - (budgetStatus.budget || 0), currency)}` : `${formatCurrency(remaining, currency)} left`}</div>
+            <div className={`mt-2 flex items-center justify-between text-[11px] font-bold ${colors.textColor}`}>
+                <div>{formatCurrency(spent, currency)} used</div>
+                <div>{budgetStatus.exceeded ? `Exceeded by ${formatCurrency(spent - (budgetStatus.budget || 0), currency)}` : `${formatCurrency(remaining, currency)} available`}</div>
             </div>
         </div>
     );

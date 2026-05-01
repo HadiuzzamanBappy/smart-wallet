@@ -361,19 +361,18 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
+              className="flex-1 px-4 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-bold uppercase tracking-widest transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveSettings}
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
             >
-              {loading && (
+              {loading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
-              Save Settings
+              ) : 'Apply Preferences'}
             </button>
           </div>
         }
@@ -443,37 +442,37 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
             </div>
           </div>
 
-          {/* Notification Settings */}
+          {/* Lifestyle Monitor Settings */}
           <div>
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Notifications
+            <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">
+              Intelligence Alerts
             </h4>
             <div className="space-y-3">
-              <label className="flex items-center space-x-3">
+              <label className="flex items-center space-x-3 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={settings.budgetAlerts}
                   onChange={(e) => setSettings(prev => ({ ...prev, budgetAlerts: e.target.checked }))}
-                  className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                  className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 bg-white dark:bg-gray-700"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Budget alerts</span>
+                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider group-hover:text-teal-500 transition-colors">Ceiling proximity alerts</span>
               </label>
-              <label className="flex items-center space-x-3">
+              <label className="flex items-center space-x-3 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={settings.notifications}
                   onChange={(e) => setSettings(prev => ({ ...prev, notifications: e.target.checked }))}
-                  className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                  className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 bg-white dark:bg-gray-700"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">General notifications</span>
+                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider group-hover:text-teal-500 transition-colors">General insights</span>
               </label>
             </div>
           </div>
 
           {/* Data Management */}
           <div>
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Data Management
+            <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">
+              Data Governance
             </h4>
             <div className="space-y-3">
               <button

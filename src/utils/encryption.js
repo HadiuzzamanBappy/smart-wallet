@@ -268,6 +268,16 @@ export const decryptUserProfile = async (profileData) => {
     decrypted.totalLoanTaken = 0; // Default for new fields
   }
 
+  // Decrypt salary manager plan if exists
+  if (decrypted.salaryPlan_encrypted) {
+    try {
+      const decryptedString = await decryptData(decrypted.salaryPlan_encrypted);
+      decrypted.salaryPlan = JSON.parse(decryptedString);
+    } catch (e) {
+      console.warn("Failed to decrypt salary plan in profile", e);
+    }
+  }
+
   return decrypted;
 };
 

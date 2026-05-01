@@ -7,7 +7,7 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000 }) 
   useEffect(() => {
     if (isVisible) {
       setShow(true);
-      
+
       const timer = setTimeout(() => {
         setShow(false);
         setTimeout(onClose, 300); // Wait for animation to complete
@@ -47,10 +47,9 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000 }) 
   };
 
   return (
-    <div 
-      className={`fixed top-4 right-4 z-50 max-w-sm w-full transform transition-all duration-300 ${
-        show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-      }`}
+    <div
+      className={`fixed top-4 right-4 z-50 max-w-sm w-full transform transition-all duration-300 ${show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+        }`}
     >
       <div className={`${getStyles()} rounded-lg p-4`}>
         <div className="flex items-start gap-3">

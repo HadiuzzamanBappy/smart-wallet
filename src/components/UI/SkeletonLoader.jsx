@@ -3,14 +3,14 @@ import React from 'react';
 /**
  * Base skeleton loading component with customizable dimensions
  */
-const Skeleton = ({ 
-  className = '', 
-  width = 'w-full', 
+const Skeleton = ({
+  className = '',
+  width = 'w-full',
   height = 'h-4',
   rounded = 'rounded',
-  animated = true 
+  animated = true
 }) => (
-  <div 
+  <div
     className={`
       bg-gray-200 dark:bg-gray-700 
       ${width} ${height} ${rounded} 
@@ -41,13 +41,13 @@ export const TransactionSkeleton = ({ count = 1, showActions = true }) => (
               <Skeleton width="w-20" height="h-4" />
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 flex-wrap">
               <Skeleton width="w-16" height="h-5" rounded="rounded-full" />
               <Skeleton width="w-12" height="h-3" />
             </div>
-            
+
             {showActions && (
               <div className="flex items-center space-x-1">
                 <Skeleton width="w-6" height="h-6" rounded="rounded" />
@@ -255,7 +255,7 @@ export const AnalyticsSkeleton = () => (
       <div className="aspect-square">
         <Skeleton width="w-full" height="h-full" rounded="rounded-lg" />
       </div>
-      
+
       {/* Legend placeholder */}
       <div className="space-y-3">
         {Array.from({ length: 5 }, (_, index) => (

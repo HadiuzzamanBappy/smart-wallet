@@ -118,15 +118,12 @@ const UserMenuDropdown = ({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        className="flex items-center gap-2 p-1.5 pr-2.5 rounded-xl bg-white dark:bg-white/[0.05] hover:bg-gray-100 dark:hover:bg-white/[0.1] border border-gray-200 dark:border-white/10 transition-all active:scale-95"
       >
-        <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+        <div className="w-7 h-7 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-lg flex items-center justify-center text-white text-[11px] font-black shadow-lg shadow-teal-500/20">
           {userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
         </div>
-        {/* <span className="text-gray-700 dark:text-gray-300 font-medium hidden sm:block">
-          {userProfile?.displayName || 'User'}
-        </span> */}
-        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
@@ -135,16 +132,17 @@ const UserMenuDropdown = ({
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20 animate-in fade-in slide-in-from-top">
-            <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+          <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 z-20 animate-in fade-in slide-in-from-top-2">
+            <div className="p-4 border-b border-gray-200 dark:border-white/10">
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-1">Account</div>
+              <p className="text-sm font-black text-gray-900 dark:text-white truncate">
                 {userProfile?.displayName || 'User'}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 truncate opacity-80">
                 {userProfile?.email}
               </p>
             </div>
-            <div className="py-2">
+            <div className="p-2">
               {menuItems.map((item, index) => {
                 const Icon = item.icon;
                 const isSignOut = item.label === 'Sign Out';
@@ -153,29 +151,25 @@ const UserMenuDropdown = ({
                     key={index}
                     onClick={() => {
                       if (isSignOut) {
-                        if (logoutLoading) return; // prevent double clicks
+                        if (logoutLoading) return;
                         item.onClick();
-                        // do not auto-close here; handleLogout will close on success
                       } else {
                         item.onClick();
                         setIsOpen(false);
                       }
                     }}
                     disabled={isSignOut && logoutLoading}
-                    className={`w-full flex items-center space-x-3 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                      item.className || 'text-gray-700 dark:text-gray-300'
-                    } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : ''}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      isSignOut 
+                        ? 'text-red-500 hover:bg-red-500/10' 
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
+                    } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : 'active:scale-[0.98]'}`}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="flex items-center gap-2">
-                      {item.label}
-                      {isSignOut && logoutLoading && (
-                        <svg className="animate-spin h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                        </svg>
-                      )}
-                    </span>
+                    <Icon className="w-4 h-4 opacity-70" />
+                    <span className="flex-1 text-left uppercase tracking-widest">{item.label}</span>
+                    {isSignOut && logoutLoading && (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    )}
                   </button>
                 );
               })}

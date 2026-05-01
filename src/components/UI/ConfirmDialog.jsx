@@ -55,7 +55,7 @@ const ConfirmDialog = ({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-in fade-in"
       onClick={handleBackdropClick}
     >
@@ -74,7 +74,7 @@ const ConfirmDialog = ({
               </p>
             </div>
           </div>
-          
+
           <div className="flex gap-3 mt-6">
             <button
               onClick={handleCancel}

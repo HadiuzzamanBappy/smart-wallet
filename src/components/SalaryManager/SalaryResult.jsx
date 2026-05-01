@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, Printer, Save, RefreshCw, Target, PiggyBank, Home, Heart as WantsIcon, Zap, TrendingUp, AlertTriangle, ShieldCheck, Activity } from 'lucide-react';
+import { Sparkles, Printer, Save, RefreshCw, Target, PiggyBank, Home, Heart as WantsIcon, Zap, TrendingUp, AlertTriangle, ShieldCheck, Activity, BarChart3, Globe, Command } from 'lucide-react';
 import { useAIAdvice } from '../../hooks/useAIAdvice';
 import Modal from '../UI/Modal';
 
@@ -48,22 +48,22 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
 
   const modalFooter = (
     <div className="flex flex-row justify-between items-center gap-3 w-full print:hidden">
-      <button onClick={onRecalculate} className="flex-1 py-2.5 px-3 bg-gray-800/40 hover:bg-gray-800 text-gray-500 hover:text-white rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all border border-gray-700 active:scale-95 flex items-center justify-center gap-2">
-        <RefreshCw className="w-3.5 h-3.5" /><span>Edit Plan</span>
+      <button onClick={onRecalculate} className="flex-1 py-2.5 px-3 bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-white/10 active:scale-95 flex items-center justify-center gap-2">
+        <RefreshCw className="w-3.5 h-3.5" /><span>Modify Parameters</span>
       </button>
       <div className="flex gap-2">
-        <button onClick={() => window.print()} className="p-2.5 bg-gray-800/40 hover:bg-gray-800 text-gray-500 rounded-xl border border-gray-700 transition-all active:scale-95">
+        <button onClick={() => window.print()} className="p-2.5 bg-white/5 hover:bg-white/10 text-gray-500 rounded-xl border border-white/10 transition-all active:scale-95">
           <Printer className="w-3.5 h-3.5" />
         </button>
-        <button onClick={() => onSave(planData, formData, currentAdvice)} className="py-2.5 px-6 bg-teal-500 hover:bg-teal-600 text-white rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all shadow-lg shadow-teal-500/20 active:scale-95 flex items-center gap-2">
-          <Save className="w-3.5 h-3.5" /><span>Save Plan</span>
+        <button onClick={() => onSave(planData, formData, currentAdvice)} className="py-2.5 px-6 bg-teal-500 hover:bg-teal-400 text-[#050b1a] rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg shadow-teal-500/20 active:scale-95 flex items-center gap-2">
+          <Save className="w-3.5 h-3.5" /><span>Commit Plan</span>
         </button>
       </div>
     </div>
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Financial Intelligence" size="xl" disableScroll={true} footer={modalFooter}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Strategic Intelligence" size="xl" disableScroll={true} footer={modalFooter}>
       <style dangerouslySetInnerHTML={{
         __html: `
         @media print {
@@ -88,10 +88,25 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
             height: auto !important;
             padding: 10mm !important;
             margin: 0 !important;
-            zoom: 0.85; /* Increased slightly for better text readability */
+            background-color: white !important;
+            zoom: 0.85;
             filter: grayscale(100%) contrast(1.2);
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+          }
+          
+          /* Force ALL nested elements to have white background and black text */
+          #salary-dashboard-print div, 
+          #salary-dashboard-print span, 
+          #salary-dashboard-print p, 
+          #salary-dashboard-print h3, 
+          #salary-dashboard-print h4 {
+            background-color: white !important;
+            color: black !important;
+            border-color: #ddd !important;
+            background-image: none !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
           }
           
           /* 2.5 Compress vertical spacing to reclaim room for text */
@@ -117,31 +132,46 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
           }
           
           /* 5. True Black & White Styling */
-          .bg-gradient-to-br, .bg-gradient-to-b, .bg-gradient-to-r { background-image: none !important; }
+          .bg-gradient-to-br, .bg-gradient-to-b, .bg-gradient-to-r, .bg-gradient-to-t, .bg-gradient-to-tr, .bg-gradient-to-tl { 
+            background-image: none !important; 
+            background-color: transparent !important;
+          }
           
-          /* Force all card backgrounds to white */
-          .bg-black\\/40, .bg-gray-900\\/40, .bg-gray-950\\/40, .bg-gray-900\\/20, 
-          .bg-teal-500\\/5, .bg-red-500\\/5, .bg-red-500\\/10, .bg-blue-500\\/10, 
-          .bg-teal-500\\/10, .bg-amber-500\\/10, .bg-gray-900\\/40 {
+          /* CRITICAL: Hide all absolute decorative overlays that cover text in print */
+          .absolute.inset-0.pointer-events-none,
+          .absolute.inset-0.bg-gradient-to-t,
+          .absolute.inset-0.bg-gradient-to-b,
+          .absolute.top-0.right-0.opacity-10 {
+            display: none !important;
+          }
+          
+          /* Force all card backgrounds to white and borders to visible black/gray */
+          [class*="bg-white/"], [class*="bg-gray-"], [class*="bg-teal-"], [class*="bg-red-"], [class*="bg-blue-"], [class*="bg-amber-"] {
             background-color: white !important;
+            color: black !important;
+            border-color: #000 !important;
+          }
+          
+          /* Specialized high-contrast for indicators */
+          .bg-teal-500, .bg-red-500, .bg-blue-500, .bg-amber-500 {
+            background-color: #333 !important; /* Dark gray for bars in print */
+          }
+          
+          .h-1, .h-1.5, .h-2 {
+            background-color: #eee !important; /* Light gray for bar backgrounds */
+            border: 1px solid #ccc !important;
           }
           
           /* Force all text and borders to black */
           #salary-dashboard-print * { 
             color: black !important; 
-            border-color: black !important; 
+            border-color: #333 !important; 
             -webkit-print-color-adjust: exact !important; 
             print-color-adjust: exact !important; 
           }
           
-          /* Fix Progress Bars for B&W */
-          .bg-gray-950, .bg-gray-900 { 
-            background-color: white !important; 
-            border: 1px solid black !important; 
-          }
-          .bg-teal-500, .bg-red-500, .bg-blue-500, .bg-amber-500, .bg-gray-800 { 
-            background-color: black !important; 
-          }
+          /* Hide decorative icons that might look messy in B&W print */
+          .Sparkles, .Globe, .Zap { opacity: 0.2 !important; }
           
           /* 6. Force Desktop Grids */
           .grid { display: grid !important; gap: 15px !important; }
@@ -156,198 +186,201 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
       <div id="salary-dashboard-print" className="h-[calc(100vh-160px)] sm:h-[80vh] text-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 overflow-y-auto scrollbar-hide px-4 sm:px-6 pb-12">
 
-          {/* --- TOP HIGH-DENSITY STATS GRID --- */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 py-6">
-            {/* Score Card */}
-            <div className="bg-gray-900/40 border border-gray-800/40 p-5 rounded-3xl flex flex-col items-center justify-center text-center">
-              <div className={`mb-2 px-3 py-0.5 rounded-full border ${status.bg} ${status.border} ${status.color} text-[10px] font-black uppercase tracking-widest`}>
+          {/* --- TOP HIGH-DENSITY METRICS --- */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 py-6">
+            {/* Health Score */}
+            <div className="bg-white/[0.03] border border-white/10 p-5 rounded-3xl flex flex-col items-center justify-center relative overflow-hidden">
+              <div className={`mb-2 px-3 py-0.5 rounded-full ${status.bg} ${status.color} text-[9px] font-black uppercase tracking-widest`}>
                 {status.label}
               </div>
-              <div className="text-5xl font-mono font-black text-white">
-                {healthScore}<span className="text-base text-gray-700">/100</span>
+              <div className="text-4xl font-black text-white tracking-tighter">
+                {healthScore}<span className="text-sm text-gray-600 ml-1">/100</span>
               </div>
-              <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-1">Health Score</div>
+              <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mt-1">Health Index</div>
+              <div className="absolute inset-0 bg-gradient-to-t from-teal-500/5 to-transparent pointer-events-none" />
             </div>
 
-            {/* Income & Surplus Card */}
-            <div className="bg-gray-900/40 border border-gray-800/40 p-5 rounded-3xl flex flex-col items-center justify-center text-center relative overflow-hidden group">
-              <div className="text-3xl font-mono font-black text-sky-400">
+            {/* Monthly Surplus */}
+            <div className="bg-white/[0.03] border border-white/10 p-5 rounded-3xl flex flex-col items-center justify-center text-center">
+              <div className={`text-2xl font-black ${isDeficit ? 'text-red-400' : 'text-teal-400'} tracking-tight`}>
                 {isDeficit ? '-' : '+'}{c(Math.abs(net))}
               </div>
-              <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-1">Monthly Surplus</div>
-              <div className="mt-2 text-[11px] font-mono text-gray-400">Income: {c(planData.totalIncome)}</div>
+              <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mt-1">Tactical Surplus</div>
+              <div className="mt-2 text-[10px] font-bold text-gray-600 font-mono">NET: {c(planData.totalIncome)}</div>
             </div>
 
-            {/* Daily Limit Card */}
-            <div className="bg-gradient-to-br from-teal-500/10 to-blue-500/10 border border-teal-500/20 p-5 rounded-3xl flex flex-col items-center justify-center text-center">
-              <div className="flex items-center gap-2 mb-1">
-                <Zap className="w-3.5 h-3.5 text-teal-400 fill-teal-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-teal-400">Tactical Limit</span>
+            {/* Daily Ceiling */}
+            <div className="bg-white/[0.03] border border-white/10 p-5 rounded-3xl flex flex-col items-center justify-center text-center">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Zap className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-yellow-500">Daily Ops</span>
               </div>
-              <div className="text-4xl font-mono font-black text-white">{c(dailyLimit)}</div>
-              <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-1">Per Day Allowance</div>
+              <div className="text-3xl font-black text-white tracking-tight">{c(dailyLimit)}</div>
+              <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mt-1">Operational Ceiling</div>
             </div>
 
-            {/* Savings Rate Card */}
-            <div className="bg-gray-900/40 border border-gray-800/40 p-5 rounded-3xl flex flex-col items-center justify-center text-center">
-              <div className="text-3xl font-mono font-black text-emerald-400">{savingsPctActual}%</div>
-              <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-1">Actual Savings Rate</div>
-              <div className="mt-2 flex items-center gap-2">
-                <div className="w-20 h-1.5 bg-gray-950 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: `${Math.min(savingsPctActual * 5, 100)}%` }} />
+            {/* Savings Rate */}
+            <div className="bg-white/[0.03] border border-white/10 p-5 rounded-3xl flex flex-col items-center justify-center text-center">
+              <div className="text-3xl font-black text-blue-400 tracking-tight">{savingsPctActual}%</div>
+              <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mt-1">Capital Retention</div>
+              <div className="mt-3 w-full px-4">
+                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" style={{ width: `${Math.min(savingsPctActual * 5, 100)}%` }} />
                 </div>
-                <span className="text-[10px] text-gray-600 font-bold">VS 20%</span>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* --- LEFT COLUMN: BENCHMARKS & GOALS (8 cols) --- */}
+            {/* --- LEFT: ALLOCATION MATRIX --- */}
             <div className="lg:col-span-8 space-y-6">
-
-              {/* 50/30/20 BENCHMARKS COMPACT CARD */}
-              <div className="bg-gray-950/40 border border-gray-800/60 rounded-[2rem] p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <Activity className="w-4 h-4 text-gray-500" />
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Allocation Benchmarks</h3>
+              <div className="bg-white/[0.02] border border-white/10 rounded-[2rem] p-8">
+                <div className="flex items-center gap-3 mb-8">
+                  <Activity className="w-4 h-4 text-teal-500" />
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Allocation Matrix</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   {/* Needs */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex justify-between items-end">
-                      <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Needs</div>
-                      <div className="text-2xl font-mono font-bold text-white">{needsPct}%</div>
+                      <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Fixed Ops</div>
+                      <div className="text-2xl font-black text-white">{needsPct}%</div>
                     </div>
-                    <div className="h-2 bg-gray-900 rounded-full overflow-hidden">
-                      <div className={`h-full ${needsPct > 50 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]' : 'bg-gray-700'}`} style={{ width: `${Math.min(needsPct, 100)}%` }} />
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className={`h-full ${needsPct > 50 ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.3)]'}`} style={{ width: `${Math.min(needsPct, 100)}%` }} />
                     </div>
-                    <div className="flex justify-between text-[10px] font-medium text-gray-600 font-mono">
+                    <div className="flex justify-between text-[9px] font-black text-gray-600 uppercase tracking-widest">
                       <span>{c(totalNeeds)}</span>
-                      <span>Target: 50%</span>
+                      <span>MAX 50%</span>
                     </div>
                   </div>
 
                   {/* Wants */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex justify-between items-end">
-                      <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Wants</div>
-                      <div className="text-2xl font-mono font-bold text-white">{wantsPctActual}%</div>
+                      <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Lifestyle</div>
+                      <div className="text-2xl font-black text-white">{wantsPctActual}%</div>
                     </div>
-                    <div className="h-2 bg-gray-900 rounded-full overflow-hidden">
-                      <div className={`h-full ${wantsPctActual > 30 ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]' : 'bg-gray-700'}`} style={{ width: `${Math.min(wantsPctActual, 100)}%` }} />
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className={`h-full ${wantsPctActual > 30 ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'}`} style={{ width: `${Math.min(wantsPctActual, 100)}%` }} />
                     </div>
-                    <div className="flex justify-between text-[10px] font-medium text-gray-600 font-mono">
+                    <div className="flex justify-between text-[9px] font-black text-gray-600 uppercase tracking-widest">
                       <span>{c(totalWants)}</span>
-                      <span>Target: 30%</span>
+                      <span>MAX 30%</span>
                     </div>
                   </div>
 
                   {/* Savings */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex justify-between items-end">
-                      <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Savings</div>
-                      <div className="text-2xl font-mono font-bold text-teal-400">{savingsPctActual}%</div>
+                      <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Retention</div>
+                      <div className="text-2xl font-black text-teal-400">{savingsPctActual}%</div>
                     </div>
-                    <div className="h-2 bg-gray-900 rounded-full overflow-hidden">
-                      <div className={`h-full ${savingsPctActual >= 20 ? 'bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.4)]' : 'bg-amber-500'}`} style={{ width: `${Math.min(savingsPctActual, 100)}%` }} />
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className={`h-full ${savingsPctActual >= 20 ? 'bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.5)]' : 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]'}`} style={{ width: `${Math.min(savingsPctActual, 100)}%` }} />
                     </div>
-                    <div className="flex justify-between text-[10px] font-medium text-gray-600 font-mono">
+                    <div className="flex justify-between text-[9px] font-black text-gray-600 uppercase tracking-widest">
                       <span>{c(totalSavings)}</span>
-                      <span>Target: 20%</span>
+                      <span>MIN 20%</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* TARGET BREAKDOWN (Compact Version) */}
-              <div className="bg-gray-950/40 border border-gray-800/60 rounded-[2rem] p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <Target className="w-4 h-4 text-gray-500" />
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Purchase Strategy</h3>
+              {/* PURCHASE OBJECTIVE */}
+              <div className="bg-white/[0.02] border border-white/10 rounded-[2rem] p-8">
+                <div className="flex items-center gap-3 mb-8">
+                  <Target className="w-4 h-4 text-teal-500" />
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Capital Objective</h3>
                 </div>
                 {hasGoal ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-end">
-                        <div>
-                          <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1">Goal: {c(planData.goal)}</div>
-                          <div className="text-3xl font-mono font-black text-white">{c(planData.monthlyForGoal)}<span className="text-xs text-gray-500 ml-1">/mo</span></div>
+                    <div>
+                      <div className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-1">Target Asset: {c(planData.goal)}</div>
+                      <div className="text-4xl font-black text-white tracking-tighter">{c(planData.monthlyForGoal)}<span className="text-xs text-gray-600 ml-1">/mo</span></div>
+                      <div className="mt-4 flex items-center gap-4">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-black text-gray-600 uppercase">Timeline</span>
+                          <span className="text-sm font-bold text-teal-400">{planData.goalMonths} Mo</span>
                         </div>
-                        <div className="text-right">
-                          <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1">Timeline</div>
-                          <div className="text-base font-bold text-white">{planData.goalMonths} Months</div>
+                        <div className="w-px h-8 bg-white/10" />
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-black text-gray-600 uppercase">Priority</span>
+                          <span className="text-sm font-bold text-white uppercase tracking-tighter">Strategic</span>
                         </div>
-                      </div>
-                      <div className="h-2 bg-gray-900 rounded-full overflow-hidden p-0.5">
-                        <div className="h-full bg-teal-500 rounded-full shadow-[0_0_12px_rgba(20,184,166,0.3)]" style={{ width: '65%' }} />
                       </div>
                     </div>
-                    <div className={`p-4 rounded-2xl border ${planData.canAffordGoal ? 'bg-teal-500/5 border-teal-500/10 text-teal-400' : 'bg-red-500/5 border-red-500/10 text-red-400'}`}>
-                      <div className="flex items-center gap-2 mb-1.5">
-                        {planData.canAffordGoal ? <ShieldCheck className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
-                        <span className="text-[9px] font-black uppercase tracking-widest">{planData.canAffordGoal ? 'Goal is Viable' : 'Funding Deficit'}</span>
+                    <div className={`p-6 rounded-2xl border ${planData.canAffordGoal ? 'bg-teal-500/5 border-teal-500/10' : 'bg-red-500/5 border-red-500/10'}`}>
+                      <div className="flex items-center gap-2 mb-3">
+                        {planData.canAffordGoal ? <ShieldCheck className="w-4 h-4 text-teal-500" /> : <AlertTriangle className="w-4 h-4 text-red-500" />}
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${planData.canAffordGoal ? 'text-teal-400' : 'text-red-400'}`}>
+                          {planData.canAffordGoal ? 'Objective Viable' : 'Strategic Deficit'}
+                        </span>
                       </div>
-                      <p className="text-[11px] font-medium leading-relaxed opacity-80">
+                      <p className="text-[11px] font-medium text-gray-500 leading-relaxed">
                         {planData.canAffordGoal
-                          ? `Allocation confirmed. You have ${c(planData.actualSavings - planData.monthlyForGoal)}/mo surplus above this target.`
-                          : `You are short by ${c(planData.monthlyForGoal - planData.actualSavings)}/mo. Reallocate from your Tactical Allowance.`}
+                          ? `Allocation protocols confirmed. You have ${c(planData.actualSavings - planData.monthlyForGoal)}/mo surplus above this target.`
+                          : `Funding shortfall detected: ${c(planData.monthlyForGoal - planData.actualSavings)}/mo required. Adjust tactical allowance.`}
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="py-6 text-center text-gray-700 font-bold uppercase tracking-widest text-[9px]">No specific purchase target defined.</div>
+                  <div className="py-4 text-center text-gray-700 font-black uppercase tracking-widest text-[9px]">No strategic objective defined.</div>
                 )}
               </div>
             </div>
 
-            {/* --- RIGHT COLUMN: AUDIT (4 cols) --- */}
+            {/* --- RIGHT: AUDIT --- */}
             <div className="lg:col-span-4 space-y-6">
-              {/* SYSTEM SUGGESTIONS (Compact) */}
-              <div className="bg-gray-900/20 border border-gray-800/40 rounded-[2rem] p-6 h-full">
-                <div className="flex items-center gap-3 mb-5">
-                  <AlertTriangle className="w-4 h-4 text-gray-600" />
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600">System Audit</h3>
+              <div className="bg-white/[0.02] border border-white/10 rounded-[2rem] p-6 h-full">
+                <div className="flex items-center gap-3 mb-4">
+                  <Command className="w-4 h-4 text-teal-500" />
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">System Audit</h3>
                 </div>
-                <div className="space-y-3.5">
+                <div className="space-y-2">
                   {planData.flags && planData.flags.length > 0 ? (
                     planData.flags.map((f, i) => (
-                      <div key={i} className="flex gap-3 items-start group">
-                        <div className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${f.type === 'danger' ? 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]' : f.type === 'warn' ? 'bg-amber-500' : 'bg-teal-500'}`} />
-                        <p className="text-[10px] text-gray-500 font-bold leading-tight group-hover:text-gray-400 transition-colors">
+                      <div key={i} className="flex gap-3 items-start group p-2 rounded-xl hover:bg-white/[0.02] transition-colors border border-transparent hover:border-white/5">
+                        <div className={`mt-1.5 h-1 w-1 rounded-full shrink-0 ${f.type === 'danger' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' : f.type === 'warn' ? 'bg-yellow-500' : 'bg-teal-500'}`} />
+                        <p className="text-[9px] text-gray-500 font-bold leading-normal uppercase tracking-tight group-hover:text-gray-300 transition-colors">
                           {f.msg}
                         </p>
                       </div>
                     ))
                   ) : (
-                    <div className="text-[9px] text-gray-700 font-bold uppercase tracking-widest">No issues detected.</div>
+                    <div className="text-[9px] text-gray-700 font-black uppercase tracking-widest text-center py-8">All systems nominal.</div>
                   )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* --- BOTTOM ROW: AI INTELLIGENCE (FULL WIDTH) --- */}
+          {/* --- AI INTELLIGENCE --- */}
           <div className="mt-6">
-            <div className="bg-gradient-to-r from-gray-900/40 to-transparent border border-gray-800/40 rounded-[2rem] p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-5">
+            <div className="bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 rounded-[2rem] p-8 relative overflow-hidden">
+              <div className="flex items-center gap-3 mb-6">
                 <Sparkles className="w-4 h-4 text-teal-400" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-400">Nexus AI Intelligence</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-400">Strategic Advisory</h3>
               </div>
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-12 text-teal-400 space-y-3">
-                  <RefreshCw className="w-6 h-6 animate-spin opacity-50" />
-                  <span className="text-[8px] font-black uppercase tracking-[0.3em] animate-pulse">Processing...</span>
+                <div className="flex flex-col items-center justify-center py-12 text-teal-500 space-y-4">
+                  <RefreshCw className="w-6 h-6 animate-spin opacity-40" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.3em] animate-pulse">Analyzing Data Streams...</span>
                 </div>
               ) : (
-                <div className="text-[11px] sm:text-xs text-gray-400 leading-relaxed whitespace-pre-wrap font-medium italic opacity-80">
-                  {currentAdvice || "No analysis available."}
+                <div className="text-xs text-gray-400 leading-[1.8] font-medium italic opacity-90 max-w-4xl">
+                  {currentAdvice || "Neural analysis not available."}
                 </div>
               )}
+              <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                <Globe className="w-24 h-24 text-teal-500" />
+              </div>
             </div>
           </div>
 
           <div className="mt-12 text-center print-hide pb-8">
-            <p className="text-[8px] text-gray-800 font-black uppercase tracking-[0.6em]">Nexus Dashboard v3.0 · High Fidelity Reporting</p>
+            <p className="text-[8px] text-gray-700 font-black uppercase tracking-[0.5em]">Smart Wallet v3.0 · Strategic Planning Report</p>
           </div>
         </div>
       </div>

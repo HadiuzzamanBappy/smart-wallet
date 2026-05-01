@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit3, Save, X } from 'lucide-react';
+import { Edit3, Save, X, Loader2 } from 'lucide-react';
 import Modal from '../UI/Modal';
 import { updateTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
@@ -45,7 +45,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!editData.amount || !editData.description || !transaction) return;
-    
+
     setLoading(true);
     try {
       // Create update data with proper date handling
@@ -56,9 +56,9 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
         userId: user.uid,
         updatedAt: new Date() // Add timestamp for when this edit happened
       };
-      
+
       const result = await updateTransaction(transaction.id, updateData);
-      
+
       if (result.success) {
         await refreshUserProfile();
         onSuccess?.();
@@ -86,10 +86,10 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
   const formId = 'edit-transaction-form';
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      title="Edit Transaction" 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit Transaction"
       size="md"
       footer={
         <div className="flex gap-3 w-full">
@@ -97,7 +97,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="flex-1 h-11 flex items-center justify-center gap-2 px-4 py-2 text-gray-500 dark:text-gray-400 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
           >
             <X className="w-4 h-4" />
             <span>Cancel</span>
@@ -106,10 +106,10 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             type="submit"
             form={formId}
             disabled={loading || !editData.amount || !editData.description}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 h-11 flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-teal-500/20 active:scale-[0.98]"
           >
             {loading ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Save className="w-4 h-4" />
             )}
@@ -121,14 +121,14 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
       <form id={formId} onSubmit={handleSubmit} className="space-y-4">
         {/* Transaction Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Type
+          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
+            Transaction Type
           </label>
           <select
             name="type"
             value={editData.type}
             onChange={handleInputChange}
-            className="input-field"
+            className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
           >
             <option value="expense">Expense</option>
             <option value="income">Income</option>
@@ -137,10 +137,10 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
               Amount (BDT)
             </label>
             <input
@@ -148,17 +148,15 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
               name="amount"
               value={editData.amount}
               onChange={handleInputChange}
-              className="input-field"
-              placeholder="0"
-              min="0"
-              step="0.01"
+              className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+              placeholder="0.00"
               required
             />
           </div>
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
               Date
             </label>
             <input
@@ -166,7 +164,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
               name="date"
               value={editData.date}
               onChange={handleInputChange}
-              className="input-field"
+              className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
               required
             />
           </div>
@@ -174,7 +172,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
             Description
           </label>
           <input
@@ -182,22 +180,22 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             name="description"
             value={editData.description}
             onChange={handleInputChange}
-            className="input-field"
-            placeholder="What was this transaction for?"
+            className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+            placeholder="What was this for?"
             required
           />
         </div>
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
             Category
           </label>
           <select
             name="category"
             value={editData.category}
             onChange={handleInputChange}
-            className="input-field"
+            className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
           >
             {categories.map(category => (
               <option key={category.value} value={category.value}>
@@ -206,9 +204,6 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             ))}
           </select>
         </div>
-
-        {/* Original message display removed for privacy — we do not store or show user-entered messages */}
-
       </form>
     </Modal>
   );

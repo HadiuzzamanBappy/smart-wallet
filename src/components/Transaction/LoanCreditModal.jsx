@@ -20,7 +20,9 @@ import {
     CheckCircle,
     AlertCircle,
     X,
-    Edit3
+    Edit3,
+    Plus,
+    Loader2
 } from 'lucide-react';
 import { APP_EVENTS } from '../../config/constants';
 
@@ -243,48 +245,50 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         if (!showPaymentModal) return null;
 
         return (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold">
-                            {isLoans ? 'Record Loan Repayment' : 'Record Credit Collection'}
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in">
+                <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-white/10">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">
+                            {isLoans ? 'Record Repayment' : 'Record Collection'}
                         </h3>
                         <button
                             onClick={() => setShowPaymentModal(null)}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                            className="p-2 hover:bg-white/10 rounded-xl transition-colors"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-5 h-5 text-gray-500" />
                         </button>
                     </div>
 
                     <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Original Amount
-                            </label>
-                            <div className="text-lg font-semibold text-gray-600 dark:text-gray-300">
-                                {formatCurrencyWithUser(showPaymentModal.amount, userProfile)}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">
+                                    Original
+                                </label>
+                                <div className="text-sm font-black text-gray-700 dark:text-gray-300">
+                                    {formatCurrencyWithUser(showPaymentModal.amount, userProfile)}
+                                </div>
+                            </div>
+
+                            <div className="bg-orange-500/5 p-3 rounded-2xl border border-orange-500/10">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-orange-500 mb-1">
+                                    Remaining
+                                </label>
+                                <div className="text-sm font-black text-orange-500">
+                                    {formatCurrencyWithUser(showPaymentModal.remainingAmount, userProfile)}
+                                </div>
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Remaining Amount
-                            </label>
-                            <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
-                                {formatCurrencyWithUser(showPaymentModal.remainingAmount, userProfile)}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                {isLoans ? 'Repayment' : 'Collection'} Amount *
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
+                                {isLoans ? 'Repayment' : 'Collection'} Amount
                             </label>
                             <input
                                 ref={paymentAmountRef}
                                 type="number"
-                                className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-                                placeholder="Enter amount"
+                                className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+                                placeholder="0.00"
                                 defaultValue={showPaymentModal.remainingAmount}
                                 max={showPaymentModal.remainingAmount}
                                 step="0.01"
@@ -293,31 +297,31 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Description (optional)
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
+                                Notes (Optional)
                             </label>
                             <input
                                 type="text"
                                 value={paymentDescription}
                                 onChange={(e) => setPaymentDescription(e.target.value)}
-                                className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-                                placeholder="Additional notes"
+                                className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+                                placeholder="Any additional details?"
                             />
                         </div>
 
                         <div className="flex gap-3 pt-4">
                             <button
                                 onClick={() => setShowPaymentModal(null)}
-                                className="flex-1 px-4 py-2 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                                className="flex-1 h-12 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handlePaymentSubmit}
                                 disabled={!paymentInputHasValue || processing[showPaymentModal.id]}
-                                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-[2] h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
                             >
-                                {processing[showPaymentModal.id] && <LoadingSpinner size="sm" />}
+                                {processing[showPaymentModal.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                                 Record {isLoans ? 'Repayment' : 'Collection'}
                             </button>
                         </div>
@@ -331,74 +335,74 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         if (!showAdjustmentModal) return null;
 
         return (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold">
-                            Adjust {isLoans ? 'Loan' : 'Credit'} Amount
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in">
+                <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-white/10">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">
+                            Adjust {isLoans ? 'Loan' : 'Credit'}
                         </h3>
                         <button
                             onClick={() => setShowAdjustmentModal(null)}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                            className="p-2 hover:bg-white/10 rounded-xl transition-colors"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-5 h-5 text-gray-500" />
                         </button>
                     </div>
 
                     <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Current Amount
+                        <div className="bg-white/5 p-3 rounded-2xl border border-white/5 mb-4">
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">
+                                Current Balance
                             </label>
-                            <div className="text-lg font-semibold text-gray-600 dark:text-gray-300">
+                            <div className="text-lg font-black text-gray-700 dark:text-gray-300">
                                 {formatCurrencyWithUser(showAdjustmentModal.amount, userProfile)}
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Adjustment Amount *
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
+                                Adjustment Amount
                             </label>
                             <input
                                 ref={adjustmentAmountRef}
                                 type="number"
-                                className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-                                placeholder="Enter amount (+ to increase, - to decrease)"
+                                className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+                                placeholder="+/- 0.00"
                                 step="0.01"
                                 onInput={(e) => setAdjustmentInputHasValue(String(e.target.value).trim() !== '')}
                             />
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Use positive numbers to increase, negative to decrease
+                            <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 px-1">
+                                + for increase, - for decrease
                             </p>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Reason (optional)
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
+                                Reason
                             </label>
                             <input
                                 type="text"
                                 value={adjustmentReason}
                                 onChange={(e) => setAdjustmentReason(e.target.value)}
-                                className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-                                placeholder="Why are you adjusting this amount?"
+                                className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+                                placeholder="Why this adjustment?"
                             />
                         </div>
 
                         <div className="flex gap-3 pt-4">
                             <button
                                 onClick={() => setShowAdjustmentModal(null)}
-                                className="flex-1 px-4 py-2 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                                className="flex-1 h-12 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleAdjustmentSubmit}
                                 disabled={!adjustmentInputHasValue || processing[showAdjustmentModal.id]}
-                                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-[2] h-12 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 active:scale-[0.98]"
                             >
-                                {processing[showAdjustmentModal.id] && <LoadingSpinner size="sm" />}
-                                Adjust Amount
+                                {processing[showAdjustmentModal.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit3 className="w-4 h-4" />}
+                                Apply Adjustment
                             </button>
                         </div>
                     </div>
@@ -409,45 +413,47 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
 
     return (
         <>
-            <Modal isOpen={open} onClose={onClose} title={title}>
-                {/* Header totals summary with toggle */}
-                <div className="mb-4">
+            <Modal isOpen={open} onClose={onClose} title={title} size="lg" disableScroll={true}>
+                <div className="flex flex-col h-full p-4 sm:p-5">
+                    {/* Header totals summary with toggle */}
+                    <div className="mb-4 flex-shrink-0">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex items-center gap-3 flex-wrap">
-                            <div className="text-sm text-gray-600 dark:text-gray-300 truncate">Total: <span className="font-semibold ml-1">{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</span></div>
-                            <div className="text-sm text-orange-600 dark:text-orange-400 truncate">Due: <span className="font-semibold ml-1">{formatCurrencyWithUser(totalRemaining, userProfile)}</span></div>
+                            <div className="bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                                <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-0.5">Total</div>
+                                <div className="text-sm font-black text-gray-900 dark:text-white">{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</div>
+                            </div>
+                            <div className="bg-orange-500/10 px-3 py-2 rounded-xl border border-orange-500/20">
+                                <div className="text-[9px] font-black uppercase tracking-widest text-orange-500 mb-0.5">Due</div>
+                                <div className="text-sm font-black text-orange-600 dark:text-orange-400">{formatCurrencyWithUser(totalRemaining, userProfile)}</div>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                            {/* If there are fully paid items offer a toggle group, otherwise show a simple count */}
                             {hasFullyPaid ? (
-                                <div className="inline-flex items-center rounded-md bg-gray-100 dark:bg-gray-800 p-1">
+                                <div className="inline-flex items-center rounded-2xl bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 p-1">
                                     <button
                                         type="button"
                                         onClick={() => setShowAllItems(false)}
-                                        aria-pressed={!showAllItems}
-                                        className={`flex items-center gap-2 px-3 py-1 rounded-md text-xs transition ${!showAllItems ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
-                                        title="Show unpaid only"
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!showAllItems ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                                     >
-                                        <User className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Unpaid</span>
-                                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full bg-white/30 dark:bg-gray-700 text-xs">{unpaidCount}</span>
+                                        <User className="w-3 h-3" />
+                                        <span>Unpaid</span>
+                                        <span className={`ml-1 px-1.5 py-0.5 rounded-lg text-[9px] ${!showAllItems ? 'bg-teal-500/10' : 'bg-gray-500/10'}`}>{unpaidCount}</span>
                                     </button>
 
                                     <button
                                         type="button"
                                         onClick={() => setShowAllItems(true)}
-                                        aria-pressed={showAllItems}
-                                        className={`flex items-center gap-2 px-3 py-1 rounded-md text-xs transition ${showAllItems ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
-                                        title="Show fully paid/collected items"
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${showAllItems ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                                     >
-                                        <CheckCircle className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Paid</span>
-                                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full bg-white/30 dark:bg-gray-700 text-xs">{paidCount}</span>
+                                        <CheckCircle className="w-3 h-3" />
+                                        <span>Paid</span>
+                                        <span className={`ml-1 px-1.5 py-0.5 rounded-lg text-[9px] ${showAllItems ? 'bg-teal-500/10' : 'bg-gray-500/10'}`}>{paidCount}</span>
                                     </button>
                                 </div>
                             ) : (
-                                <span className="text-xs inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 min-w-[44px] justify-center">{unpaidCount}</span>
+                                <span className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-500">{unpaidCount} ACTIVE</span>
                             )}
                         </div>
                     </div>
@@ -457,36 +463,36 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                         <LoadingSpinner />
                     </div>
                 ) : displayedItems.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                        <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>{showAllItems ? emptyMessage : `No ${isLoans ? 'loans' : 'credits'} match the filter. Try toggling 'Show all'.`}</p>
+                    <div className="text-center py-12 text-gray-500 bg-white/[0.02] rounded-2xl border border-dashed border-white/10">
+                        <AlertCircle className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-50">{showAllItems ? emptyMessage : `No active ${isLoans ? 'loans' : 'credits'}`}</p>
                     </div>
                 ) : (
-                    <div className="space-y-4 overflow-y-auto max-h-100 sm:max-h-96 min-h-0">
+                    <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent space-y-3">
                         {displayedItems.map((item) => (
                             <div
                                 key={item.id}
-                                className="border rounded-lg p-4 dark:border-gray-700"
+                                className="relative group border border-white/10 rounded-2xl p-3 dark:bg-white/[0.02] hover:bg-white/[0.04] transition-all overflow-hidden"
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-start gap-3 flex-1">
-                                        <div className={`p-2 rounded-lg ${isLoans
-                                            ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
-                                            : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                                        <div className={`p-2 rounded-xl shrink-0 ${isLoans
+                                            ? 'bg-red-500/10 text-red-500'
+                                            : 'bg-emerald-500/10 text-emerald-500'
                                             }`}>
-                                            {isLoans ? <CreditCard className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
+                                            {isLoans ? <CreditCard className="w-4 h-4" /> : <DollarSign className="w-4 h-4" />}
                                         </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">
                                                 {item.description}
                                             </h4>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-4 mt-1">
+                                            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide flex items-center gap-3 mt-0.5">
                                                 <span className="flex items-center gap-1">
-                                                    <Calendar className="w-4 h-4" />
+                                                    <Calendar className="w-3 h-3" />
                                                     {formatDate(item.date)}
                                                 </span>
                                                 {item.category && (
-                                                    <span className="capitalize">{item.category}</span>
+                                                    <span className="opacity-60">{item.category}</span>
                                                 )}
                                             </div>
                                         </div>
@@ -495,66 +501,43 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                         <button
                                             onClick={() => handleAdjust(item)}
                                             disabled={processing[item.id]}
-                                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50"
+                                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
                                             title="Adjust amount"
                                         >
-                                            <Edit3 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                            <Edit3 className="w-3.5 h-3.5 text-gray-500" />
                                         </button>
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                            Original Amount
-                                        </div>
-                                        <div className="text-lg font-semibold">
+                                <div className="grid grid-cols-2 gap-3 mb-3">
+                                    <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+                                        <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-0.5">Original</div>
+                                        <div className="text-sm font-black text-gray-700 dark:text-gray-300">
                                             {formatCurrencyWithUser(item.amount, userProfile)}
                                         </div>
                                     </div>
-                                    <div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                            Remaining
-                                        </div>
-                                        <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
+                                    <div className="bg-orange-500/5 p-2 rounded-xl border border-orange-500/10">
+                                        <div className="text-[9px] text-orange-500 uppercase font-black tracking-widest mb-0.5">Remaining</div>
+                                        <div className="text-sm font-black text-orange-500">
                                             {formatCurrencyWithUser(item.remainingAmount, userProfile)}
                                         </div>
                                     </div>
                                 </div>
 
-                                {item.paidAmount > 0 && (
-                                    <div className="mb-4">
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                            {isLoans ? 'Paid So Far' : 'Collected So Far'}
-                                        </div>
-                                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                                            {formatCurrencyWithUser(item.paidAmount, userProfile)}
-                                            {item.lastPaymentDate && (
-                                                <span className="text-xs text-gray-400 ml-2">
-                                                    (Last: {formatDate(item.lastPaymentDate)})
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
                                 {item.adjustmentHistory && item.adjustmentHistory.length > 0 && (
-                                    <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/10 rounded-md border border-purple-200 dark:border-purple-800">
-                                        <div className="text-xs font-medium text-purple-700 dark:text-purple-300 uppercase tracking-wide mb-2">
-                                            Adjustment History
+                                    <div className="mb-3 p-2 bg-purple-500/5 dark:bg-purple-900/10 rounded-xl border border-purple-500/10">
+                                        <div className="text-[9px] font-black text-purple-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                            <div className="w-1 h-1 rounded-full bg-purple-500" />
+                                            History
                                         </div>
-                                        <div className="space-y-1.5">
-                                            {item.adjustmentHistory.map((adj, idx) => {
-                                                const adjustDate = adj.date ? new Date(adj.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date';
+                                        <div className="space-y-1">
+                                            {item.adjustmentHistory.slice(-2).map((adj, idx) => {
                                                 const isIncrease = adj.amount > 0;
                                                 return (
-                                                    <div key={idx} className="text-xs text-gray-600 dark:text-gray-300 flex items-start gap-2">
-                                                        <span className={`font-medium ${isIncrease ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                                    <div key={idx} className="text-[10px] text-gray-500 flex items-center justify-between">
+                                                        <span className="truncate max-w-[70%]">{adj.reason || (isIncrease ? 'Increase' : 'Decrease')}</span>
+                                                        <span className={`font-bold ${isIncrease ? 'text-emerald-500' : 'text-red-500'}`}>
                                                             {isIncrease ? '+' : ''}{formatCurrencyWithUser(adj.amount, userProfile)}
-                                                        </span>
-                                                        <span className="flex-1">
-                                                            {adj.reason || (isIncrease ? 'Amount increased' : 'Amount decreased')}
-                                                            <span className="text-gray-400 dark:text-gray-500"> on {adjustDate}</span>
                                                         </span>
                                                     </div>
                                                 );
@@ -566,27 +549,26 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                                 <button
                                     onClick={() => handleMarkAsPaid(item)}
                                     disabled={processing[item.id] || item.remainingAmount <= 0}
-                                    className={`w-full px-4 py-2 rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${item.remainingAmount <= 0
-                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700'
+                                    className={`w-full h-10 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${item.remainingAmount <= 0
+                                        ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/20'
                                         : isLoans
-                                            ? 'bg-red-600 text-white hover:bg-red-700'
-                                            : 'bg-green-600 text-white hover:bg-green-700'
+                                            ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20'
+                                            : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
                                         }`}
                                 >
-                                    {processing[item.id] && <LoadingSpinner size="sm" />}
-                                    {item.remainingAmount <= 0 ? (
-                                        <>
-                                            <CheckCircle className="w-4 h-4" />
-                                            Fully {isLoans ? 'Repaid' : 'Collected'}
-                                        </>
-                                    ) : (
-                                        `Mark as ${isLoans ? 'Repaid' : 'Collected'}`
+                                    {processing[item.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                        item.remainingAmount <= 0 ? <CheckCircle className="w-4 h-4" /> : <Plus className="w-4 h-4" />
                                     )}
+                                    {item.remainingAmount <= 0 ? `Fully ${isLoans ? 'Repaid' : 'Collected'}` : `Record ${isLoans ? 'Repayment' : 'Collection'}`}
                                 </button>
+
+                                {/* Subtle decorative background gradient */}
+                                <div className={`absolute -bottom-6 -right-6 w-16 h-16 rounded-full blur-3xl opacity-10 ${isLoans ? 'bg-red-500' : 'bg-emerald-500'}`} />
                             </div>
                         ))}
                     </div>
                 )}
+                </div>
             </Modal>
 
             <PaymentModal />

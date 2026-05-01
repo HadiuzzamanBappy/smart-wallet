@@ -19,7 +19,8 @@ import {
   encryptTransactionData,
   decryptTransactions,
   encryptUserProfile,
-  decryptUserProfile
+  decryptUserProfile,
+  encryptData
 } from '../utils/encryption';
 import {
   normalizeDateToTimestamp,
@@ -36,6 +37,7 @@ import {
   normalizeLoanCreditNumbers
 } from '../utils/transactionHelpers';
 import { APP_EVENTS } from '../config/constants';
+import { deleteSalaryPlan } from './salaryService';
 
 /**
  * Add a new transaction to the user's account
@@ -644,6 +646,13 @@ export const deleteAllUserData = async (userId) => {
       console.warn('Error running reconciliation after deleteAllUserData:', e?.message || e);
     }
 
+    // Also erase salary manager plan
+    try {
+      await deleteSalaryPlan(userId);
+    } catch (e) {
+      console.warn('Failed to delete salary plan during mass erasure:', e?.message);
+    }
+
     return { success: true };
   } catch (error) {
     console.error('Error deleting all user data:', error);
@@ -1125,10 +1134,20 @@ export const importUserData = async (userId, data, options = { preserveIds: fals
         updatedAt: Timestamp.now()
       };
 
+      // Handle salary plan restoration
+      if (profile.salaryPlan) {
+        try {
+          const encryptedSalary = await encryptData(JSON.stringify(profile.salaryPlan));
+          updatable.salaryPlan_encrypted = encryptedSalary;
+        } catch (e) {
+          console.warn("Failed to re-encrypt salary plan during import", e);
+        }
+      }
+
       // Remove undefined keys so updateDoc doesn't set them
       Object.keys(updatable).forEach(k => updatable[k] === undefined && delete updatable[k]);
 
-      await updateDoc(userRef, updatable);
+      await setDoc(userRef, updatable, { merge: true });
     }
 
     // Attach importSourceTag to result so caller can undo later if needed

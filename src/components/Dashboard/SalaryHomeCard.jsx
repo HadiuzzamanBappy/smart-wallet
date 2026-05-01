@@ -100,19 +100,19 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
   }
 
   return (
-    <div className="rounded-md p-3 bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 cursor-pointer hover:border-teal-300 dark:hover:border-teal-700 transition-colors" onClick={() => onOpen('result')}>
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/10 dark:to-emerald-900/30">
-            <BarChart2 className="w-4 h-4 text-teal-500" />
+    <div className="rounded-2xl p-3 bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 cursor-pointer hover:border-teal-300 dark:hover:border-teal-700 transition-all hover:shadow-md" onClick={() => onOpen('result')}>
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-xl bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/10 dark:to-emerald-900/30">
+            <BarChart2 className="w-5 h-5 text-teal-500" />
           </div>
           <div>
-            <div className="text-xs font-medium text-teal-700 dark:text-teal-200">Financial Intelligence</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Smart salary allocation</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-200">Financial Intelligence</div>
+            <div className="text-[11px] text-gray-500 dark:text-gray-400">Smart salary allocation</div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             title="Open settings"
             onClick={(e) => { e.stopPropagation(); onOpen('wizard'); }}
@@ -123,29 +123,29 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 py-2 px-1 rounded border border-gray-100 dark:border-gray-700/50 flex flex-col items-center justify-center text-center">
-          <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Needs</span>
-          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 py-2 px-1 rounded-xl border border-gray-100 dark:border-gray-700/50 flex flex-col items-center justify-center text-center">
+          <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-0.5">Needs</span>
+          <span className="text-xs font-black text-gray-700 dark:text-gray-300">
             {needsPct}%
           </span>
         </div>
-        <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 py-2 px-1 rounded border border-gray-100 dark:border-gray-700/50 flex flex-col items-center justify-center text-center">
-          <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Wants</span>
-          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+        <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 py-2 px-1 rounded-xl border border-gray-100 dark:border-gray-700/50 flex flex-col items-center justify-center text-center">
+          <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-0.5">Wants</span>
+          <span className="text-xs font-black text-gray-700 dark:text-gray-300">
             {wantsPct}%
           </span>
         </div>
-        <div className="flex-1 bg-teal-50 dark:bg-teal-900/20 py-2 px-1 rounded border border-teal-100 dark:border-teal-800/50 flex flex-col items-center justify-center text-center">
-          <span className="text-[9px] text-teal-600 dark:text-teal-400 uppercase font-bold tracking-wider mb-0.5">Save</span>
-          <span className="text-xs font-semibold text-teal-700 dark:text-teal-300">
+        <div className="flex-1 bg-teal-50 dark:bg-teal-900/20 py-2 px-1 rounded-xl border border-teal-100 dark:border-teal-800/50 flex flex-col items-center justify-center text-center">
+          <span className="text-[9px] text-teal-600 dark:text-teal-400 uppercase font-black tracking-widest mb-0.5">Save</span>
+          <span className="text-xs font-black text-teal-700 dark:text-teal-300">
             {savePct}%
           </span>
         </div>
       </div>
 
-      <div className="mt-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900/40 dark:to-gray-800/40 rounded py-2 px-3 border border-gray-200 dark:border-gray-700/50 flex justify-between items-center">
-        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Daily Spending Limit</span>
+      <div className="mt-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900/40 dark:to-gray-800/40 rounded-xl py-2 px-3 border border-gray-200 dark:border-gray-700/50 flex justify-between items-center">
+        <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Daily Spending Limit</span>
         <span className="text-xs font-black text-gray-900 dark:text-white">{planData.currencySymbol}{Math.round(dailyLimit).toLocaleString()}</span>
       </div>
     </div>

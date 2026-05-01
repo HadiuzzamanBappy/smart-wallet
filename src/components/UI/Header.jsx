@@ -5,7 +5,7 @@ import useLocalRefresh from '../../hooks/useLocalRefresh';
 import { formatCurrency } from '../../utils/helpers';
 import UserMenuDropdown from '../User/UserMenuDropdown';
 import { getOutstandingCredits, getOutstandingLoans } from '../../services/transactionService';
-import Skeleton, { HeaderSkeleton } from '../UI/SkeletonLoader';
+import Skeleton, { HeaderSkeleton } from './SkeletonLoader';
 import { APP_EVENTS } from '../../config/constants';
 
 const Header = ({
@@ -110,10 +110,10 @@ const Header = ({
             refreshDues();
         };
 
-    window.addEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTxUpdate);
-    window.addEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTxUpdate);
-    window.addEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTxUpdate);
-    window.addEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTxUpdate);
+        window.addEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTxUpdate);
+        window.addEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTxUpdate);
+        window.addEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTxUpdate);
+        window.addEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTxUpdate);
 
         return () => {
             window.removeEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTxUpdate);
@@ -235,9 +235,9 @@ const Header = ({
                                 </div>
                                 <div className="flex flex-col items-end space-y-2">
                                     <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full">
-                                            <span className="text-sm">Net Due: {formatCurrency((creditDue - loanDue), userProfile?.currency || 'BDT')}</span>
+                                        <span className="text-sm">Net Due: {formatCurrency((creditDue - loanDue), userProfile?.currency || 'BDT')}</span>
                                     </div>
-                                        <div className={`px-3 py-1 rounded-full text-xs ${(creditDue - loanDue) > 0 ? 'bg-blue-100 text-blue-800' : (creditDue - loanDue) < 0 ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
+                                    <div className={`px-3 py-1 rounded-full text-xs ${(creditDue - loanDue) > 0 ? 'bg-blue-100 text-blue-800' : (creditDue - loanDue) < 0 ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
                                         {(creditDue - loanDue) > 0 ? 'More due to you' : (creditDue - loanDue) < 0 ? 'You owe more' : 'Balanced'}
                                     </div>
                                 </div>

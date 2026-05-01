@@ -13,7 +13,48 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
   const [lastResponse, setLastResponse] = useState(null);
   const [parsedTransactions, setParsedTransactions] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const textareaRef = useRef(null);
+  const hideTimeoutRef = useRef(null);
+
+  // Visibility logic: On mobile, only show when actively scrolling
+  useEffect(() => {
+    const handleVisibility = () => {
+      const isMobile = window.innerWidth < 768;
+      
+      if (!isMobile) {
+        setIsVisible(true);
+        return;
+      }
+
+      // Show on scroll
+      setIsVisible(true);
+      
+      // Clear existing timeout
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+
+      // Hide after 2 seconds of inactivity (only if chat is not open)
+      hideTimeoutRef.current = setTimeout(() => {
+        if (!isOpen) {
+          setIsVisible(false);
+        }
+      }, 2000);
+    };
+
+    window.addEventListener('scroll', handleVisibility, { passive: true });
+    window.addEventListener('resize', handleVisibility);
+    
+    // Initial state check
+    handleVisibility();
+
+    return () => {
+      window.removeEventListener('scroll', handleVisibility);
+      window.removeEventListener('resize', handleVisibility);
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    };
+  }, [isOpen]);
 
   // Get user's currency preference
   const userCurrency = userProfile?.currency || 'BDT';
@@ -167,7 +208,9 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
       {/* Chat Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center"
+        className={`fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-500 flex items-center justify-center ${
+          isVisible || isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-12 pointer-events-none'
+        }`}
         title="Quick Add Transaction"
       >
         <MessageSquare className="w-6 h-6" />

@@ -218,35 +218,36 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Add Transaction" size="lg">
-      <div className="space-y-6">
-        {/* Feedback: show errors or save-success only; hide parse-success badge when preview is open */}
+      <div className="space-y-4">
+        {/* Feedback Messages */}
         {lastResponse && (lastResponse.type === 'error' || (lastResponse.type === 'success' && parsedTransactions.length === 0)) && (
-          <div className={`p-3 rounded-lg ${lastResponse.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'}`}>
-            <p className="text-sm font-medium">{lastResponse.message}</p>
+          <div className={`p-3 rounded-2xl ${lastResponse.type === 'success' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'} border border-current/20 animate-in fade-in slide-in-from-top-1`}>
+            <p className="text-xs font-black uppercase tracking-widest text-center">{lastResponse.message}</p>
           </div>
         )}
-        {/* Mode Toggle */}
-        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+
+        {/* Mode Toggle - Nexus Style */}
+        <div className="flex bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl p-1">
           <button
             onClick={() => setMode('chat')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all ${
               mode === 'chat'
-                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-400'
-            }`}
+                ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm font-black'
+                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold'
+            } text-xs uppercase tracking-widest`}
           >
-            <MessageSquare className="w-4 h-4" />
+            <MessageSquare className="w-3.5 h-3.5" />
             <span>Smart Chat</span>
           </button>
           <button
             onClick={() => setMode('manual')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all ${
               mode === 'manual'
-                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-400'
-            }`}
+                ? 'bg-white dark:bg-gray-700 text-teal-500 shadow-sm font-black'
+                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold'
+            } text-xs uppercase tracking-widest`}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Manual Entry</span>
           </button>
         </div>
@@ -255,7 +256,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
           // Chat Mode
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
                 Describe your transaction
               </label>
               <textarea
@@ -263,7 +264,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 placeholder={`e.g., I bought groceries for ${userCurrency === 'BDT' ? '500 taka' : userCurrency === 'USD' ? '$50' : `50 ${userCurrency}`} today`}
-                className="input-field min-h-[100px]"
+                className="w-full bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-teal-500/50 outline-none transition-all min-h-[120px]"
                 rows="3"
               />
             </div>
@@ -271,10 +272,12 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             <button
               onClick={handleChatParse}
               disabled={!chatMessage.trim() || aiLoading}
-              className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full h-12 bg-teal-500 hover:bg-teal-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20 active:scale-[0.98]"
             >
-              {aiLoading && (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              {aiLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <MessageSquare className="w-4 h-4" />
               )}
               Parse with AI
             </button>
@@ -331,112 +334,98 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
 
             {/* Parsed Results */}
             {parsedTransactions.length > 0 && (
-              <div className="space-y-3">
-                <div className="mb-2 text-xs text-yellow-700 dark:text-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
-                  ⚠️ AI can make mistakes. Please review and edit the parsed transactions before saving.
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+                    Parsed Transactions ({parsedTransactions.length})
+                  </h4>
+                  <div className="text-[9px] font-bold text-yellow-500 animate-pulse">REVIEW REQUIRED</div>
                 </div>
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Parsed Transactions ({parsedTransactions.length})
-                </h4>
-                {parsedTransactions.map((transaction, index) => (
-                  <div key={index} className="flex items-center gap-2 text-xs p-2 bg-gray-50 dark:bg-gray-700/40 rounded min-w-0">
-                    <div className="w-8 h-8 flex items-center justify-center rounded bg-gray-50 dark:bg-gray-700">
-                      <span className="text-xs">{getCategoryEmoji(transaction.category)}</span>
-                    </div>
 
-                    {/* Normal row view */}
-                    {editingIndex !== index ? (
-                      <>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
-                          <div className="text-[11px] text-gray-500">{humanizeType(transaction.type)} • {getCategoryLabel(transaction.category)}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className={`font-medium ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                            {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{formatCurrency(transaction.amount, userCurrency)}
+                <div className="space-y-2">
+                  {parsedTransactions.map((transaction, index) => (
+                    <div key={index} className="relative flex items-center gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/10 group overflow-hidden">
+                      <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 shrink-0">
+                        <span className="text-lg">{getCategoryEmoji(transaction.category)}</span>
+                      </div>
+
+                      {editingIndex !== index ? (
+                        <>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-black text-gray-900 dark:text-white truncate">
+                              {(transaction.description || '').replace(/\s+/g, ' ').trim()}
+                            </div>
+                            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                              {humanizeType(transaction.type)} • {getCategoryLabel(transaction.category)}
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <button onClick={() => setEditingIndex(index)} className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded hover:scale-105 transition-transform" aria-label="Edit">
-                            <Edit className="w-4 h-4 text-yellow-700 dark:text-yellow-300" />
-                          </button>
-                          <button onClick={() => removeParsedTransaction(index)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 rounded hover:bg-red-100 dark:hover:bg-red-800 transition-colors" aria-label="Delete">
-                            <Trash className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </>
+                          <div className="text-right mr-2">
+                            <div className={`text-sm font-black ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-emerald-500' : 'text-red-500'}`}>
+                              {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}{formatCurrency(transaction.amount, userCurrency)}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button onClick={() => setEditingIndex(index)} className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                              <Edit className="w-3.5 h-3.5 text-gray-400" />
+                            </button>
+                            <button onClick={() => removeParsedTransaction(index)} className="p-2 bg-red-500/10 rounded-lg hover:bg-red-500/20 transition-colors">
+                              <Trash className="w-3.5 h-3.5 text-red-500" />
+                            </button>
+                          </div>
+                        </>
                       ) : (
-                      /* Edit mode for this row (responsive) */
-                      <>
-                        <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="flex-1 grid grid-cols-2 gap-2 pr-2">
                           <input
                             type="text"
                             value={transaction.description || ''}
                             onChange={(e) => updateParsedTransaction(index, { description: e.target.value })}
-                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full"
+                            className="col-span-2 px-3 py-1.5 text-xs rounded-xl border border-white/10 bg-black/20 text-white outline-none focus:border-teal-500/50"
                             placeholder="Description"
                           />
-
                           <input
                             type="number"
                             value={transaction.amount ?? ''}
                             onChange={(e) => updateParsedTransaction(index, { amount: e.target.value })}
-                            className="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full "
+                            className="px-3 py-1.5 text-xs rounded-xl border border-white/10 bg-black/20 text-white outline-none focus:border-teal-500/50"
                             placeholder="Amount"
                           />
-
                           <select
                             value={transaction.type || 'expense'}
                             onChange={(e) => updateParsedTransaction(index, { type: e.target.value })}
-                            className="col-span-1 sm:col-span-1 px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full"
+                            className="px-3 py-1.5 text-xs rounded-xl border border-white/10 bg-black/20 text-white outline-none focus:border-teal-500/50"
                           >
                             <option value="expense">Expense</option>
                             <option value="income">Income</option>
                             <option value="credit">Credit (lent)</option>
                             <option value="loan">Loan (borrowed)</option>
                           </select>
-
-                          <select
-                            value={transaction.category || 'other'}
-                            onChange={(e) => updateParsedTransaction(index, { category: e.target.value })}
-                            className="col-span-1 sm:col-span-1 px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full"
-                          >
-                            {categories.map(cat => (
-                              <option key={cat.value} value={cat.value}>{cat.emoji} {cat.label}</option>
-                            ))}
-                          </select>
+                          <div className="col-span-2 flex justify-end gap-2 mt-1">
+                            <button onClick={() => setEditingIndex(null)} className="p-2 rounded-lg bg-white/5 text-gray-400"><X className="w-4 h-4" /></button>
+                            <button onClick={saveRowEdit} className="p-2 rounded-lg bg-teal-500 text-white"><Check className="w-4 h-4" /></button>
+                          </div>
                         </div>
-
-                        <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-                          <button onClick={() => setEditingIndex(null)} className="p-2 bg-white dark:bg-gray-800 border rounded hover:scale-95 transition-transform" aria-label="Cancel edit">
-                            <X className="w-4 h-4 text-gray-700 dark:text-gray-200" />
-                          </button>
-                          <button onClick={saveRowEdit} className="p-2 bg-teal-500 text-white rounded hover:opacity-90 transition-opacity" aria-label="Save edit">
-                            <Check className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
+                      )}
+                      {/* Decorative gradient */}
+                      <div className="absolute -bottom-4 -right-4 w-12 h-12 rounded-full blur-2xl opacity-10 bg-teal-500" />
+                    </div>
+                  ))}
+                </div>
                 
-                <div className="flex space-x-2">
+                <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => { setIsPreviewOpen(false); setParsedTransactions([]); setLastResponse(null); }}
-                    className="flex-1 px-3 py-2 text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm font-medium"
+                    className="flex-1 h-11 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
                   >
-                    Cancel
+                    Discard
                   </button>
 
                   <button
                     onClick={handleAddParsedTransactions}
                     disabled={loading}
-                    className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-[2] h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
                   >
-                    {loading && (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    )}
-                    Add Transaction{parsedTransactions.length > 1 ? 's' : ''}
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Confirm {parsedTransactions.length > 1 ? 'Transactions' : 'Entry'}
                   </button>
                 </div>
               </div>
@@ -445,15 +434,14 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         ) : (
           // Manual Mode
           <form onSubmit={handleManualSubmit} className="space-y-4">
-            {/* Transaction Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Type
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
+                Transaction Type
               </label>
               <select
                 value={manualData.type}
                 onChange={(e) => setManualData(prev => ({ ...prev, type: e.target.value }))}
-                className="input-field"
+                className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
               >
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
@@ -462,63 +450,56 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Amount */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
                   Amount ({userCurrency})
                 </label>
                 <input
                   type="number"
                   value={manualData.amount}
                   onChange={(e) => setManualData(prev => ({ ...prev, amount: e.target.value }))}
-                  className="input-field"
-                  placeholder="0"
-                  min="0"
-                  step="0.01"
+                  className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+                  placeholder="0.00"
                   required
                 />
               </div>
-
-              {/* Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
                   Date
                 </label>
                 <input
                   type="date"
                   value={manualData.date}
                   onChange={(e) => setManualData(prev => ({ ...prev, date: e.target.value }))}
-                  className="input-field"
+                  className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
                   required
                 />
               </div>
             </div>
 
-            {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
                 Description
               </label>
               <input
                 type="text"
                 value={manualData.description}
                 onChange={(e) => setManualData(prev => ({ ...prev, description: e.target.value }))}
-                className="input-field"
-                placeholder="What was this transaction for?"
+                className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+                placeholder="What was this for?"
                 required
               />
             </div>
 
-            {/* Category */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
                 Category
               </label>
               <select
                 value={manualData.category}
                 onChange={(e) => setManualData(prev => ({ ...prev, category: e.target.value }))}
-                className="input-field"
+                className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
               >
                 {categories.map(category => (
                   <option key={category.value} value={category.value}>
@@ -528,16 +509,13 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
               </select>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading || !manualData.amount || !manualData.description}
-              className="w-full px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full h-12 bg-teal-500 hover:bg-teal-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20 active:scale-[0.98] mt-2"
             >
-              {loading && (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
-              Add Transaction
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              Save Transaction
             </button>
           </form>
         )}

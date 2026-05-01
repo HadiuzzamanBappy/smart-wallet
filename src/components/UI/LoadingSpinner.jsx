@@ -21,13 +21,13 @@ const LoadingSpinner = ({ size = 'md', color = 'teal' }) => {
   );
 };
 
-export const LoadingButton = ({ 
-  children, 
-  loading, 
-  disabled, 
-  className = '', 
-  loadingText = 'Loading...', 
-  ...props 
+export const LoadingButton = ({
+  children,
+  loading,
+  disabled,
+  className = '',
+  loadingText = 'Loading...',
+  ...props
 }) => {
   return (
     <button
