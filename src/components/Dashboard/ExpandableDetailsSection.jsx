@@ -20,18 +20,18 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
         if (onSectionChange) onSectionChange(null);
       }
     };
-    
+
     // Check on mount and add listener
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
-    
+
     return () => window.removeEventListener('resize', checkScreenSize);
   }, [activeSection, onSectionChange, hasUserInteracted]);
 
   const toggleSection = (section) => {
     // Mark that user has interacted, so auto-behavior stops
     setHasUserInteracted(true);
-    
+
     // Basic toggle: clicking an already-active section hides it, otherwise show the clicked section
     if (activeSection === section) {
       setActiveSection(null);
@@ -66,19 +66,13 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   const renderSectionContent = (sectionId) => {
     switch (sectionId) {
       case 'transactions':
-        return (
-          <div className="p-4">
-            <TransactionList onTransactionChange={onTransactionChange} />
-          </div>
-        );
+        return <TransactionList onTransactionChange={onTransactionChange} />;
       case 'reports':
         return (
-          <div className="p-4">
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>Financial reports will be displayed here</p>
-              <p className="text-sm">Coming soon...</p>
-            </div>
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p>Financial reports will be displayed here</p>
+            <p className="text-sm">Coming soon...</p>
           </div>
         );
       case 'analytics':
@@ -121,31 +115,31 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   return (
     <div className="w-full space-y-4 sm:space-y-6">
       <div className="w-full">
-      {/* Horizontal Button List - Responsive */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center">
-        {sections.map((section) => {
-          const IconComponent = section.icon;
-          const isActive = activeSection === section.id;
+        {/* Horizontal Button List - Responsive */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center">
+          {sections.map((section) => {
+            const IconComponent = section.icon;
+            const isActive = activeSection === section.id;
 
-          return (
-            <button
+            return (
+              <button
               key={section.id}
               onClick={() => toggleSection(section.id)}
-              className={`group relative flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-2xl transition-all duration-300 border-2 w-full sm:w-auto ${
+              className={`group relative flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 rounded-xl transition-all duration-300 border w-full sm:w-auto ${
                 isActive 
-                  ? `bg-gradient-to-r from-teal-500 to-blue-500 dark:from-teal-600 dark:to-blue-600 text-white border-teal-300 dark:border-teal-500 shadow-xl scale-105` 
-                  : `bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700 hover:border-teal-300 dark:hover:border-teal-600 shadow-sm hover:shadow-md`
+                  ? `bg-gradient-to-r from-teal-500 to-blue-500 text-white border-teal-400 shadow-lg scale-[1.02]` 
+                  : `bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-teal-200 dark:border-teal-800 hover:border-teal-300 dark:hover:border-teal-700 shadow-sm`
               }`}
             >
-              <div className={`p-2 rounded-xl transition-colors ${
+              <div className={`p-2 rounded-lg transition-colors ${
                 isActive 
                   ? 'bg-white/20' 
-                  : section.bgColor
+                  : 'bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/10 dark:to-emerald-900/30'
               }`}>
                 <IconComponent className={`w-5 h-5 transition-colors ${
                   isActive 
                     ? 'text-white' 
-                    : section.color
+                    : 'text-teal-500'
                 }`} />
               </div>
               <div className="text-left flex-1 sm:flex-initial">
@@ -156,7 +150,7 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
                 }`}>
                   {section.title}
                 </h3>
-                <p className={`text-xs sm:text-sm transition-colors ${
+                <p className={`text-xs transition-colors ${
                   isActive 
                     ? 'text-white/80' 
                     : 'text-gray-600 dark:text-gray-400'
@@ -164,89 +158,90 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
                   {section.description}
                 </p>
               </div>
+              
+              <div className={`transition-transform duration-300 ${isActive ? 'rotate-180 text-white' : 'text-gray-400 dark:text-gray-500'}`}>
+                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+
               {isActive && (
                 <div className="absolute -top-1 -right-1">
-                  <Skeleton width="w-3" height="h-3" rounded="rounded-full" />
+                  <div className="w-3 h-3 rounded-full bg-teal-400 border-2 border-white dark:border-gray-800 shadow-sm" />
                 </div>
               )}
             </button>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      {/* Always show transactions on mobile, show active section on desktop */}
-      <div className="space-y-4">
-        {/* Mobile: Show active section */}
-        <div className="md:hidden">
-          {activeSection && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mt-3">
-              {(() => {
-                const section = sections.find(s => s.id === activeSection);
-                if (!section) return null;
-                const IconComponent = section.icon;
-                return (
-                  <>
-                    <div className="bg-gradient-to-r from-teal-500 to-blue-500 dark:from-teal-600 dark:to-blue-600 p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white/20 rounded-xl">
-                          <IconComponent className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <h2 className="text-lg font-bold text-white">{section.title}</h2>
-                          <p className="text-white/80 text-sm">{section.description}</p>
+        {/* Always show transactions on mobile, show active section on desktop */}
+        <div className="space-y-4">
+          {/* Mobile: Show active section */}
+          <div className="md:hidden">
+            {activeSection && (
+              <div className="overflow-hidden mt-2">
+                {(() => {
+                  const section = sections.find(s => s.id === activeSection);
+                  if (!section) return null;
+                  const IconComponent = section.icon;
+                  return (
+                    <>
+                      <div className="bg-gray-50 dark:bg-gray-800/80 p-3 border-x border-t border-teal-200 dark:border-teal-800 rounded-t-md">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-teal-50 dark:bg-teal-900/30 rounded-lg">
+                            <IconComponent className="w-4 h-4 text-teal-500" />
+                          </div>
+                          <div>
+                            <h2 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{section.title}</h2>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div>
-                      {renderSectionContent(activeSection)}
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-          )}
-        </div>
+                      <div className="bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 rounded-b-md">
+                        {renderSectionContent(activeSection)}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
 
-        {/* Desktop/Tablet: Show active section */}
-        <div className="hidden md:block">
-          {activeSection && (
-            <div className="animate-in slide-in-from-top duration-300">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="bg-gradient-to-r from-teal-500 to-blue-500 dark:from-teal-600 dark:to-blue-600 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {(() => {
-                        const section = sections.find(s => s.id === activeSection);
-                        const IconComponent = section.icon;
-                        return (
-                          <>
-                            <div className="p-2 bg-white/20 rounded-xl">
-                              <IconComponent className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                              <h2 className="text-xl font-bold text-white">{section.title}</h2>
-                              <p className="text-white/80 text-sm">{section.description}</p>
-                            </div>
-                          </>
-                        );
-                      })()}
+          {/* Desktop/Tablet: Show active section */}
+          <div className="hidden md:block">
+            {activeSection && (
+              <div className="animate-in slide-in-from-top duration-300">
+                <div className="overflow-hidden">
+                  <div className="bg-gray-50 dark:bg-gray-800/80 p-3 border-x border-t border-teal-200 dark:border-teal-800 rounded-t-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const section = sections.find(s => s.id === activeSection);
+                          const IconComponent = section.icon;
+                          return (
+                            <>
+                              <div className="p-1.5 bg-teal-50 dark:bg-teal-900/30 rounded-lg">
+                                <IconComponent className="w-4 h-4 text-teal-500" />
+                              </div>
+                              <h2 className="text-sm font-bold text-gray-900 dark:text-white">{section.title}</h2>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      <button
+                        onClick={() => toggleSection(activeSection)}
+                        className="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors"
+                      >
+                        <ChevronUp className="w-4 h-4 text-gray-500" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => toggleSection(activeSection)}
-                      className="p-2 hover:bg-white/20 rounded-xl transition-colors"
-                    >
-                      <ChevronUp className="w-5 h-5 text-white" />
-                    </button>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 rounded-b-md">
+                    {renderSectionContent(activeSection)}
                   </div>
                 </div>
-                <div>
-                  {renderSectionContent(activeSection)}
-                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

@@ -323,76 +323,58 @@ const SpendingAnalytics = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      {/* Chart Type Selector */}
-      <div className="flex flex-wrap gap-2 sm:gap-3">
+    <div className="p-3 space-y-4">
+      {/* Chart Type Selector - Compact Tabs */}
+      <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-2">
         {[
-          { id: 'spending-trend', label: 'Weekly Trend', icon: TrendingUp },
-          { id: 'category-breakdown', label: 'Categories', icon: PieChart },
-          { id: 'monthly-comparison', label: 'Monthly View', icon: BarChart3 },
+          { id: 'spending-trend', label: 'Trend', icon: TrendingUp },
+          { id: 'category-breakdown', label: 'Summary', icon: PieChart },
+          { id: 'monthly-comparison', label: 'Monthly', icon: BarChart3 },
         ].map((chart) => {
           const IconComponent = chart.icon;
+          const isActive = activeChart === chart.id;
           return (
             <button
               key={chart.id}
               onClick={() => setActiveChart(chart.id)}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
-                activeChart === chart.id
-                  ? 'bg-gradient-to-r from-teal-500 to-blue-500 text-white shadow-lg'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                isActive
+                  ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400'
+                  : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/50'
               }`}
             >
-              <IconComponent className="w-4 h-4" />
-              <span className="hidden sm:inline">{chart.label}</span>
-              <span className="sm:hidden">{chart.icon === TrendingUp ? 'Trend' : chart.icon === PieChart ? 'Cat.' : 'Month'}</span>
+              <IconComponent className="w-3.5 h-3.5" />
+              {chart.label}
             </button>
           );
         })}
       </div>
 
-      {/* Chart Display */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="h-64 sm:h-80">
+      {/* Chart Display - Matches Salary Card Vibe */}
+      <div className="bg-white dark:bg-gray-800 rounded-md p-3 border border-teal-200 dark:border-teal-800">
+        <div className="h-56 sm:h-64 relative">
           {activeChart === 'spending-trend' && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                7-Day Spending Trend
-              </h3>
-              <div className="w-full h-56 sm:h-72">
-                <Line data={getSpendingTrendData()} options={chartOptions()} />
-              </div>
+            <div className="h-full">
+              <Line data={getSpendingTrendData()} options={chartOptions()} />
             </div>
           )}
           
-              {activeChart === 'category-breakdown' && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <PieChart className="w-5 h-5" />
-                Activity Breakdown
-              </h3>
-              <div className="w-full h-56 sm:h-64">
-                <Doughnut data={getActivityBreakdown()} options={doughnutOptions} />
-              </div>
+          {activeChart === 'category-breakdown' && (
+            <div className="h-full">
+              <Doughnut data={getActivityBreakdown()} options={doughnutOptions} />
             </div>
           )}
           
           {activeChart === 'monthly-comparison' && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" />
-                6-Month Comparison
-              </h3>
-              <div className="w-full h-64 sm:h-80">
-                <Bar data={getMonthlyData()} options={chartOptions()} />
-              </div>
+            <div className="h-full">
+              <Bar data={getMonthlyData()} options={chartOptions()} />
             </div>
           )}
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Quick Stats - Matches Needs/Wants Box Style */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {(() => {
           const thisMonthExpenses = transactions
             .filter(t => {
@@ -405,8 +387,6 @@ const SpendingAnalytics = () => {
             .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
           const avgDailySpending = thisMonthExpenses / new Date().getDate();
-          // compute top category from the normalized category data
-          // Use activity breakdown totals to determine a top 'activity' (mostly for display)
           const activityData = getActivityBreakdown();
           let topCategory = null;
           if (activityData.labels && activityData.labels.length > 0) {
@@ -420,39 +400,39 @@ const SpendingAnalytics = () => {
 
           const stats = [
             {
-              label: 'This Month',
+              label: 'Spent (Mo)',
               value: formatCurrency(thisMonthExpenses),
-              color: 'text-red-600 dark:text-red-400',
-              bg: 'bg-red-50 dark:bg-red-900/20'
+              color: 'text-gray-900 dark:text-white',
+              bg: 'bg-gray-50 dark:bg-gray-900/50'
             },
             {
               label: 'Daily Avg',
               value: formatCurrency(avgDailySpending),
-              color: 'text-blue-600 dark:text-blue-400',
-              bg: 'bg-blue-50 dark:bg-blue-900/20'
+              color: 'text-gray-900 dark:text-white',
+              bg: 'bg-gray-50 dark:bg-gray-900/50'
             },
             {
-              label: 'Top Category',
+              label: 'Top Area',
               value: topCategory ? topCategory[0] : 'N/A',
-              color: 'text-purple-600 dark:text-purple-400',
-              bg: 'bg-purple-50 dark:bg-purple-900/20'
+              color: 'text-teal-600 dark:text-teal-400',
+              bg: 'bg-teal-50 dark:bg-teal-900/20'
             },
             {
-              label: 'Total Records',
+              label: 'Logs',
               value: transactions.length.toString(),
-              color: 'text-green-600 dark:text-green-400',
-              bg: 'bg-green-50 dark:bg-green-900/20'
+              color: 'text-gray-900 dark:text-white',
+              bg: 'bg-gray-50 dark:bg-gray-900/50'
             },
           ];
 
           return stats.map((stat, index) => (
-            <div key={index} className={`p-4 rounded-xl ${stat.bg} text-center`}>
-              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <div key={index} className={`py-2 px-1 rounded border border-gray-100 dark:border-gray-700/50 ${stat.bg} flex flex-col items-center justify-center text-center`}>
+              <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">
                 {stat.label}
-              </p>
-              <p className={`text-sm sm:text-base font-bold ${stat.color} truncate`}>
+              </span>
+              <span className={`text-xs font-semibold ${stat.color} truncate w-full px-1`}>
                 {stat.value}
-              </p>
+              </span>
             </div>
           ));
         })()}

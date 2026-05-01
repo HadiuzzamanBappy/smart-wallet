@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Edit3, 
-  Trash2, 
-  Filter, 
+import {
+  Edit3,
+  Trash2,
+  Filter,
   Calendar,
   TrendingUp,
   TrendingDown,
@@ -22,10 +22,10 @@ import { TransactionListSkeleton } from '../UI/SkeletonLoader';
 
 const TransactionList = ({ onTransactionUpdate }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
-  const { 
-    transactions, 
-    loading: transactionLoading, 
-    refreshTransactions 
+  const {
+    transactions,
+    loading: transactionLoading,
+    refreshTransactions
   } = useTransactions();
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -34,7 +34,7 @@ const TransactionList = ({ onTransactionUpdate }) => {
   const [preparingDelete, setPreparingDelete] = useState(false);
   const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
   const [adjustmentDetail, setAdjustmentDetail] = useState(null);
-  
+
   // Filters
   const [filters, setFilters] = useState({
     search: '',
@@ -53,7 +53,7 @@ const TransactionList = ({ onTransactionUpdate }) => {
 
   const handleDelete = async () => {
     if (!deletingTransaction) return;
-    
+
     setDeleteLoading(true);
     try {
       const result = await deleteTransaction(user.uid, deletingTransaction.id, deletingTransaction);
@@ -105,7 +105,7 @@ const TransactionList = ({ onTransactionUpdate }) => {
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       if (!transaction.description.toLowerCase().includes(searchTerm) &&
-          !transaction.category.toLowerCase().includes(searchTerm)) {
+        !transaction.category.toLowerCase().includes(searchTerm)) {
         return false;
       }
     }
@@ -174,12 +174,9 @@ const TransactionList = ({ onTransactionUpdate }) => {
 
   return (
     <>
-      <div className="card">
-          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+      <div>
+        <div className="px-4 border-b border-gray-200 dark:border-gray-700 py-4 mb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Transaction History
-            </h3>
             <div className="text-sm text-gray-500 dark:text-gray-400">
               {filteredTransactions.length} of {transactions.length} transactions
             </div>
@@ -248,12 +245,12 @@ const TransactionList = ({ onTransactionUpdate }) => {
 
         <div className="divide-y divide-gray-200 dark:divide-gray-700">
           {filteredTransactions.length === 0 ? (
-            <div className="p-8 text-center">
+            <div className="py-8 text-center">
               <div className="text-gray-400 dark:text-gray-500 mb-2">
                 <Filter className="w-12 h-12 mx-auto mb-4" />
               </div>
               <p className="text-gray-500 dark:text-gray-400">
-                {transactions.length === 0 
+                {transactions.length === 0
                   ? "No transactions yet. Add your first transaction to get started!"
                   : "No transactions match your current filters."
                 }
@@ -264,7 +261,7 @@ const TransactionList = ({ onTransactionUpdate }) => {
               const dc = getDisplayCategory(transaction);
               const dcl = getDisplayCategoryLabel(transaction);
               return (
-                <div key={transaction.id} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-150">
+                <div key={transaction.id} className="px-4 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-150 border-b border-gray-100 dark:border-gray-700/30 last:border-0">
                   <div className="grid grid-cols-[auto_1fr_auto] gap-4 items-start sm:items-center">
                     {/* Left: avatar with soft bg and small status indicator */}
                     <div className="relative">
@@ -318,26 +315,43 @@ const TransactionList = ({ onTransactionUpdate }) => {
 
         {/* Pagination Controls */}
         {filteredTransactions.length > PAGE_SIZE && (
-          <div className="p-4 flex items-center justify-between">
-            <div className="text-sm text-gray-500">Page {page} of {totalPages}</div>
-            <div className="flex items-center space-x-2">
+          <div className="py-4 px-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-700/50">
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+              Page {page} <span className="hidden sm:inline">of {totalPages}</span>
+            </div>
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 rounded-md border border-gray-200 dark:border-gray-700 text-sm disabled:opacity-50"
-              >Prev</button>
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={`px-3 py-1 rounded-md text-sm ${page === i + 1 ? 'bg-teal-500 text-white' : 'border border-gray-200 dark:border-gray-700'}`}
-                >{i + 1}</button>
-              ))}
+                className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-xs font-bold uppercase tracking-widest disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Prev
+              </button>
+              
+              {/* Desktop Page Numbers */}
+              <div className="hidden sm:flex items-center gap-1">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i + 1)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-md text-xs font-bold transition-all ${
+                      page === i + 1 
+                        ? 'bg-teal-500 text-white shadow-md shadow-teal-500/20' 
+                        : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1 rounded-md border border-gray-200 dark:border-gray-700 text-sm disabled:opacity-50"
-              >Next</button>
+                className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-xs font-bold uppercase tracking-widest disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Next
+              </button>
             </div>
           </div>
         )}

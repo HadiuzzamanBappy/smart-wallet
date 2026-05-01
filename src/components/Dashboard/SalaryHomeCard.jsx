@@ -113,8 +113,8 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button 
-            title="Open settings" 
+          <button
+            title="Open settings"
             onClick={(e) => { e.stopPropagation(); onOpen('wizard'); }}
             className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
           >
