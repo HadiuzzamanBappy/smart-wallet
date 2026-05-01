@@ -5,7 +5,7 @@ import SalaryFormModal from './SalaryFormModal';
 import SalaryResult from './SalaryResult';
 import { RefreshCw } from 'lucide-react';
 
-export default function SalaryManager({ userId, onClose }) {
+export default function SalaryManager({ userId, onClose, initialView }) {
   const [view, setView] = useState('loading'); // 'loading' | 'wizard' | 'result'
   const [currentForm, setCurrentForm] = useState(null);
   const [currentPlan, setCurrentPlan] = useState(null);
@@ -15,11 +15,18 @@ export default function SalaryManager({ userId, onClose }) {
     const fetchPlan = async () => {
       try {
         const plan = await getSalaryPlan(userId);
+        
         if (plan) {
           setCurrentForm(plan.form);
-          setCurrentPlan(plan.plan);
+          const recalculated = {
+            ...calculatePlan(plan.form),
+            savedAt: plan.savedAt || plan.plan?.savedAt,
+          };
+          setCurrentPlan(recalculated);
           setCurrentAdvice(plan.aiAdvice);
-          setView('result');
+          
+          // Respect initialView if provided, otherwise default to result
+          setView(initialView || 'result');
         } else {
           setView('wizard');
         }
@@ -29,7 +36,7 @@ export default function SalaryManager({ userId, onClose }) {
       }
     };
     if (userId) fetchPlan();
-  }, [userId]);
+  }, [userId, initialView]);
 
   const handleWizardComplete = (formData) => {
     const planData = calculatePlan(formData);

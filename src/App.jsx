@@ -41,6 +41,7 @@ const AppContent = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSalaryManager, setShowSalaryManager] = useState(false);
+  const [salaryManagerMode, setSalaryManagerMode] = useState(null); // 'wizard' | 'result'
 
   // Refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -180,7 +181,13 @@ const AppContent = () => {
             <BudgetProgress onSettingsClick={() => setShowProfileModal(true)} />
 
             {/* Salary Manager Card */}
-            <SalaryHomeCard userId={user.uid} onOpen={() => setShowSalaryManager(true)} />
+            <SalaryHomeCard 
+              userId={user.uid} 
+              onOpen={(mode) => {
+                setSalaryManagerMode(mode);
+                setShowSalaryManager(true);
+              }} 
+            />
 
             {/* Expandable Details Section */}
             <ExpandableDetailsSection onTransactionChange={handleTransactionUpdate} />
@@ -217,7 +224,11 @@ const AppContent = () => {
       {showSalaryManager && (
         <SalaryManager
           userId={user.uid}
-          onClose={() => setShowSalaryManager(false)}
+          initialView={salaryManagerMode}
+          onClose={() => {
+            setShowSalaryManager(false);
+            setSalaryManagerMode(null);
+          }}
         />
       )}
 
