@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Settings,
   Moon,
@@ -8,17 +8,28 @@ import {
   Download,
   Trash2,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Plus,
+  Check,
+  Smartphone,
+  ShieldCheck,
+  Database
 } from 'lucide-react';
 import Modal from '../UI/base/Modal';
-import ConfirmDialog from '../UI/ConfirmDialog';
+import ConfirmDialog from '../UI/base/ConfirmDialog';
+import GlassCard from '../UI/base/GlassCard';
+import Button from '../UI/base/Button';
+import Select from '../UI/base/Select';
+import GlassInput from '../UI/base/GlassInput';
+import GlassBadge from '../UI/base/GlassBadge';
+import IconBox from '../UI/base/IconBox';
+
 import { useAuth } from '../../hooks/useAuth';
 import {
   updateUserProfile,
   reauthenticateUser,
   reauthenticateWithGoogle,
-  isGoogleUser,
-  confirmEmailForDeletion
+  isGoogleUser
 } from '../../services/authService';
 import { exportUserData, deleteAllUserData, importUserData } from '../../services/transactionService';
 import { useTransactions } from '../../hooks/useTransactions';
@@ -28,7 +39,6 @@ import { APP_EVENTS, PROFILE_EVENTS } from '../../config/constants';
 const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const { refreshTransactions } = useTransactions();
-  // Theme will be handled through ThemeContext
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showReauthDialog, setShowReauthDialog] = useState(false);
@@ -47,31 +57,22 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
     notifications: userProfile?.notifications !== false
   });
 
-  // Persistence status for theme saving: 'idle' | 'saving' | 'success' | 'error'
   const [persistStatus, setPersistStatus] = useState('idle');
-  const initialThemeRef = React.useRef(currentTheme);
+  const initialThemeRef = useRef(currentTheme);
 
-  // Capture original theme when modal opens so we can rollback if save fails
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       initialThemeRef.current = currentTheme;
       setPersistStatus('idle');
-      // Initialize settings.theme from profile or currentTheme
       setSettings(prev => ({ ...prev, theme: userProfile?.theme || currentTheme || 'system' }));
+      setIsUserGoogleAuth(isGoogleUser());
     }
   }, [isOpen, currentTheme, userProfile?.theme]);
 
-  // Check authentication method when modal opens
-  React.useEffect(() => {
-    if (isOpen && user) {
-      setIsUserGoogleAuth(isGoogleUser());
-    }
-  }, [isOpen, user]);
-
   const themes = [
-    { value: 'light', label: 'Light', icon: Sun },
-    { value: 'dark', label: 'Dark', icon: Moon },
-    { value: 'system', label: 'System', icon: Monitor }
+    { value: 'light', label: 'Luminous', icon: Sun },
+    { value: 'dark', label: 'Midnight', icon: Moon },
+    { value: 'system', label: 'Adaptive', icon: Monitor }
   ];
 
   const languages = [
@@ -81,31 +82,25 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
   const handleSaveSettings = async () => {
     setLoading(true);
-    // Apply theme optimistically on Save
     const previousTheme = initialThemeRef.current;
     try {
       setPersistStatus('saving');
-      // Apply locally
       if (settings.theme) {
-        try { setTheme(settings.theme); } catch (err) { void err; }
+        setTheme(settings.theme);
       }
 
       const result = await updateUserProfile(user.uid, settings);
       if (result.success) {
-        // refresh profile but DO NOT reapply theme from profile (we already applied it optimistically)
         if (refreshUserProfile) await refreshUserProfile();
         setPersistStatus('success');
         setTimeout(() => setPersistStatus('idle'), 1500);
       } else {
-        // rollback optimistic theme change
-        try { setTheme(previousTheme); } catch (err) { void err; }
+        setTheme(previousTheme);
         setPersistStatus('error');
         setTimeout(() => setPersistStatus('idle'), 3000);
       }
-    } catch (error) {
-      console.error('Settings update failed:', error);
-      // rollback optimistic theme change
-      try { setTheme(previousTheme); } catch (err) { void err; }
+    } catch {
+      setTheme(previousTheme);
       setPersistStatus('error');
     } finally {
       setLoading(false);
@@ -119,14 +114,12 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         const dataStr = JSON.stringify(result.data, null, 2);
         const dataBlob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(dataBlob);
-
         const link = document.createElement('a');
         link.href = url;
-        link.download = `smart-wallet-data-${new Date().toISOString().split('T')[0]}.json`;
+        link.download = `wallet-export-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
         URL.revokeObjectURL(url);
       }
     } catch (error) {
@@ -134,11 +127,10 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
     }
   };
 
-  // Import data from JSON file exported earlier
   const [importLoading, setImportLoading] = useState(false);
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = useRef(null);
   const [importPayload, setImportPayload] = useState(null);
-  const [importPreview, setImportPreview] = useState(null); // { profile, transactions }
+  const [importPreview, setImportPreview] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [preserveIds, setPreserveIds] = useState(false);
   const [dedupe, setDedupe] = useState(true);
@@ -151,215 +143,91 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-
-      // Basic validation
       if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.transactions)) {
-        console.error('Invalid import file');
-        alert('Invalid import file format');
+        alert('Invalid Vault Export file');
         return;
       }
 
-      // Build a small preview (counts + sample)
-      const sample = parsed.transactions.slice(0, 5).map(s => {
-        const copy = { ...s };
-        if ('originalMessage' in copy) delete copy.originalMessage;
-        if ('originalMessage_encrypted' in copy) delete copy.originalMessage_encrypted;
-        return copy;
-      });
-
-      const preview = {
+      setImportPreview({
         profile: parsed.profile || {},
         totalTransactions: parsed.transactions.length,
-        sample
-      };
-
-      setImportPreview(preview);
+        sample: parsed.transactions.slice(0, 3)
+      });
       setImportPayload(parsed);
       setShowImportModal(true);
-    } catch (error) {
-      console.error('Error reading import file:', error);
-      alert('Failed to read import file');
+    } catch {
+      alert('Failed to read Vault file');
     } finally {
-      // Reset input so same file can be reselected
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  const triggerImport = () => {
-    if (fileInputRef.current) fileInputRef.current.click();
-  };
-  // Import immediately using the parsed payload stored in state when the file was selected
   const startImport = async () => {
     if (!importPayload) return;
     setImportLoading(true);
-    setImportResult(null);
     try {
       const res = await importUserData(user.uid, importPayload, { preserveIds, dedupe });
       setImportResult(res);
       if (res.success) {
-        // Refresh profile and transactions so the UI updates immediately
         if (refreshUserProfile) await refreshUserProfile();
-        try {
-          if (refreshTransactions) await refreshTransactions();
-        } catch (err) {
-          console.warn('Failed to refresh transactions after import:', err?.message || err);
-        }
-
-        // Dispatch a global event so components listening for transaction updates refresh their views
-        try {
-          window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { importResult: res } }));
-        } catch {
-          // ignore
-        }
+        if (refreshTransactions) await refreshTransactions();
+        window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { importResult: res } }));
       }
     } catch (error) {
-      console.error('Import failed:', error);
       setImportResult({ success: false, error: error.message });
     } finally {
       setImportLoading(false);
       setShowImportModal(false);
       setImportPayload(null);
       setImportPreview(null);
-      // Auto-clear the import result after a short delay to avoid clutter
       if (resultClearMs > 0) {
-        setTimeout(() => {
-          setImportResult(null);
-        }, resultClearMs);
+        setTimeout(() => setImportResult(null), resultClearMs);
       }
     }
   };
 
-  // New flow: Erase user data but keep the auth account
-  const handleDeleteAccount = () => {
-    // repurpose the delete flow to be an "Erase My Data" confirmation
-    setShowDeleteConfirm(true);
-  };
+  const handleDeleteAccount = () => setShowDeleteConfirm(true);
 
   const handleConfirmDelete = () => {
     setShowDeleteConfirm(false);
     setShowReauthDialog(true);
-    // Reset form fields
-    setPassword('');
-    setEmailConfirmation('');
   };
 
   const handleReauthAndDelete = async () => {
-    // Allow skipping reauthentication if the user types their exact email (case-insensitive).
-    // Otherwise, fall back to reauthentication (password or provider).
-
-    // Basic email match guard: require the typed email to match the signed-in user's email
-    if (emailConfirmation && user?.email && emailConfirmation.trim().toLowerCase() !== user.email.trim().toLowerCase()) {
-      console.error('Provided email does not match signed-in user');
-      alert('The provided email does not match the signed-in user. Please type your account email to confirm.');
+    const emailMatches = Boolean(emailConfirmation && user?.email && emailConfirmation.trim().toLowerCase() === user.email.trim().toLowerCase());
+    if (emailConfirmation && !emailMatches) {
+      alert('Email mismatch. Please verify your account identity.');
       return;
     }
 
-    // If emailConfirmation matches the signed-in user's email, we skip reauthentication per request.
-    const emailMatches = Boolean(emailConfirmation && user?.email && emailConfirmation.trim().toLowerCase() === user.email.trim().toLowerCase());
-
-    // If email doesn't match and the user is an email/password user, require password.
-    if (!emailMatches && !isUserGoogleAuth && !password) return;
-
     setDeleteLoading(true);
     try {
-      // If we still need to reauth (email didn't match and user didn't provide other proof), do it.
       if (!emailMatches) {
         let reauth;
         if (isUserGoogleAuth) {
-          // For Google users: perform provider reauth (do not skip just because email is typed)
-          if (typeof confirmEmailForDeletion === 'function') {
-            const emailCheck = await confirmEmailForDeletion(emailConfirmation);
-            if (!emailCheck.success) {
-              console.error('Email confirmation failed:', emailCheck.error);
-              alert('Email confirmation failed.');
-              return;
-            }
-          }
-
           reauth = await reauthenticateWithGoogle();
         } else {
           reauth = await reauthenticateUser(password);
         }
-
-        if (!reauth.success) {
-          console.error('Reauthentication failed:', reauth.error);
-          alert('Reauthentication failed. Please try again.');
-          return;
-        }
+        if (!reauth.success) return alert('Verification failed.');
       }
 
-      // Delete Firestore data (transactions, recurring rules, etc.) but DO NOT delete the auth user
       const deleteData = await deleteAllUserData(user.uid);
-      if (!deleteData.success) {
-        console.error('Data deletion failed:', deleteData.error);
-        alert('Failed to erase data. Please try again.');
-        return;
-      }
+      if (!deleteData.success) return alert('Erase operation aborted.');
 
-      // Reset user profile totals to zero (keep profile document but clear accounting fields)
-      try {
-        // Best-effort: reset common totals — ensure balance is explicitly set to 0
-        await updateUserProfile(user.uid, {
-          balance: 0,
-          totalIncome: 0,
-          totalExpense: 0,
-          totalCreditGiven: 0,
-          totalLoanTaken: 0,
-          transactionsCount: 0
-        });
+      await updateUserProfile(user.uid, {
+        balance: 0, totalIncome: 0, totalExpense: 0, totalCreditGiven: 0, totalLoanTaken: 0, transactionsCount: 0
+      });
 
-        // Notify other parts of the app that the profile changed (so UI updates immediately)
-        try {
-          window.dispatchEvent(new CustomEvent(PROFILE_EVENTS.PROFILE_UPDATED, { 
-            detail: { 
-              uid: user.uid, 
-              profile: { 
-                balance: 0, 
-                totalIncome: 0, 
-                totalExpense: 0, 
-                totalCreditGiven: 0,
-                totalLoanTaken: 0,
-                transactionsCount: 0 
-              } 
-            } 
-          }));
-        } catch (err) {
-          console.warn('Failed to dispatch wallet:profile-updated event', err);
-        }
-      } catch (err) {
-        console.warn('Failed to reset user profile totals:', err);
-      }
+      window.dispatchEvent(new CustomEvent(PROFILE_EVENTS.PROFILE_UPDATED, { detail: { uid: user.uid, profile: {} } }));
+      window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { erased: true } }));
 
-      // Clear local caches and storage
-      localStorage.clear();
-      sessionStorage.clear();
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
-      }
-
-      // Refresh UI state
-      if (refreshUserProfile) await refreshUserProfile();
-      try { if (refreshTransactions) await refreshTransactions(); } catch { /* ignore */ }
-
-      // Dispatch an event so components can refresh
-      try {
-        window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { erased: true } }));
-      } catch (err) {
-        // Non-fatal: some environments may restrict CustomEvent or window dispatch
-        console.warn('Failed to dispatch wallet:transactions-updated event', err);
-      }
-
-      // Show a friendly confirmation modal instead of a blocking alert
       setShowEraseComplete(true);
-    } catch (error) {
-      console.error('Erase data failed:', error);
-      alert('Failed to erase data. See console for details.');
+    } catch {
+      alert('Erase operation failed.');
     } finally {
       setDeleteLoading(false);
       setShowReauthDialog(false);
-      setPassword('');
-      setEmailConfirmation('');
     }
   };
 
@@ -368,421 +236,295 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="Settings"
+        title="System Configuration"
         size="md"
         footer={
           <div className="flex gap-3 w-full">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-bold uppercase tracking-widest transition-colors"
-            >
+            <Button variant="ghost" color="gray" fullWidth onClick={onClose}>
               Cancel
-            </button>
-            <button
-              onClick={handleSaveSettings}
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : 'Apply Preferences'}
-            </button>
+            </Button>
+            <Button color="teal" fullWidth onClick={handleSaveSettings} loading={loading} icon={Check}>
+              Apply Changes
+            </Button>
           </div>
         }
       >
         <div className="space-y-6">
-          {/* Theme Settings */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-              <Settings className="w-4 h-4 mr-2" />
-              Appearance
-            </h4>
+          {/* Theme & Visuals */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <Sun className="w-3.5 h-3.5 text-teal-500" />
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Interface Theme</span>
+              </div>
+              {persistStatus !== 'idle' && (
+                <GlassBadge
+                  label={persistStatus === 'saving' ? 'Saving...' : persistStatus === 'success' ? 'Saved' : 'Error'}
+                  variant={persistStatus === 'success' ? 'teal' : persistStatus === 'error' ? 'red' : 'gray'}
+                />
+              )}
+            </div>
             <div className="grid grid-cols-3 gap-3">
-              {themes.map((theme) => {
-                const Icon = theme.icon;
+              {themes.map((t) => {
+                const Icon = t.icon;
+                const isActive = settings.theme === t.value;
                 return (
                   <button
-                    key={theme.value}
-                    onClick={() => {
-                      // Only update the local selection; actual application occurs when the user clicks Save
-                      setSettings(prev => ({ ...prev, theme: theme.value }));
-                      // Mark as unsaved
-                      setPersistStatus('idle');
-                    }}
-                    className={`p-3 rounded-lg border-2 transition-colors ${settings.theme === theme.value
-                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    key={t.value}
+                    onClick={() => setSettings(prev => ({ ...prev, theme: t.value }))}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all duration-300 ${isActive
+                      ? 'bg-teal-500/10 border-teal-500/50 shadow-lg shadow-teal-500/5'
+                      : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
                       }`}
                   >
-                    <Icon className="w-5 h-5 mx-auto mb-1 text-gray-600 dark:text-gray-400" />
-                    <div className="text-xs text-center text-gray-600 dark:text-gray-400">
-                      {theme.label}
-                    </div>
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-teal-400' : 'text-gray-500'}`} />
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-white' : 'text-gray-500'}`}>
+                      {t.label}
+                    </span>
                   </button>
                 );
               })}
-              {/* persistence status indicator */}
-              <div className="mt-2">
-                {persistStatus === 'saving' && <span className="text-xs text-yellow-600">Saving theme...</span>}
-                {persistStatus === 'success' && <span className="text-xs text-green-600">Theme saved</span>}
-                {persistStatus === 'error' && <span className="text-xs text-red-600">Failed to save theme</span>}
+            </div>
+          </div>
+
+          {/* Regional Settings */}
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 px-1">
+                <Globe className="w-3.5 h-3.5 text-teal-500" />
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Language</span>
+              </label>
+              <Select
+                value={settings.language}
+                onChange={(e) => setSettings(prev => ({ ...prev, language: e.target.value }))}
+                options={languages.map(l => ({ value: l.value, label: `${l.flag} ${l.label}` }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 px-1">
+                <Smartphone className="w-3.5 h-3.5 text-teal-500" />
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Device Sync</span>
+              </label>
+              <div className="h-10 bg-white/5 border border-white/5 rounded-2xl flex items-center px-4">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">v1.2.0</span>
               </div>
             </div>
           </div>
 
-          {/* Language Settings */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-              <Globe className="w-4 h-4 mr-2" />
-              Language
-            </h4>
-            <div className="grid grid-cols-2 gap-3">
-              {languages.map((language) => (
-                <button
-                  key={language.value}
-                  onClick={() => setSettings(prev => ({ ...prev, language: language.value }))}
-                  className={`p-3 rounded-lg border-2 transition-colors ${settings.language === language.value
-                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
-                >
-                  <div className="text-lg mb-1">{language.flag}</div>
-                  <div className="text-sm text-center text-gray-600 dark:text-gray-400">
-                    {language.label}
+          {/* Intelligence Settings */}
+          <GlassCard padding="p-5" className="bg-white/[0.02] border-white/5">
+            <div className="flex items-center gap-2 mb-4">
+              <ShieldCheck className="w-4 h-4 text-teal-500" />
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">Security & Intelligence</span>
+            </div>
+            <div className="space-y-4">
+              {[
+                { key: 'budgetAlerts', label: 'Predictive Budget Alerts', desc: 'Notify when approaching spending ceilings' },
+                { key: 'notifications', label: 'Financial Insights', desc: 'Weekly analytics and anomaly detection' }
+              ].map(item => (
+                <label key={item.key} className="flex items-center justify-between cursor-pointer group">
+                  <div className="flex-1">
+                    <p className="text-[11px] font-black text-gray-300 uppercase tracking-widest group-hover:text-white transition-colors">{item.label}</p>
+                    <p className="text-[10px] text-gray-500 font-medium mt-0.5">{item.desc}</p>
                   </div>
-                </button>
+                  <div className="relative inline-flex items-center cursor-pointer ml-4">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={settings[item.key]}
+                      onChange={(e) => setSettings(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                    />
+                    <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-500/50 peer-checked:after:bg-teal-400"></div>
+                  </div>
+                </label>
               ))}
             </div>
-          </div>
+          </GlassCard>
 
-          {/* Lifestyle Monitor Settings */}
-          <div>
-            <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">
-              Intelligence Alerts
-            </h4>
-            <div className="space-y-3">
-              <label className="flex items-center space-x-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={settings.budgetAlerts}
-                  onChange={(e) => setSettings(prev => ({ ...prev, budgetAlerts: e.target.checked }))}
-                  className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 bg-white dark:bg-gray-700"
-                />
-                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider group-hover:text-teal-500 transition-colors">Ceiling proximity alerts</span>
-              </label>
-              <label className="flex items-center space-x-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={settings.notifications}
-                  onChange={(e) => setSettings(prev => ({ ...prev, notifications: e.target.checked }))}
-                  className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 bg-white dark:bg-gray-700"
-                />
-                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider group-hover:text-teal-500 transition-colors">General insights</span>
-              </label>
+          {/* Data Governance */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2 px-1">
+              <Database className="w-3.5 h-3.5 text-teal-500" />
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Data Sovereignty</span>
             </div>
-          </div>
-
-          {/* Data Management */}
-          <div>
-            <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">
-              Data Governance
-            </h4>
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleExportData}
-                className="w-full flex items-center space-x-3 p-3 text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-teal-500/30 transition-all group"
               >
-                <Download className="w-5 h-5 text-blue-500" />
-                <div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">Export Data</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Download all your data as JSON</div>
+                <div className="text-left">
+                  <p className="text-[11px] font-black text-white uppercase tracking-widest">Vault Export</p>
+                  <p className="text-[9px] text-gray-500 font-bold uppercase mt-0.5">JSON Snapshot</p>
                 </div>
+                <Download className="w-4 h-4 text-gray-600 group-hover:text-teal-400 transition-colors" />
               </button>
-
-              <div className="relative">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/json"
-                  onChange={onFileSelect}
-                  className="hidden"
-                />
-
-                <button
-                  onClick={triggerImport}
-                  className="w-full mt-2 flex items-center space-x-3 p-3 text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                >
-                  <Download className="w-5 h-5 text-green-500" />
-                  <div>
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">Import Data</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Select a previously exported JSON to restore data</div>
-                  </div>
-                  {importLoading && (
-                    <div className="absolute right-3 top-3 w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
-                  )}
-                </button>
-              </div>
-
-              {/* Import Modal */}
-              {showImportModal && (
-                <Modal
-                  isOpen={showImportModal}
-                  onClose={() => setShowImportModal(false)}
-                  title="Import Data"
-                  size="md"
-                  footer={
-                    <div className="flex justify-end gap-3 w-full">
-                      <button onClick={() => setShowImportModal(false)} className="px-3 py-2 rounded border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
-                      <button onClick={startImport} disabled={importLoading} className="px-3 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded disabled:opacity-50 flex items-center gap-2">
-                        {importLoading && (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        )}
-                        Start Import
-                      </button>
-                    </div>
-                  }
-                >
-                  <div className="space-y-4">
-                    <div className="text-sm text-gray-700 dark:text-gray-300">
-                      Preview: {importPreview?.totalTransactions || 0} transactions. Sample (up to 5):
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded space-y-2 max-h-40 overflow-auto">
-                      {importPreview?.sample?.map((s, i) => (
-                        <div key={i} className="text-xs">
-                          <strong>{s.type}</strong> • {s.amount} • {s.description || s.category}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                      {/* Preserve IDs toggle */}
-                      <label className="flex items-center space-x-3 cursor-pointer">
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={preserveIds}
-                            onChange={(e) => setPreserveIds(e.target.checked)}
-                            className="sr-only"
-                            aria-label="Preserve original IDs"
-                          />
-                          <div
-                            onClick={() => setPreserveIds(p => !p)}
-                            className={`w-10 h-6 rounded-full transition-colors ${preserveIds ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                          />
-                          <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${preserveIds ? 'translate-x-4' : ''}`} />
-                        </div>
-                        <span className="text-sm">Preserve original document IDs (overwrite if exists)</span>
-                      </label>
-
-                      {/* Dedupe toggle */}
-                      <label className="flex items-center space-x-3 cursor-pointer">
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={dedupe}
-                            onChange={(e) => setDedupe(e.target.checked)}
-                            className="sr-only"
-                            aria-label="Skip duplicates"
-                          />
-                          <div
-                            onClick={() => setDedupe(d => !d)}
-                            className={`w-10 h-6 rounded-full transition-colors ${dedupe ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                          />
-                          <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${dedupe ? 'translate-x-4' : ''}`} />
-                        </div>
-                        <span className="text-sm">Skip already-imported transactions (dedupe by originalId)</span>
-                      </label>
-                    </div>
-
-                  </div>
-                </Modal>
-              )}
-
-              {/* Note: we only use a single file input (preview). Start Import uses the parsed payload in memory. */}
-
-              {/* Import result summary */}
-              {importResult && (
-                <div className="mt-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm">
-                  {importResult.success ? (
-                    <div className="text-green-600 dark:text-green-400">Imported {importResult.imported} of {importResult.total} transactions. Skipped: {importResult.skipped}. Failed: {importResult.failed}.</div>
-                  ) : (
-                    <div className="text-red-600 dark:text-red-400">Import failed: {importResult.error}</div>
-                  )}
-                  {importResult.reconciled !== undefined && (
-                    <div className="mt-2 text-xs">
-                      {importResult.reconciled ? (
-                        <div className="text-green-500">Reconciliation completed. New totals: {importResult.totals ? `Balance: ${importResult.totals.balance}, Income: ${importResult.totals.totalIncome}, Expense: ${importResult.totals.totalExpense}` : 'n/a'}</div>
-                      ) : (
-                        <div className="text-yellow-500">Reconciliation was not performed or failed.</div>
-                      )}
-                    </div>
-                  )}
-                  {importResult.errors && importResult.errors.length > 0 && (
-                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                      <div className="font-medium">Errors:</div>
-                      <ul className="list-disc list-inside max-h-24 overflow-auto">
-                        {importResult.errors.slice(0, 10).map((err, i) => (
-                          <li key={i}>{err.id ? `id:${err.id} — ` : ''}{err.error}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {(importResult.overwritten && importResult.overwritten.length > 0) && (
-                    <div className="mt-2 text-xs text-gray-700 dark:text-gray-300">
-                      <div className="font-medium">Overwritten:</div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">{importResult.overwritten.length} document(s) overwritten.</div>
-                      <ul className="list-disc list-inside max-h-28 overflow-auto text-xs text-gray-600 dark:text-gray-400">
-                        {importResult.overwritten.slice(0, 10).map((id, i) => (<li key={i}>{id}</li>))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {(importResult.createdIds && importResult.createdIds.length > 0) && (
-                    <div className="mt-2 text-xs text-gray-700 dark:text-gray-300">
-                      <div className="font-medium">Created:</div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">{importResult.createdIds.length} document(s) created.</div>
-                      <ul className="list-disc list-inside max-h-28 overflow-auto text-xs text-gray-600 dark:text-gray-400">
-                        {importResult.createdIds.slice(0, 10).map((id, i) => (<li key={i}>{id}</li>))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-
               <button
-                onClick={handleDeleteAccount}
-                className="w-full flex items-center space-x-3 p-3 text-left border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition-all group"
               >
-                <Trash2 className="w-5 h-5 text-red-500" />
-                <div>
-                  <div className="text-sm font-medium text-red-600 dark:text-red-400">Erase My Data</div>
-                  <div className="text-xs text-red-500 dark:text-red-400">Permanently erase all accounting data from this account (your auth account will remain)</div>
+                <div className="text-left">
+                  <p className="text-[11px] font-black text-white uppercase tracking-widest">Restore Data</p>
+                  <p className="text-[9px] text-gray-500 font-bold uppercase mt-0.5">Import Vault</p>
                 </div>
+                <Plus className="w-4 h-4 text-gray-600 group-hover:text-emerald-400 transition-colors" />
               </button>
             </div>
-          </div>
+            <input ref={fileInputRef} type="file" accept="application/json" onChange={onFileSelect} className="hidden" />
 
+            {/* Import Status Feedback */}
+            {importResult && (
+              <div className={`p-4 rounded-2xl border ${importResult.success ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-500' : 'bg-red-500/5 border-red-500/10 text-red-500'} animate-in fade-in zoom-in-95 duration-300`}>
+                <div className="flex items-center gap-3">
+                  {importResult.success ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                  <div className="flex-1">
+                    <p className="text-[11px] font-black uppercase tracking-widest">
+                      {importResult.success ? 'Vault Restored' : 'Import Aborted'}
+                    </p>
+                    <p className="text-[10px] opacity-70 font-bold mt-0.5 uppercase tracking-wider">
+                      {importResult.success 
+                        ? `Integrated ${importResult.imported} of ${importResult.total} ledger entries.`
+                        : importResult.error || 'System validation failed.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handleDeleteAccount}
+              className="w-full flex items-center justify-between p-4 rounded-2xl bg-red-500/5 border border-red-500/10 hover:bg-red-500/10 hover:border-red-500/30 transition-all group mt-2"
+            >
+              <div className="text-left">
+                <p className="text-[11px] font-black text-red-400 uppercase tracking-widest">Purge Vault</p>
+                <p className="text-[9px] text-red-500/50 font-bold uppercase mt-0.5">Permanent Erasure</p>
+              </div>
+              <Trash2 className="w-4 h-4 text-red-500/40 group-hover:text-red-500 transition-colors" />
+            </button>
+          </div>
         </div>
       </Modal>
 
-      {/* Clear importResult when modal closes to ensure a fresh state next open */}
-      {!isOpen && importResult && setImportResult(null)}
+      {/* Modern Import Dialog */}
+      {showImportModal && (
+        <Modal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          title="Import Wallet Data"
+          size="sm"
+          footer={
+            <div className="flex gap-3 w-full">
+              <Button variant="ghost" color="gray" fullWidth onClick={() => setShowImportModal(false)}>Cancel</Button>
+              <Button color="teal" fullWidth onClick={startImport} loading={importLoading} icon={Check}>Start Import</Button>
+            </div>
+          }
+        >
+          <div className="space-y-5">
+            <GlassCard className="bg-emerald-500/5 border-emerald-500/10" padding="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <Database className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-white">{importPreview?.totalTransactions} Records Found</p>
+                  <p className="text-[10px] text-emerald-500/70 font-bold uppercase tracking-widest">Verified Vault Snapshot</p>
+                </div>
+              </div>
+            </GlassCard>
 
-      {/* Delete Confirmation */}
+            <div className="space-y-4">
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div>
+                  <p className="text-[11px] font-black text-gray-300 uppercase tracking-widest">Overwrite Conflict</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">Preserve original system identifiers</p>
+                </div>
+                <input type="checkbox" checked={preserveIds} onChange={(e) => setPreserveIds(e.target.checked)} className="w-4 h-4 rounded border-white/10 bg-white/5 text-teal-500" />
+              </label>
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div>
+                  <p className="text-[11px] font-black text-gray-300 uppercase tracking-widest">Duplicate Shield</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">Skip already existing ledger entries</p>
+                </div>
+                <input type="checkbox" checked={dedupe} onChange={(e) => setDedupe(e.target.checked)} className="w-4 h-4 rounded border-white/10 bg-white/5 text-teal-500" />
+              </label>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Modern Purge Confirmation */}
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleConfirmDelete}
-        title="Erase My Data"
-        message="This will permanently remove all your accounting data (transactions, recurring rules, budgets). Your authentication account will remain. Proceed?"
-        confirmText="Continue"
+        title="Purge Vault Data"
+        message="This will permanently incinerate all financial records and configurations. Your identity account will remain active. This action is irreversible."
+        confirmText="Confirm Purge"
         type="danger"
       />
 
-      {/* Reauthentication Dialog */}
       <Modal
         isOpen={showReauthDialog}
-        onClose={() => {
-          setShowReauthDialog(false);
-          setPassword('');
-          setEmailConfirmation('');
-        }}
-        title="Confirm Erase My Data"
+        onClose={() => setShowReauthDialog(false)}
+        title="Identity Verification"
         size="sm"
         footer={
           <div className="flex gap-3 w-full">
-            <button
-              onClick={() => {
-                setShowReauthDialog(false);
-                setPassword('');
-                setEmailConfirmation('');
-              }}
-              disabled={deleteLoading}
-              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleReauthAndDelete}
-              disabled={
-                (isUserGoogleAuth && !emailConfirmation) ||
-                (!isUserGoogleAuth && !password) ||
-                deleteLoading
-              }
-              className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {deleteLoading && (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
-              {isUserGoogleAuth ? 'Authenticate' : 'Erase Data'}
-            </button>
+            <Button variant="ghost" color="gray" fullWidth onClick={() => setShowReauthDialog(false)}>Cancel</Button>
+            <Button color="red" fullWidth onClick={handleReauthAndDelete} loading={deleteLoading} icon={Trash2}>Verify & Purge</Button>
           </div>
         }
       >
-        <div className="space-y-4">
-          <div className="flex items-start space-x-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                This action is permanent
-              </p>
-              <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                {isUserGoogleAuth
-                  ? 'Type your email address to confirm erasing data. If the email matches your account, no further reauthentication is needed; otherwise you will be prompted to sign in with Google.'
-                  : 'Type your account email to confirm erasing data (matching email will skip reauthentication), or enter your password to reauthenticate.'}
-              </p>
+        <div className="space-y-5">
+          <GlassCard className="bg-red-500/5 border-red-500/10" padding="p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[11px] font-black text-red-400 uppercase tracking-widest">High-Risk Operation</p>
+                <p className="text-[10px] text-red-500/70 font-medium mt-1 leading-relaxed">
+                  To proceed with the total erasure of your vault, please provide your account password or verify your email.
+                </p>
+              </div>
             </div>
+          </GlassCard>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Confirmation Key</label>
+            {isUserGoogleAuth ? (
+              <GlassInput
+                type="email"
+                value={emailConfirmation}
+                onChange={(e) => setEmailConfirmation(e.target.value)}
+                placeholder="Account Email"
+                required
+              />
+            ) : (
+              <GlassInput
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Account Password"
+                required
+              />
+            )}
           </div>
-
-          {isUserGoogleAuth ? (
-            <input
-              type="email"
-              value={emailConfirmation}
-              onChange={(e) => setEmailConfirmation(e.target.value)}
-              placeholder="Type your email address to confirm"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-              required
-            />
-          ) : (
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-              required
-            />
-          )}
-
         </div>
       </Modal>
 
-      {/* Erase complete modal */}
       <Modal
         isOpen={showEraseComplete}
-        onClose={() => {
-          setShowEraseComplete(false);
-          // Close the settings as well to return user to app
-          try { onClose && onClose(); } catch (err) { console.warn('onClose handler threw', err); }
-        }}
-        title="Erase complete"
+        onClose={() => { setShowEraseComplete(false); onClose?.(); }}
+        title="Operation Complete"
         size="sm"
       >
-        <div className="flex flex-col items-center space-y-4 p-4">
-          <CheckCircle className="w-12 h-12 text-green-500" />
-          <div className="text-sm text-gray-800 dark:text-gray-100 text-center">All accounting data has been erased. Your authentication account remains.</div>
-          <div className="w-full">
-            <button
-              onClick={() => {
-                setShowEraseComplete(false);
-                try { onClose && onClose(); } catch (err) { console.warn('onClose handler threw', err); }
-              }}
-              className="w-full px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium"
-            >
-              OK
-            </button>
+        <div className="flex flex-col items-center gap-4 py-6">
+          <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 flex items-center justify-center">
+            <CheckCircle className="w-8 h-8 text-emerald-500" />
           </div>
+          <div className="text-center space-y-1">
+            <p className="text-sm font-black text-white">Vault Purged Successfully</p>
+            <p className="text-xs text-gray-500 font-medium px-4">All local and cloud financial records have been permanently erased.</p>
+          </div>
+          <Button color="teal" className="mt-4 min-w-[120px]" onClick={() => { setShowEraseComplete(false); onClose?.(); }}>Return to System</Button>
         </div>
       </Modal>
     </>

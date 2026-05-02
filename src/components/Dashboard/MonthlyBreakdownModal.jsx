@@ -6,6 +6,12 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { formatCurrencyWithUser } from '../../utils/helpers';
 import LoadingSpinner from '../UI/LoadingSpinner';
 
+// Base UI Components
+import GlassCard from '../UI/base/GlassCard';
+import Select from '../UI/base/Select';
+import GlassBadge from '../UI/base/GlassBadge';
+import IconBox from '../UI/base/IconBox';
+
 const MonthlyBreakdownModal = ({ open, onClose }) => {
   const { userProfile } = useAuth();
   const { transactions, loading } = useTransactions();
@@ -72,97 +78,115 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
   return (
     <Modal isOpen={open} onClose={onClose} title="Monthly Breakdown">
       <div className="space-y-4">
-        {/* Month Selector */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Select Month</label>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent"
-          >
-            {monthlyData.map(m => (
-              <option key={m.month} value={m.month}>
-                {formatMonthLabel(m.month)}
-              </option>
-            ))}
-          </select>
-        </div>
-
         {loading ? (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-12">
             <LoadingSpinner />
           </div>
-        ) : !selectedData ? (
-          <div className="text-center py-8 text-gray-500">
-            <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No data for selected month</p>
+        ) : monthlyData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <IconBox icon={Calendar} size="lg" colorClass="text-gray-500" bgClass="bg-white/5" className="mb-4 opacity-40" />
+            <h3 className="text-sm font-bold text-white/80 mb-1">No transaction history</h3>
+            <p className="text-[11px] text-gray-500 font-medium max-w-[200px]">
+              We need at least one income or expense entry to generate your monthly report.
+            </p>
           </div>
         ) : (
           <>
+            {/* Month Selector */}
+            <div className="px-1">
+              <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">Select Reporting Month</label>
+              <Select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                options={monthlyData.map(m => ({
+                  value: m.month,
+                  label: formatMonthLabel(m.month)
+                }))}
+              />
+            </div>
+
+            {!selectedData ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <IconBox icon={Calendar} size="lg" colorClass="text-gray-500" bgClass="bg-white/5" className="mb-4 opacity-40" />
+                <h3 className="text-sm font-bold text-white/80 mb-1">No monthly records</h3>
+                <p className="text-[11px] text-gray-500 font-medium">No income or expense data found for this period.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
             {/* Summary Cards */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <span className="text-sm font-medium text-green-600 dark:text-green-400">Income</span>
+              <GlassCard border="border-emerald-500/10" padding="p-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <IconBox icon={TrendingUp} size="sm" colorClass="text-emerald-400" bgClass="bg-emerald-500/10" />
+                  <span className="text-[10px] font-semibold text-emerald-400/80">Monthly Income</span>
                 </div>
-                <div className="text-lg font-semibold text-green-600 dark:text-green-400">
+                <div className="text-lg font-bold text-white tracking-tighter">
                   {formatCurrencyWithUser(selectedData.income, userProfile)}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {selectedData.incomeCount} transaction{selectedData.incomeCount !== 1 ? 's' : ''}
+                <div className="text-[10px] text-gray-500 font-medium mt-1">
+                  {selectedData.incomeCount} transactions
                 </div>
-              </div>
+              </GlassCard>
 
-              <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingDown className="w-4 h-4 text-red-600 dark:text-red-400" />
-                  <span className="text-sm font-medium text-red-600 dark:text-red-400">Expense</span>
+              <GlassCard border="border-rose-500/10" padding="p-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <IconBox icon={TrendingDown} size="sm" colorClass="text-rose-400" bgClass="bg-rose-500/10" />
+                  <span className="text-[10px] font-semibold text-rose-400/80">Monthly Expense</span>
                 </div>
-                <div className="text-lg font-semibold text-red-600 dark:text-red-400">
+                <div className="text-lg font-bold text-white tracking-tighter">
                   {formatCurrencyWithUser(selectedData.expense, userProfile)}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {selectedData.expenseCount} transaction{selectedData.expenseCount !== 1 ? 's' : ''}
+                <div className="text-[10px] text-gray-500 font-medium mt-1">
+                  {selectedData.expenseCount} transactions
                 </div>
-              </div>
+              </GlassCard>
             </div>
 
             {/* Net Change */}
-            <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <GlassCard padding="p-3" border="border-white/5">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Net Change</span>
-                <span className={`text-lg font-semibold ${selectedData.income - selectedData.expense >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                <span className="text-[11px] font-semibold text-gray-500">Net Balance Shift</span>
+                <span className={`text-sm font-bold tracking-tighter ${selectedData.income - selectedData.expense >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {selectedData.income - selectedData.expense >= 0 ? '+' : ''}
                   {formatCurrencyWithUser(selectedData.income - selectedData.expense, userProfile)}
                 </span>
               </div>
-            </div>
+            </GlassCard>
 
             {/* Transaction Details */}
-            <div>
-              <h4 className="text-sm font-semibold mb-2">Transactions ({selectedData.transactions.length})</h4>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-3">
+              <h4 className="text-[11px] font-semibold text-gray-500 px-1">Detailed Ledger ({selectedData.transactions.length})</h4>
+              <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
                 {selectedData.transactions
                   .filter(tx => tx.type === 'income' || tx.type === 'expense')
                   .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
                   .map(tx => (
-                    <div key={tx.id} className="flex items-center justify-between p-2 rounded bg-gray-50 dark:bg-gray-800 text-sm">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 dark:text-white truncate">
-                          {tx.description}
+                    <GlassCard key={tx.id} padding="p-2" border="border-white/5" className="group hover:bg-white/[0.04]">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-semibold text-white/90 truncate">
+                            {tx.description}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] font-medium text-gray-500/80">
+                              {new Date(tx.date || tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
+                            <div className="w-1 h-1 rounded-full bg-gray-700" />
+                            <span className="text-[10px] font-medium text-gray-500/80">
+                              {tx.category}
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(tx.date || tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {tx.category}
+                        <div className={`text-xs font-bold tracking-tighter whitespace-nowrap ${tx.type === 'income' ? 'text-emerald-400/90' : 'text-rose-400/90'}`}>
+                          {tx.type === 'income' ? '+' : '-'}{formatCurrencyWithUser(tx.amount, userProfile)}
                         </div>
                       </div>
-                      <div className={`font-semibold ml-2 whitespace-nowrap ${tx.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {tx.type === 'income' ? '+' : '-'}{formatCurrencyWithUser(tx.amount, userProfile)}
-                      </div>
-                    </div>
+                    </GlassCard>
                   ))}
+                </div>
               </div>
             </div>
+            )}
           </>
         )}
       </div>

@@ -1188,3 +1188,47 @@ export const adjustLoanCreditAmount = async (userId, transactionId, adjustmentAm
     return { success: false, error: error.message };
   }
 };
+
+export const resetLoanCreditPayments = async (userId, transactionId) => {
+  try {
+    const transactionsRef = collection(db, `users/${userId}/transactions`);
+    const linkedQuery = query(transactionsRef, where('linkedTransactionId', '==', transactionId));
+    const linkedSnap = await getDocs(linkedQuery);
+    
+    const originalRef = doc(db, `users/${userId}/transactions/${transactionId}`);
+    const originalSnap = await getDoc(originalRef);
+    
+    if (!originalSnap.exists()) throw new Error('Original transaction not found');
+    const [originalDecrypted] = await decryptTransactions([{ id: originalSnap.id, ...originalSnap.data() }]);
+
+    await runTransaction(db, async (tx) => {
+      // 1. Delete all linked repayments
+      linkedSnap.docs.forEach(d => {
+        tx.delete(d.ref);
+      });
+
+      // 2. Reset the original transaction
+      const updatedOriginal = {
+        ...originalDecrypted,
+        paidAmount: 0,
+        isFullyPaid: false,
+        lastPaymentDate: null,
+        updatedAt: Timestamp.now()
+      };
+      
+      const encryptedOriginal = await encryptTransactionData(updatedOriginal);
+      tx.update(originalRef, encryptedOriginal);
+    });
+
+    // Dispatch events
+    window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_EDITED, { 
+      detail: { transactionId, updates: { paidAmount: 0, isFullyPaid: false } } 
+    }));
+    window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED));
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error resetting loan/credit:', error);
+    return { success: false, error: error.message };
+  }
+};

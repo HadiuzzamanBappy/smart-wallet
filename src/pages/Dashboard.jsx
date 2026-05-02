@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import Header from '../components/Dashboard/Header';
+import Header from '../components/UI/Header';
 import CompactSummary from '../components/Dashboard/CompactSummary';
 import BudgetProgress from '../components/Dashboard/BudgetProgress';
 import SalaryHomeCard from '../components/Dashboard/SalaryHomeCard';
 import ExpandableDetailsSection from '../components/Dashboard/ExpandableDetailsSection';
-import ChatWidget from '../components/Dashboard/ChatWidget';
-import AddTransactionModal from '../components/UI/AddTransactionModal';
+import ChatWidget from '../components/UI/ChatWidget';
+import AddTransactionModal from '../components/Dashboard/AddTransactionModal';
 import ProfileModal from '../components/User/ProfileModal';
 import SettingsModal from '../components/User/SettingsModal';
 import SalaryManager from './SalaryManager';

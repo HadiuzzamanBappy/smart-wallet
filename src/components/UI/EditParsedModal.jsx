@@ -4,6 +4,12 @@ import Modal from './base/Modal';
 import { updateTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
 
+// Base UI Components
+import Button from './base/Button';
+import GlassInput from './base/GlassInput';
+import Select from './base/Select';
+import IconBox from './base/IconBox';
+
 const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
   const { user, refreshUserProfile } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -93,62 +99,60 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
       size="md"
       footer={
         <div className="flex gap-3 w-full">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            color="gray"
+            fullWidth
             onClick={onClose}
             disabled={loading}
-            className="flex-1 h-11 flex items-center justify-center gap-2 px-4 py-2 text-gray-500 dark:text-gray-400 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+            icon={X}
           >
-            <X className="w-4 h-4" />
-            <span>Cancel</span>
-          </button>
-          <button
-            type="submit"
+            Cancel
+          </Button>
+          <Button
+            color="teal"
+            fullWidth
+            onClick={handleSubmit}
             form={formId}
-            disabled={loading || !editData.amount || !editData.description}
-            className="flex-1 h-11 flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-teal-500/20 active:scale-[0.98]"
+            loading={loading}
+            disabled={!editData.amount || !editData.description}
+            icon={Save}
           >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            <span>Save Changes</span>
-          </button>
+            Save Changes
+          </Button>
         </div>
       }
     >
-      <form id={formId} onSubmit={handleSubmit} className="space-y-4">
+      <form id={formId} onSubmit={handleSubmit} className="space-y-4 px-1">
         {/* Transaction Type */}
         <div>
-          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
+          <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
             Transaction Type
           </label>
-          <select
+          <Select
             name="type"
             value={editData.type}
-            onChange={handleInputChange}
-            className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
-          >
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-            <option value="credit">Credit Given</option>
-            <option value="loan">Loan Taken</option>
-          </select>
+            onChange={(e) => handleInputChange({ target: { name: 'type', value: e.target.value }})}
+            options={[
+              { value: 'expense', label: 'Expense' },
+              { value: 'income', label: 'Income' },
+              { value: 'credit', label: 'Credit Given' },
+              { value: 'loan', label: 'Loan Taken' }
+            ]}
+          />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {/* Amount */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
-              Amount (BDT)
+            <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+              Amount
             </label>
-            <input
+            <GlassInput
               type="number"
               name="amount"
               value={editData.amount}
               onChange={handleInputChange}
-              className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
               placeholder="0.00"
               required
             />
@@ -156,15 +160,14 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
 
           {/* Date */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
+            <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
               Date
             </label>
-            <input
+            <GlassInput
               type="date"
               name="date"
               value={editData.date}
               onChange={handleInputChange}
-              className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
               required
             />
           </div>
@@ -172,15 +175,14 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
 
         {/* Description */}
         <div>
-          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
+          <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
             Description
           </label>
-          <input
+          <GlassInput
             type="text"
             name="description"
             value={editData.description}
             onChange={handleInputChange}
-            className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
             placeholder="What was this for?"
             required
           />
@@ -188,21 +190,18 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
 
         {/* Category */}
         <div>
-          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">
+          <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
             Category
           </label>
-          <select
+          <Select
             name="category"
             value={editData.category}
-            onChange={handleInputChange}
-            className="w-full h-11 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
-          >
-            {categories.map(category => (
-              <option key={category.value} value={category.value}>
-                {category.emoji} {category.label}
-              </option>
-            ))}
-          </select>
+            onChange={(e) => handleInputChange({ target: { name: 'category', value: e.target.value }})}
+            options={categories.map(c => ({
+              value: c.value,
+              label: `${c.emoji} ${c.label}`
+            }))}
+          />
         </div>
       </form>
     </Modal>

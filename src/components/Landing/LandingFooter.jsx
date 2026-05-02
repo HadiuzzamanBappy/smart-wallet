@@ -20,7 +20,7 @@ const LandingFooter = () => {
                 <Wallet className="w-6 h-6 text-teal-500" style={{ display: 'none' }} />
             </div>
             <div className="flex flex-col items-center md:items-start">
-                <span className="text-sm font-black text-white uppercase tracking-[0.2em] leading-none">Smart <span className="text-teal-500">Wallet</span></span>
+                <span className="text-sm font-black text-white uppercase tracking-[0.2em] leading-none">Wallet <span className="text-teal-500">Tracker</span></span>
                 <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 mt-1.5">Sovereign Financial Infrastructure</span>
             </div>
           </div>
@@ -38,7 +38,7 @@ const LandingFooter = () => {
                 </div>
             </div>
             <div className="text-[9px] sm:text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] sm:tracking-[0.3em]">
-                &copy; {new Date().getFullYear()} Smart Wallet. All Rights Reserved.
+                &copy; {new Date().getFullYear()} Wallet Tracker. All Rights Reserved.
             </div>
           </div>
         </div>

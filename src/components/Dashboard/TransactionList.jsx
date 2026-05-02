@@ -3,7 +3,6 @@ import {
   Edit3,
   Trash2,
   Filter,
-  Calendar,
   TrendingUp,
   TrendingDown,
   Search,
@@ -13,12 +12,17 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import { deleteTransaction, countLinkedRepayments } from '../../services/transactionService';
 import { formatCurrency, formatDate } from '../../utils/helpers';
-import { getCategoryEmoji, getCategoryColor } from '../../utils/aiTransactionParser';
+import { getCategoryEmoji } from '../../utils/aiTransactionParser';
 import EditParsedModal from '../UI/EditParsedModal';
-import ConfirmDialog from '../UI/ConfirmDialog';
+import ConfirmDialog from '../UI/base/ConfirmDialog';
 import Modal from '../UI/base/Modal';
-import LoadingSpinner from '../UI/LoadingSpinner';
 import { TransactionListSkeleton } from '../UI/SkeletonLoader';
+
+// Base UI Components
+import Button from '../UI/base/Button';
+import GlassInput from '../UI/base/GlassInput';
+import Select from '../UI/base/Select';
+import GlassBadge from '../UI/base/GlassBadge';
 
 const TransactionList = ({ onTransactionChange }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -56,10 +60,10 @@ const TransactionList = ({ onTransactionChange }) => {
 
     const targetId = deletingTransaction.id;
     const backupTx = { ...deletingTransaction };
-    
+
     // We don't removeTransaction instantly anymore to ensure dialog shows loading
     // instead of disappearing instantly.
-    
+
     setPreparingDelete(true); // Reuse preparingDelete for the actual deletion loading state
 
     try {
@@ -68,12 +72,12 @@ const TransactionList = ({ onTransactionChange }) => {
       if (result.success) {
         // Now we can remove from UI
         removeTransaction(targetId);
-        
+
         // Silent refresh of other data (like balance)
         await refreshUserProfile();
-        await refreshTransactions(true); 
+        await refreshTransactions(true);
         onTransactionChange?.();
-        
+
         // Finally close dialog
         setDeletingTransaction(null);
         setLinkedCount(0);
@@ -162,24 +166,29 @@ const TransactionList = ({ onTransactionChange }) => {
     return categories.sort();
   };
 
-  const getAmountColor = (type) => {
-    switch (type) {
-      case 'income':
-      case 'loan':
-      case 'collection':
-        return 'text-green-600 dark:text-green-400';
-      case 'expense':
-      case 'credit':
-      case 'repayment':
-        return 'text-red-600 dark:text-red-400';
-      default:
-        return 'text-gray-600 dark:text-gray-400';
-    }
+  const getDisplayCategory = (transaction) => {
+    if (transaction.type === 'repayment') return 'other';
+    if (transaction.type === 'collection') return 'other';
+    return transaction.category || 'other';
   };
 
-  const getDisplayCategory = (transaction) => transaction.category;
-  const getDisplayCategoryLabel = (transaction) => {
-    return transaction.category;
+  const getCategoryBadgeColor = (category) => {
+    const map = {
+      food: 'orange',
+      transport: 'blue',
+      shopping: 'rose',
+      entertainment: 'purple',
+      health: 'rose',
+      utilities: 'amber',
+      salary: 'emerald',
+      freelance: 'teal',
+      investment: 'cyan',
+      gift: 'orange',
+      loan: 'rose',
+      credit: 'emerald',
+      other: 'gray'
+    };
+    return map[category?.toLowerCase()] || 'gray';
   };
 
   if (transactionLoading) {
@@ -189,135 +198,143 @@ const TransactionList = ({ onTransactionChange }) => {
   return (
     <>
       <div>
-        <div className="px-4 border-b border-gray-200 dark:border-gray-700 py-4 mb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="px-4 py-4 space-y-4 border-b border-white/10 pb-6 mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="text-[11px] font-semibold text-gray-500 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
               {filteredTransactions.length} of {transactions.length} transactions
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Search - Full width on all screens */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-sm"
-              />
-            </div>
+          {/* Filters Bar */}
+          <div className="flex flex-col md:flex-row gap-2">
+            <GlassInput
+              placeholder="Search..."
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              icon={Search}
+              className="flex-1"
+            />
 
-            {/* Filter dropdowns - Single row on mobile, grid on larger screens */}
-            <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3">
-              {/* Type Filter */}
-              <select
+            <div className="grid grid-cols-3 gap-2">
+              <Select
                 value={filters.type}
                 onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
-                className="px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-xs sm:text-sm truncate"
-              >
-                <option value="all">All Types</option>
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
-                <option value="credit">Credit</option>
-                <option value="loan">Loan</option>
-                <option value="repayment">Repayment</option>
-                <option value="collection">Collection</option>
-              </select>
+                options={[
+                  { label: 'All Types', value: 'all' },
+                  { label: 'Income', value: 'income' },
+                  { label: 'Expense', value: 'expense' },
+                  { label: 'Credit', value: 'credit' },
+                  { label: 'Loan', value: 'loan' },
+                  { label: 'Repayment', value: 'repayment' },
+                  { label: 'Collection', value: 'collection' }
+                ]}
+              />
 
-              {/* Category Filter */}
-              <select
+              <Select
                 value={filters.category}
                 onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-                className="px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-xs sm:text-sm truncate"
-              >
-                <option value="all">All Categories</option>
-                {getUniqueCategories().map(category => (
-                  <option key={category} value={category}>
-                    {getCategoryEmoji(category)} {category}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { label: 'All Categories', value: 'all' },
+                  ...getUniqueCategories().map(c => ({ label: c, value: c }))
+                ]}
+              />
 
-              {/* Date Range Filter */}
-              <select
+              <Select
                 value={filters.dateRange}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
-                className="px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-transparent text-xs sm:text-sm truncate"
-              >
-                <option value="all">All Time</option>
-                <option value="7">Last 7 days</option>
-                <option value="30">Last 30 days</option>
-                <option value="90">Last 3 months</option>
-                <option value="365">Last year</option>
-              </select>
+                options={[
+                  { label: 'All Time', value: 'all' },
+                  { label: '7 days', value: '7' },
+                  { label: '30 days', value: '30' },
+                  { label: '3 months', value: '90' },
+                  { label: '1 year', value: '365' }
+                ]}
+              />
             </div>
           </div>
         </div>
 
-        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+        <div className="space-y-0 px-0">
           {filteredTransactions.length === 0 ? (
-            <div className="py-8 text-center">
-              <div className="text-gray-400 dark:text-gray-500 mb-2">
-                <Filter className="w-12 h-12 mx-auto mb-4" />
-              </div>
-              <p className="text-gray-500 dark:text-gray-400">
+            <div className="py-12 text-center opacity-60">
+              <Filter className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+              <p className="text-[11px] font-semibold text-gray-500">
                 {transactions.length === 0
-                  ? "No transactions yet. Add your first transaction to get started!"
-                  : "No transactions match your current filters."
+                  ? "No transactions yet"
+                  : "No matches found"
                 }
               </p>
             </div>
           ) : (
             paginatedTransactions.map((transaction) => {
               const dc = getDisplayCategory(transaction);
-              const dcl = getDisplayCategoryLabel(transaction);
+              const isPositive = ['income', 'loan', 'collection'].includes(transaction.type);
+
               return (
-                <div key={transaction.id} className="px-4 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-150 border-b border-gray-100 dark:border-gray-700/30 last:border-0">
-                  <div className="grid grid-cols-[auto_1fr_auto] gap-4 items-start sm:items-center">
-                    {/* Left: avatar with soft bg and small status indicator */}
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg">
-                        {getCategoryEmoji(dc)}
+                <div key={transaction.id} className="px-4 py-3 hover:bg-white/[0.02] transition-all border-b border-white/5 last:border-0 group">
+                  <div className="grid grid-cols-[auto_1fr_auto] gap-4 items-center">
+                    {/* Left: avatar with trend overlay */}
+                    <div className="relative shrink-0">
+                      <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-xl">
+                        <span className="opacity-80">{getCategoryEmoji(dc)}</span>
                       </div>
-                      {/* small status badge (up/down) */}
-                      <div className={`absolute -right-1 -bottom-1 w-5 h-5 rounded-full flex items-center justify-center text-xs ${['income', 'loan', 'collection'].includes(transaction.type) ? 'bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300'}`}>
-                        {['income', 'loan', 'collection'].includes(transaction.type) ? (
-                          <TrendingUp className="w-3 h-3" />
-                        ) : (
-                          <TrendingDown className="w-3 h-3" />
+                      <div className={`absolute -right-1 -bottom-1 w-5 h-5 rounded-lg flex items-center justify-center border-2 border-[#0f172a] ${isPositive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                        {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                      </div>
+                    </div>
+
+                    {/* Middle: Content */}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white/90 truncate mb-1.5">{transaction.description}</p>
+                      <div className="flex items-center gap-3">
+                        <GlassBadge color={getCategoryBadgeColor(dc)}>
+                          <span>{getCategoryEmoji(dc)}</span>
+                          <span>{dc}</span>
+                        </GlassBadge>
+                        <span className="text-[11px] font-medium text-gray-500/80">
+                          {formatDate(transaction.createdAt)}
+                        </span>
+                        {transaction.source === 'chat' && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500/60 shadow-[0_0_8px_rgba(59,130,246,0.2)]" title="AI Parsed" />
                         )}
                       </div>
                     </div>
 
-                    {/* Middle: description, date, badges */}
-                    <div className="min-w-0">
-                      <div className="flex items-center justify-between sm:justify-start gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{transaction.description}</p>
-                          <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${getCategoryColor(dc)}`}>{dcl}</span>
-                            <span>{formatDate(transaction.createdAt)}</span>
-                            <span className="hidden sm:inline">• {transaction.type}</span>
-                            {transaction.source === 'chat' && (<span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">AI</span>)}
-                          </div>
-                        </div>
+                    {/* Right: Amount & Actions */}
+                    <div className="flex flex-col items-end gap-2">
+                      <div className={`text-sm font-semibold whitespace-nowrap tracking-tighter ${isPositive ? 'text-emerald-400/80' : 'text-rose-400/80'}`}>
+                        {isPositive ? '+' : '-'}{formatCurrency(transaction.amount, currency)}
                       </div>
-                    </div>
-
-                    {/* Right: amount and CTA (single row on desktop, stacked on mobile) */}
-                    <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-3">
-                      <div className={`text-sm font-semibold whitespace-nowrap ${getAmountColor(transaction.type)}`}>{['income', 'loan', 'collection'].includes(transaction.type) ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</div>
-                      <div className="flex gap-1 flex-wrap justify-end">
+                      <div className="flex gap-1 transition-opacity">
                         {(transaction.type === 'repayment' || transaction.type === 'collection') && (
-                          <button type="button" onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors" title="View details"><Eye className="w-4 h-4" /></button>
+                          <Button
+                            variant="icon"
+                            size="xsm"
+                            color="gray"
+                            onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }}
+                            icon={Eye}
+                            title="View details"
+                          />
                         )}
                         {transaction.type !== 'repayment' && transaction.type !== 'collection' && (
-                          <button onClick={() => setEditingTransaction(transaction)} className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors" title="Edit"><Edit3 className="w-4 h-4" /></button>
+                          <Button
+                            variant="icon"
+                            size="xsm"
+                            color="teal"
+                            onClick={() => setEditingTransaction(transaction)}
+                            icon={Edit3}
+                            title="Edit"
+                          />
                         )}
-                        <button onClick={() => handlePrepareDelete(transaction)} className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                        <Button
+                          variant="icon"
+                          size="xsm"
+                          color="red"
+                          onClick={() => handlePrepareDelete(transaction)}
+                          icon={Trash2}
+                          title="Delete"
+                        />
                       </div>
                     </div>
                   </div>
@@ -349,8 +366,8 @@ const TransactionList = ({ onTransactionChange }) => {
                     key={i}
                     onClick={() => setPage(i + 1)}
                     className={`w-8 h-8 flex items-center justify-center rounded-md text-xs font-bold transition-all ${page === i + 1
-                        ? 'bg-teal-500 text-white shadow-md shadow-teal-500/20'
-                        : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      ? 'bg-teal-500 text-white shadow-md shadow-teal-500/20'
+                      : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
                       }`}
                   >
                     {i + 1}

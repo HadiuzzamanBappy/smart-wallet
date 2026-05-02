@@ -15,8 +15,20 @@ import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useTransactions } from '../../hooks/useTransactions';
 import { formatCurrency } from '../../utils/helpers';
 // normalizeCategory not needed here after activity breakdown changes
-import { Calendar, TrendingUp, PieChart, BarChart3 } from 'lucide-react';
+import {
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  PieChart,
+  BarChart3
+} from 'lucide-react';
 import { AnalyticsSkeleton } from '../UI/SkeletonLoader';
+
+// Base UI Components
+import GlassCard from '../UI/base/GlassCard';
+import Button from '../UI/base/Button';
+import GlassBadge from '../UI/base/GlassBadge';
+import IconBox from '../UI/base/IconBox';
 
 ChartJS.register(
   CategoryScale,
@@ -47,28 +59,28 @@ const SpendingAnalytics = () => {
     }).reverse();
 
     const dailySpending = last7Days.map(date => {
-      const dayTransactions = transactions.filter(t => 
+      const dayTransactions = transactions.filter(t =>
         t.date.toISOString().split('T')[0] === date && t.type === 'expense'
       );
       return dayTransactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     });
 
     const dailyIncome = last7Days.map(date => {
-      const dayTransactions = transactions.filter(t => 
+      const dayTransactions = transactions.filter(t =>
         t.date.toISOString().split('T')[0] === date && t.type === 'income'
       );
       return dayTransactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     });
 
     const dailyCredit = last7Days.map(date => {
-      const dayTransactions = transactions.filter(t => 
+      const dayTransactions = transactions.filter(t =>
         t.date.toISOString().split('T')[0] === date && t.type === 'credit'
       );
       return dayTransactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     });
 
     const dailyLoan = last7Days.map(date => {
-      const dayTransactions = transactions.filter(t => 
+      const dayTransactions = transactions.filter(t =>
         t.date.toISOString().split('T')[0] === date && t.type === 'loan'
       );
       return dayTransactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
@@ -153,7 +165,7 @@ const SpendingAnalytics = () => {
   const getMonthlyData = () => {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    
+
     const months = Array.from({ length: 6 }, (_, i) => {
       const date = new Date(currentYear, currentMonth - i, 1);
       return {
@@ -165,9 +177,9 @@ const SpendingAnalytics = () => {
     const monthlyExpenses = months.map(month => {
       const monthTransactions = transactions.filter(t => {
         const tDate = t.date;
-        return tDate.getMonth() === month.fullDate.getMonth() && 
-               tDate.getFullYear() === month.fullDate.getFullYear() && 
-               t.type === 'expense';
+        return tDate.getMonth() === month.fullDate.getMonth() &&
+          tDate.getFullYear() === month.fullDate.getFullYear() &&
+          t.type === 'expense';
       });
       return monthTransactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     });
@@ -175,9 +187,9 @@ const SpendingAnalytics = () => {
     const monthlyIncome = months.map(month => {
       const monthTransactions = transactions.filter(t => {
         const tDate = t.date;
-        return tDate.getMonth() === month.fullDate.getMonth() && 
-               tDate.getFullYear() === month.fullDate.getFullYear() && 
-               t.type === 'income';
+        return tDate.getMonth() === month.fullDate.getMonth() &&
+          tDate.getFullYear() === month.fullDate.getFullYear() &&
+          t.type === 'income';
       });
       return monthTransactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     });
@@ -185,9 +197,9 @@ const SpendingAnalytics = () => {
     const monthlyCredit = months.map(month => {
       const monthTransactions = transactions.filter(t => {
         const tDate = t.date;
-        return tDate.getMonth() === month.fullDate.getMonth() && 
-               tDate.getFullYear() === month.fullDate.getFullYear() && 
-               t.type === 'credit';
+        return tDate.getMonth() === month.fullDate.getMonth() &&
+          tDate.getFullYear() === month.fullDate.getFullYear() &&
+          t.type === 'credit';
       });
       return monthTransactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     });
@@ -195,9 +207,9 @@ const SpendingAnalytics = () => {
     const monthlyLoan = months.map(month => {
       const monthTransactions = transactions.filter(t => {
         const tDate = t.date;
-        return tDate.getMonth() === month.fullDate.getMonth() && 
-               tDate.getFullYear() === month.fullDate.getFullYear() && 
-               t.type === 'loan';
+        return tDate.getMonth() === month.fullDate.getMonth() &&
+          tDate.getFullYear() === month.fullDate.getFullYear() &&
+          t.type === 'loan';
       });
       return monthTransactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     });
@@ -250,7 +262,7 @@ const SpendingAnalytics = () => {
         titleFont: { size: 13 },
         padding: 10,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             const value = formatCurrency(context.parsed.y || context.parsed);
             return `${context.dataset.label}: ${value}`;
           }
@@ -264,7 +276,7 @@ const SpendingAnalytics = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function(value) {
+          callback: function (value) {
             return formatCurrency(value);
           },
           font: { size: 11 }
@@ -295,7 +307,7 @@ const SpendingAnalytics = () => {
       tooltip: {
         bodyFont: { size: 14 },
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             const total = context.dataset.data.reduce((a, b) => a + b, 0) || 0;
             const value = context.parsed || 0;
             const percentage = total > 0 ? ((value * 100) / total).toFixed(1) : '0.0';
@@ -323,66 +335,64 @@ const SpendingAnalytics = () => {
   }
 
   return (
-    <div className="p-3 space-y-4">
-      {/* Chart Type Selector - Compact Tabs */}
-      <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-2">
-        {[
-          { id: 'spending-trend', label: 'Trend', icon: TrendingUp },
-          { id: 'category-breakdown', label: 'Summary', icon: PieChart },
-          { id: 'monthly-comparison', label: 'Monthly', icon: BarChart3 },
-        ].map((chart) => {
-          const IconComponent = chart.icon;
-          const isActive = activeChart === chart.id;
-          return (
-            <button
+    <div className="p-4 space-y-4">
+      {/* Chart Header & Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-2">
+          <IconBox icon={TrendingUp} size="sm" colorClass="text-teal-400" bgClass="bg-teal-400/10" />
+          <div>
+            <h3 className="text-[12px] font-bold text-white">Insights</h3>
+            <p className="text-[10px] text-gray-500 font-semibold">Financial performance</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/5">
+          {[
+            { id: 'spending-trend', label: 'Trend', icon: TrendingUp },
+            { id: 'category-breakdown', label: 'Summary', icon: PieChart },
+            { id: 'monthly-comparison', label: 'Monthly', icon: BarChart3 },
+          ].map((chart) => (
+            <Button
               key={chart.id}
               onClick={() => setActiveChart(chart.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
-                isActive
-                  ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400'
-                  : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-              }`}
+              variant={activeChart === chart.id ? 'soft' : 'ghost'}
+              size="xsm"
+              color={activeChart === chart.id ? 'teal' : 'gray'}
+              icon={chart.icon}
             >
-              <IconComponent className="w-3.5 h-3.5" />
               {chart.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Chart Display - Matches Salary Card Vibe */}
-      <div className="bg-white dark:bg-gray-800 rounded-md p-3 border border-teal-200 dark:border-teal-800">
-        <div className="h-56 sm:h-64 relative">
-          {activeChart === 'spending-trend' && (
-            <div className="h-full">
-              <Line data={getSpendingTrendData()} options={chartOptions()} />
-            </div>
-          )}
-          
-          {activeChart === 'category-breakdown' && (
-            <div className="h-full">
-              <Doughnut data={getActivityBreakdown()} options={doughnutOptions} />
-            </div>
-          )}
-          
-          {activeChart === 'monthly-comparison' && (
-            <div className="h-full">
-              <Bar data={getMonthlyData()} options={chartOptions()} />
-            </div>
-          )}
+            </Button>
+          ))}
         </div>
       </div>
 
-      {/* Quick Stats - Matches Needs/Wants Box Style */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      {/* Chart Display */}
+      <GlassCard className="border-white/5 overflow-hidden" padding="p-4">
+        <div className="h-64 sm:h-72 relative">
+          {activeChart === 'spending-trend' && (
+            <Line data={getSpendingTrendData()} options={chartOptions()} />
+          )}
+
+          {activeChart === 'category-breakdown' && (
+            <Doughnut data={getActivityBreakdown()} options={doughnutOptions} />
+          )}
+
+          {activeChart === 'monthly-comparison' && (
+            <Bar data={getMonthlyData()} options={chartOptions()} />
+          )}
+        </div>
+      </GlassCard>
+
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {(() => {
           const thisMonthExpenses = transactions
             .filter(t => {
               const tDate = t.date;
               const now = new Date();
-              return tDate.getMonth() === now.getMonth() && 
-                     tDate.getFullYear() === now.getFullYear() && 
-                     t.type === 'expense';
+              return tDate.getMonth() === now.getMonth() &&
+                tDate.getFullYear() === now.getFullYear() &&
+                t.type === 'expense';
             })
             .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
@@ -394,46 +404,51 @@ const SpendingAnalytics = () => {
               acc[label] = activityData.datasets[0].data[i] || 0;
               return acc;
             }, {});
-            const sorted = Object.entries(totals).sort(([,a], [,b]) => b - a);
+            const sorted = Object.entries(totals).sort(([, a], [, b]) => b - a);
             topCategory = sorted.length > 0 ? sorted[0] : null;
           }
 
           const stats = [
             {
-              label: 'Spent (Mo)',
+              label: 'Monthly Spent',
               value: formatCurrency(thisMonthExpenses),
-              color: 'text-gray-900 dark:text-white',
-              bg: 'bg-gray-50 dark:bg-gray-900/50'
+              color: 'teal',
+              icon: TrendingDown
             },
             {
-              label: 'Daily Avg',
+              label: 'Daily Average',
               value: formatCurrency(avgDailySpending),
-              color: 'text-gray-900 dark:text-white',
-              bg: 'bg-gray-50 dark:bg-gray-900/50'
+              color: 'blue',
+              icon: Calendar
             },
             {
-              label: 'Top Area',
+              label: 'Top Spending',
               value: topCategory ? topCategory[0] : 'N/A',
-              color: 'text-teal-600 dark:text-teal-400',
-              bg: 'bg-teal-50 dark:bg-teal-900/20'
+              color: 'amber',
+              icon: PieChart
             },
             {
-              label: 'Logs',
+              label: 'Total Logs',
               value: transactions.length.toString(),
-              color: 'text-gray-900 dark:text-white',
-              bg: 'bg-gray-50 dark:bg-gray-900/50'
+              color: 'gray',
+              icon: BarChart3
             },
           ];
 
           return stats.map((stat, index) => (
-            <div key={index} className={`py-2 px-1 rounded border border-gray-100 dark:border-gray-700/50 ${stat.bg} flex flex-col items-center justify-center text-center`}>
-              <span className="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">
+            <GlassCard key={index} className="border-white/5 flex flex-col items-center justify-center text-center group" padding="p-3">
+              <div className="mb-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                <stat.icon className="w-4 h-4 text-gray-400" />
+              </div>
+              <span className="text-[10px] text-gray-500 font-semibold mb-1.5">
                 {stat.label}
               </span>
-              <span className={`text-xs font-semibold ${stat.color} truncate w-full px-1`}>
-                {stat.value}
-              </span>
-            </div>
+              <div className="w-full">
+                <GlassBadge color={stat.color} className="w-full justify-center">
+                  {stat.value}
+                </GlassBadge>
+              </div>
+            </GlassCard>
           ));
         })()}
       </div>

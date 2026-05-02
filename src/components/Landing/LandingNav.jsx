@@ -1,5 +1,6 @@
 import React from 'react';
 import { Wallet, Github, ArrowRight } from 'lucide-react';
+import Button from '../UI/base/Button';
 
 const LandingNav = ({ onGetStarted }) => {
   return (
@@ -24,7 +25,7 @@ const LandingNav = ({ onGetStarted }) => {
             </div>
             
             <div className="flex flex-col">
-                <span className="text-xs sm:text-sm font-black text-gray-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] leading-none">Smart <span className="text-teal-500">Wallet</span></span>
+                <span className="text-xs sm:text-sm font-black text-gray-900 dark:text-white uppercase tracking-[0.15em] sm:tracking-[0.2em] leading-none">Wallet <span className="text-teal-500">Tracker</span></span>
                 <div className="hidden xs:flex items-center gap-1.5 mt-0.5 sm:mt-1">
                     <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-teal-500 animate-pulse"></div>
                     <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-gray-400">System v1.0</span>
@@ -33,13 +34,15 @@ const LandingNav = ({ onGetStarted }) => {
           </div>
           
           <div className="flex items-center">
-            <button
+            <Button
               onClick={onGetStarted}
-              className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] transition-all hover:scale-105 active:scale-95 shadow-xl shadow-teal-500/10"
+              size="sm"
+              color="teal"
+              className="!rounded-xl sm:!rounded-2xl shadow-xl shadow-teal-500/10"
             >
               <span>Initialize</span>
               <ArrowRight className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

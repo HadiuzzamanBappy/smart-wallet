@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableScroll = false }) => {
@@ -17,15 +18,14 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableS
     }
   };
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center sm:p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-in fade-in"
+      className="fixed inset-0 z-[150] flex items-center justify-center sm:p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-in fade-in"
       onClick={handleBackdropClick}
     >
       <div
-        className={`w-full ${sizes[size]} bg-white dark:bg-gray-900 shadow-xl animate-in slide-in-from-top
-          rounded-none sm:rounded-xl sm:mx-4 sm:my-8
-          sm:max-h-[85vh] h-full sm:h-auto flex flex-col border border-gray-200 dark:border-gray-800`}
+        className={`w-full ${sizes[size]} mx-4 bg-white dark:bg-gray-900 shadow-2xl animate-in zoom-in-95 duration-200
+          rounded-2xl max-h-[90vh] flex flex-col border border-white/10`}
       >
         {title && (
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
@@ -55,6 +55,8 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableS
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;

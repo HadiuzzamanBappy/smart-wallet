@@ -4,6 +4,11 @@ import Skeleton from '../UI/SkeletonLoader';
 import TransactionList from './TransactionList';
 import SpendingAnalytics from './SpendingAnalytics';
 
+// Base UI Components
+import GlassCard from '../UI/base/GlassCard';
+import Button from '../UI/base/Button';
+import IconBox from '../UI/base/IconBox';
+
 const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   const [activeSection, setActiveSection] = useState(null);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
@@ -113,135 +118,96 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   };
 
   return (
-    <div className="w-full space-y-3">
-      <div className="w-full">
-        {/* Horizontal Button List - Responsive */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center items-stretch sm:items-center">
-          {sections.map((section) => {
-            const IconComponent = section.icon;
-            const isActive = activeSection === section.id;
+    <div className="w-full space-y-4">
+      {/* Tab Selectors - Restored to original bulky size */}
+      <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">
+        {sections.map((section) => {
+          const IconComponent = section.icon;
+          const isActive = activeSection === section.id;
 
-            return (
-              <button
+          return (
+            <button
               key={section.id}
               onClick={() => toggleSection(section.id)}
-              className={`group relative flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-300 border w-full sm:w-auto ${
-                isActive 
-                  ? `bg-gradient-to-r from-teal-500 to-blue-500 text-white border-teal-400 shadow-lg scale-[1.01]` 
-                  : `bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-teal-200 dark:border-teal-800 hover:border-teal-300 dark:hover:border-teal-700 shadow-sm`
-              }`}
+              className={`group relative flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 border w-full sm:w-80 ${isActive
+                  ? `bg-gradient-to-r from-teal-500 to-blue-500 text-white border-teal-400 shadow-lg scale-[1.01]`
+                  : `bg-white/5 hover:bg-white/[0.08] border-white/10 shadow-sm`
+                }`}
             >
-              <div className={`p-2.5 rounded-xl transition-colors ${
-                isActive 
-                  ? 'bg-white/20' 
-                  : 'bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/10 dark:to-emerald-900/30'
-              }`}>
-                <IconComponent className={`w-5 h-5 transition-colors ${
-                  isActive 
-                    ? 'text-white' 
+              <div className={`p-2.5 rounded-xl transition-colors ${isActive
+                  ? 'bg-white/20'
+                  : 'bg-teal-500/10'
+                }`}>
+                <IconComponent className={`w-5 h-5 ${isActive
+                    ? 'text-white'
                     : 'text-teal-500'
-                }`} />
+                  }`} />
               </div>
-              <div className="text-left flex-1 sm:flex-initial">
-                <h3 className={`font-semibold text-sm sm:text-base transition-colors ${
+              <div className="text-left flex-1">
+                <h3 className={`font-bold text-[12px] leading-none mb-1.5 ${
                   isActive 
                     ? 'text-white' 
-                    : 'text-gray-900 dark:text-white'
+                    : 'text-white/90'
                 }`}>
                   {section.title}
                 </h3>
-                <p className={`text-xs transition-colors ${
-                  isActive 
-                    ? 'text-white/80' 
-                    : 'text-gray-600 dark:text-gray-400'
-                }`}>
+                <p className={`text-[11px] leading-tight ${isActive
+                    ? 'text-white/80'
+                    : 'text-gray-400'
+                  }`}>
                   {section.description}
                 </p>
               </div>
-              
-              <div className={`transition-transform duration-300 ${isActive ? 'rotate-180 text-white' : 'text-gray-400 dark:text-gray-500'}`}>
-                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
 
-              {isActive && (
-                <div className="absolute -top-1 -right-1">
-                  <div className="w-3 h-3 rounded-full bg-teal-400 border-2 border-white dark:border-gray-800 shadow-sm" />
-                </div>
-              )}
+              <div className={`transition-transform duration-300 ${isActive ? 'rotate-180 text-white' : 'text-gray-500'}`}>
+                <ChevronDown className="w-4 h-4" />
+              </div>
             </button>
-            );
-          })}
-        </div>
+          );
+        })}
+      </div>
 
-        {/* Always show transactions on mobile, show active section on desktop */}
-        <div className="space-y-4">
-          {/* Mobile: Show active section */}
-          <div className="md:hidden">
-            {activeSection && (
-              <div className="overflow-hidden mt-2">
-                {(() => {
-                  const section = sections.find(s => s.id === activeSection);
-                  if (!section) return null;
-                  const IconComponent = section.icon;
-                  return (
-                    <>
-                      <div className="bg-gray-50 dark:bg-gray-800/80 p-3 border-x border-t border-teal-200 dark:border-teal-800 rounded-t-2xl">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-teal-50 dark:bg-teal-900/30 rounded-xl">
-                            <IconComponent className="w-4 h-4 text-teal-500" />
-                          </div>
-                          <div>
-                            <h2 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{section.title}</h2>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 rounded-b-2xl">
-                        {renderSectionContent(activeSection)}
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            )}
-          </div>
-
-          {/* Desktop/Tablet: Show active section */}
-          <div className="hidden md:block">
-            {activeSection && (
-              <div className="animate-in slide-in-from-top duration-300">
-                <div className="overflow-hidden">
-                  <div className="bg-gray-50 dark:bg-gray-800/80 p-3 border-x border-t border-teal-200 dark:border-teal-800 rounded-t-2xl">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          const section = sections.find(s => s.id === activeSection);
-                          const IconComponent = section.icon;
-                          return (
-                            <>
-                              <div className="p-1.5 bg-teal-50 dark:bg-teal-900/30 rounded-xl">
-                                <IconComponent className="w-4 h-4 text-teal-500" />
-                              </div>
-                              <h2 className="text-sm font-bold text-gray-900 dark:text-white">{section.title}</h2>
-                            </>
-                          );
-                        })()}
-                      </div>
-                      <button
-                        onClick={() => toggleSection(activeSection)}
-                        className="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl transition-colors"
-                      >
-                        <ChevronUp className="w-4 h-4 text-gray-500" />
-                      </button>
+      {/* Content Area */}
+      <div className="space-y-4">
+        {activeSection && (
+          <div className="animate-in slide-in-from-top duration-300">
+            <GlassCard className="border-white/10 overflow-hidden" padding="p-0">
+              {/* Header */}
+              <div className="bg-white/5 p-3 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <IconBox
+                      icon={sections.find(s => s.id === activeSection)?.icon}
+                      size="sm"
+                      colorClass="text-teal-400"
+                      bgClass="bg-teal-400/10"
+                    />
+                    <div>
+                      <h2 className="text-[11px] font-bold text-white">
+                        {sections.find(s => s.id === activeSection)?.title}
+                      </h2>
+                      <p className="text-[10px] text-gray-500 font-medium">
+                        {sections.find(s => s.id === activeSection)?.description}
+                      </p>
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 rounded-b-2xl">
-                    {renderSectionContent(activeSection)}
-                  </div>
+                  <Button
+                    variant="icon"
+                    size="xsm"
+                    color="gray"
+                    onClick={() => toggleSection(activeSection)}
+                    icon={ChevronUp}
+                  />
                 </div>
               </div>
-            )}
+
+              {/* Content */}
+              <div className="relative">
+                {renderSectionContent(activeSection)}
+              </div>
+            </GlassCard>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

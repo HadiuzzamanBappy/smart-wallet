@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Calendar } from 'lucide-react';
+import { User, Mail, Calendar, Check } from 'lucide-react';
 import Modal from '../UI/base/Modal';
+import GlassInput from '../UI/base/GlassInput';
+import Select from '../UI/base/Select';
+import Button from '../UI/base/Button';
+import IconBox from '../UI/base/IconBox';
+import GlassCard from '../UI/base/GlassCard';
 import { useAuth } from '../../hooks/useAuth';
 import { updateUserProfile } from '../../services/authService';
 
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const [loading, setLoading] = useState(false);
+
   const detectDefaultName = () => {
-    // Prefer explicit profile value, then firebase user displayName, then providerData displayName, then email local-part
-    if (userProfile && userProfile.displayName) return userProfile.displayName;
-    if (user && user.displayName) return user.displayName;
+    if (userProfile?.displayName) return userProfile.displayName;
+    if (user?.displayName) return user.displayName;
     try {
       const pd = user?.providerData;
       if (pd && pd.length > 0 && pd[0].displayName) return pd[0].displayName;
     } catch (err) { void err; }
-    if (user && user.email) return String(user.email).split('@')[0];
+    if (user?.email) return String(user.email).split('@')[0];
     return '';
   };
 
@@ -24,13 +29,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     currency: userProfile?.currency || 'BDT'
   });
 
-  // Keep form in sync when modal opens or when the auth/profile updates
   useEffect(() => {
     setFormData({
       displayName: detectDefaultName(),
       currency: userProfile?.currency || 'BDT'
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, userProfile]);
 
   const currencies = [
@@ -49,21 +52,14 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
       const result = await updateUserProfile(user.uid, formData);
 
       if (result.success) {
-        // Refresh user profile to get updated data
         await refreshUserProfile();
-
-        // Dispatch custom event to notify other components about currency change
         if (formData.currency !== userProfile?.currency) {
-          const event = new CustomEvent('wallet:currency-changed', {
+          window.dispatchEvent(new CustomEvent('wallet:currency-changed', {
             detail: { newCurrency: formData.currency, oldCurrency: userProfile?.currency }
-          });
-          window.dispatchEvent(event);
+          }));
         }
-
         onSave?.();
         onClose();
-      } else {
-        console.error('Profile update failed:', result.error);
       }
     } catch (error) {
       console.error('Profile update error:', error);
@@ -73,11 +69,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const formId = 'profile-settings-form';
@@ -86,97 +79,105 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Profile Settings"
+      title="Profile Identity"
       size="md"
       footer={
         <div className="flex gap-3 w-full">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            color="gray"
+            fullWidth
             onClick={onClose}
             disabled={loading}
-            className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
           >
-            Cancel
-          </button>
-          <button
+            Discard
+          </Button>
+          <Button
             type="submit"
             form={formId}
-            disabled={loading}
-            className="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            color="teal"
+            fullWidth
+            loading={loading}
+            icon={Check}
           >
-            {loading && (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            )}
             Save Changes
-          </button>
+          </Button>
         </div>
       }
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-6">
-        {/* User Info */}
-        <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white text-lg font-semibold overflow-hidden">
-            {user?.photoURL ? (
-              <img 
-                src={user.photoURL} 
-                alt={formData.displayName} 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'
-            )}
-          </div>
-          <div>
-            <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
-              <Mail className="w-4 h-4" />
-              <span className="text-sm">{user?.email}</span>
+        {/* User Identity Header */}
+        <GlassCard padding="p-4" className="bg-white/5 border-white/10">
+          <div className="flex items-center gap-4">
+            <div className="relative group">
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-teal-500/20 overflow-hidden">
+                {user?.photoURL ? (
+                  <img 
+                    src={user.photoURL} 
+                    alt={formData.displayName} 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'
+                )}
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-teal-500 border-4 border-[#0f172a] rounded-full flex items-center justify-center">
+                <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+              </div>
             </div>
-            <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 mt-1">
-              <Calendar className="w-4 h-4" />
-              <span className="text-sm">
-                Member since {new Date(user?.metadata?.creationTime).toLocaleDateString()}
-              </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 text-gray-400 mb-1">
+                <Mail className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase tracking-widest truncate">{user?.email}</span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-500">
+                <Calendar className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  Active since {new Date(user?.metadata?.creationTime).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        </GlassCard>
 
         {/* Display Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            <User className="w-4 h-4 inline mr-2" />
-            Display Name
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 px-1">
+            <User className="w-3.5 h-3.5 text-teal-500" />
+            <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Legal Name</span>
           </label>
-          <input
-            type="text"
+          <GlassInput
             name="displayName"
             value={formData.displayName}
             onChange={handleInputChange}
-            className="input-field"
-            placeholder="Your name"
+            placeholder="Executive Name"
             required
           />
         </div>
 
-        {/* Currency */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Preferred Currency
+        {/* Currency Selection */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 px-1">
+            <span className="text-teal-500 font-bold text-sm">৳</span>
+            <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Base Currency</span>
           </label>
-          <select
+          <Select
             name="currency"
             value={formData.currency}
             onChange={handleInputChange}
-            className="input-field"
-          >
-            {currencies.map(currency => (
-              <option key={currency.value} value={currency.value}>
-                {currency.flag} {currency.label}
-              </option>
-            ))}
-          </select>
+            options={currencies.map(c => ({
+              value: c.value,
+              label: `${c.flag} ${c.label}`
+            }))}
+          />
         </div>
 
+        <div className="p-4 bg-teal-500/5 rounded-2xl border border-teal-500/10">
+          <p className="text-[10px] text-teal-500/70 font-bold uppercase tracking-widest leading-relaxed">
+            Your currency preference affects all analytics, historical logs, and automated insights across the platform.
+          </p>
+        </div>
       </form>
     </Modal>
   );

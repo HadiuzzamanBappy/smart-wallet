@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shield, Zap, Github, ArrowRight, Lock } from 'lucide-react';
+import Button from '../UI/base/Button';
 
 const CTASection = ({ onGetStarted }) => {
   return (
@@ -26,13 +27,15 @@ const CTASection = ({ onGetStarted }) => {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4">
-          <button
+          <Button
             onClick={onGetStarted}
-            className="w-full sm:w-auto group relative flex items-center justify-center gap-3 px-10 py-5 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-white/10"
+            size="lg"
+            color="teal"
+            className="w-full sm:w-auto !rounded-2xl shadow-2xl shadow-teal-500/20 group"
           >
             <span>Initialize Account</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </Button>
         </div>
         
         <div className="mt-12 sm:mt-16 flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 gap-y-4 sm:gap-y-6">
