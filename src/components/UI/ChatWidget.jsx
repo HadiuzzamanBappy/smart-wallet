@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Plus, Loader2, Edit, Trash, Check, X } from 'lucide-react';
-import { parseTransaction } from '../../utils/aiTransactionParser';
+import { parseTransaction } from '../../services/aiService';
 import { addTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency } from '../../utils/helpers';

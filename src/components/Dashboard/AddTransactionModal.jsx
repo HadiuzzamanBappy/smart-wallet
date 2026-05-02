@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Plus, MessageSquare, Edit, Trash, Check, X, Loader2 } from 'lucide-react';
 import Modal from '../UI/base/Modal';
 import { addTransaction } from '../../services/transactionService';
-import { parseTransaction } from '../../utils/aiTransactionParser';
+import { parseTransaction } from '../../services/aiService';
 import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency } from '../../utils/helpers';
 import { APP_EVENTS } from '../../config/constants';

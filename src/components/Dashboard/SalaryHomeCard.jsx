@@ -4,6 +4,7 @@ import { getSalaryPlan } from '../../services/salaryService';
 import { BudgetSkeleton } from '../UI/SkeletonLoader';
 import { APP_EVENTS } from '../../config/constants';
 import { useTransactions } from '../../hooks/useTransactions';
+import { THEME } from '../../config/theme';
 
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
@@ -17,7 +18,6 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
   const { loading: transactionLoading } = useTransactions();
 
   // Combine internal fetch state with global transaction refresh state
-  // This ensures the skeleton triggers immediately with the rest of the dashboard
   const loading = internalLoading || transactionLoading;
 
   const fetchPlan = React.useCallback(async (silent = false) => {
@@ -34,7 +34,6 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
       console.error("Error checking salary plan", e);
     } finally {
       if (!silent) {
-        // Guarantee the skeleton shows for at least 500ms during fast cache reads
         setTimeout(() => {
           setInternalLoading(false);
         }, 500);
@@ -46,7 +45,6 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
     fetchPlan();
 
     const handleUpdate = (e) => {
-      // Refresh on onboarding, data erasure, or manual refresh
       if (
         e?.type === 'salary-plan-updated' ||
         e?.detail?.erased ||
@@ -97,48 +95,50 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
 
   if (!hasPlan) {
     return (
-      <div
-        className="cursor-pointer group rounded-2xl p-5 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 hover:border-teal-500/30 transition-all duration-500"
+      <GlassCard
+        padding="p-5"
+        className="cursor-pointer group hover:border-primary-500/30 transition-all duration-500"
         onClick={() => onOpen('wizard')}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 flex items-center justify-center rounded-2xl bg-teal-500/5 border border-teal-500/10 text-teal-600 dark:text-teal-400">
+            <div className="w-11 h-11 flex items-center justify-center rounded-2xl bg-primary-500/5 border border-primary-500/10 text-primary-600 dark:text-primary-400">
               <BarChart2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-gray-900 dark:text-white tracking-tight leading-tight">Financial Intelligence</h3>
-              <p className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest mt-1.5 leading-none">Setup 50/30/20 & Daily Limits</p>
+              <h3 className="text-[15px] font-bold text-gray-900 dark:text-white tracking-tight leading-tight">Financial Intelligence</h3>
+              <p className={`${THEME.typography.label} mt-1.5 opacity-60`}>Setup 50/30/20 & Daily Limits</p>
             </div>
           </div>
-          <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-white/5 text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+          <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-white/5 text-gray-400 group-hover:text-primary-500 transition-colors">
             <Edit3 className="w-3.5 h-3.5" />
           </div>
         </div>
-      </div>
+      </GlassCard>
     );
   }
 
   return (
     <div className="relative group/card w-full">
-      <div
-        className="cursor-pointer transition-all active:scale-[0.98] rounded-2xl p-5 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-500"
+      <GlassCard
+        padding="p-5"
+        className="cursor-pointer transition-all active:scale-[0.99] hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-500"
         onClick={() => onOpen('result')}
       >
         <div className="flex items-start justify-between gap-2 mb-5">
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 flex items-center justify-center rounded-2xl bg-teal-500/5 border border-teal-500/10 text-teal-600 dark:text-teal-400">
+            <div className="w-11 h-11 flex items-center justify-center rounded-2xl bg-primary-500/5 border border-primary-500/10 text-primary-600 dark:text-primary-400">
               <BarChart2 className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 dark:text-teal-400 leading-tight mb-1.5">Intelligence Suite</div>
+              <div className={`${THEME.typography.label} text-primary-600 dark:text-primary-400 leading-tight mb-1.5`}>Intelligence Suite</div>
               <div className="flex items-center gap-2.5">
-                <div className="text-sm font-black text-gray-900 dark:text-white tracking-tighter">
+                <div className="text-[15px] font-bold text-gray-900 dark:text-white tracking-tight">
                   {planData.currencySymbol}{Math.round(totalAssets).toLocaleString()}
-                  <span className="ml-2 text-[9px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-[0.2em]">Assets</span>
+                  <span className={`${THEME.typography.label} ml-2 opacity-50`}>Assets</span>
                 </div>
                 {runway > 0 && (
-                  <div className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">
+                  <div className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
                     {runway.toFixed(1)}m Runway
                   </div>
                 )}
@@ -151,12 +151,12 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
           {[
             { label: 'Needs', pct: needsPct, val: totalNeeds, color: 'text-gray-400' },
             { label: 'Wants', pct: wantsPct, val: totalWants, color: 'text-gray-400' },
-            { label: 'Saving', pct: savePct, val: totalSavings, color: 'text-teal-500' },
+            { label: 'Saving', pct: savePct, val: totalSavings, color: 'text-primary-500' },
           ].map((item, i) => (
             <div key={i} className="bg-white/50 dark:bg-white/[0.01] py-3 px-2 rounded-xl border border-gray-100 dark:border-white/5 flex flex-col items-center justify-center text-center">
-              <span className="text-[9px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest mb-2 leading-none">{item.label}</span>
-              <div className={`text-[11px] font-black ${item.color} mb-1.5`}>{item.pct}%</div>
-              <span className="text-[10px] font-black text-gray-900 dark:text-white/70 tracking-tight leading-none">
+              <span className={`${THEME.typography.label} opacity-60 mb-2 leading-none`}>{item.label}</span>
+              <div className={`text-[12px] font-bold ${item.color} mb-1.5`}>{item.pct}%</div>
+              <span className="text-[11px] font-bold text-gray-900 dark:text-white/70 tracking-tight leading-none">
                 {planData.currencySymbol}{Math.round(item.val).toLocaleString()}
               </span>
             </div>
@@ -164,22 +164,22 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
         </div>
 
         <div className="flex gap-3">
-          <div className="flex-[2] bg-teal-500/5 dark:bg-teal-500/[0.02] rounded-xl py-3 px-3 flex flex-col items-center justify-center text-teal-600 dark:text-teal-400 border border-teal-500/10 hover:bg-teal-500/10 transition-colors">
-            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1 leading-none">Net Surplus</span>
-            <span className="text-xs font-black tracking-tighter leading-none">{planData.currencySymbol}{Math.round(totalSurplus).toLocaleString()}</span>
+          <div className="flex-[2] bg-primary-500/5 dark:bg-primary-500/[0.02] rounded-xl py-3 px-3 flex flex-col items-center justify-center text-primary-600 dark:text-primary-400 border border-primary-500/10 hover:bg-primary-500/10 transition-colors">
+            <span className={`${THEME.typography.label} opacity-60 mb-1 leading-none`}>Net Surplus</span>
+            <span className="text-xs font-bold tracking-tight leading-none">{planData.currencySymbol}{Math.round(totalSurplus).toLocaleString()}</span>
           </div>
           <div className="flex-[3] bg-gray-50/50 dark:bg-white/[0.01] rounded-xl py-3 px-4 border border-gray-100 dark:border-white/5 flex justify-between items-center group/limit hover:bg-white dark:hover:bg-white/[0.04] transition-colors">
-            <span className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest">Daily Ops</span>
-            <span className="text-sm font-black text-gray-900 dark:text-white tracking-tighter leading-none">{planData.currencySymbol}{Math.round(dailyLimit).toLocaleString()}</span>
+            <span className={THEME.typography.label}>Daily Ops</span>
+            <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight leading-none">{planData.currencySymbol}{Math.round(dailyLimit).toLocaleString()}</span>
           </div>
         </div>
-      </div>
+      </GlassCard>
 
-      {/* Settings Button - Refined positioning */}
-      <div className="absolute top-5 right-5 z-10 opacity-0 group-hover/card:opacity-100 transition-opacity">
+      {/* Settings Button - Always visible as requested */}
+      <div className="absolute top-5 right-5 z-10 transition-all">
         <button
           onClick={(e) => { e.stopPropagation(); onOpen('wizard'); }}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all border border-transparent hover:border-gray-200/50 dark:hover:border-white/10"
+          className="p-2 bg-white/50 dark:bg-white/[0.05] backdrop-blur-md rounded-xl text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-all border border-gray-100 dark:border-white/10 shadow-sm"
           title="Configuration"
         >
           <Edit3 className="w-3.5 h-3.5" />

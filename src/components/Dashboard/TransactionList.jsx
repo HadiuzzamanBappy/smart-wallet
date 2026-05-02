@@ -10,15 +10,16 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
-import { deleteTransaction, countLinkedRepayments } from '../../services/transactionService';
-import { formatCurrency, formatDate } from '../../utils/helpers';
-import { getCategoryEmoji } from '../../utils/aiTransactionParser';
+import { deleteTransaction } from '../../services/transactionService';
+import { countLinkedRepayments } from '../../services/debtService';
+import { formatCurrency, formatDate, getCategoryEmoji } from '../../utils/helpers';
 import EditParsedModal from '../UI/EditParsedModal';
 import ConfirmDialog from '../UI/base/ConfirmDialog';
 import Modal from '../UI/base/Modal';
 import { TransactionListSkeleton } from '../UI/SkeletonLoader';
 
 // Base UI Components
+import { THEME } from '../../config/theme';
 import Button from '../UI/base/Button';
 import GlassInput from '../UI/base/GlassInput';
 import Select from '../UI/base/Select';
@@ -182,8 +183,8 @@ const TransactionList = ({ onTransactionChange }) => {
       <div className="flex flex-col h-full">
         <div className="px-5 py-6 space-y-5 border-b border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/[0.01]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
-            <div className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em] flex items-center gap-2.5">
-              <span className="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.4)] animate-pulse"></span>
+            <div className={`${THEME.typography.label} flex items-center gap-2.5`}>
+              <span className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(20,184,166,0.4)] animate-pulse"></span>
               {filteredTransactions.length} of {transactions.length} audit logs
             </div>
           </div>
@@ -251,7 +252,7 @@ const TransactionList = ({ onTransactionChange }) => {
               <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
                 <Filter className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 dark:text-gray-600">
+              <p className={THEME.typography.label}>
                 {transactions.length === 0 ? "No Transactions Yet" : "No Matches Found"}
               </p>
             </div>
@@ -275,13 +276,13 @@ const TransactionList = ({ onTransactionChange }) => {
 
                     {/* Middle: Executive Typography */}
                     <div className="min-w-0">
-                      <p className="text-[13px] font-black text-gray-900 dark:text-white truncate mb-2 tracking-tight">{transaction.description}</p>
+                      <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate mb-1.5 tracking-tight">{transaction.description}</p>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200/50 dark:border-white/10">
                           <span className="text-[10px]">{getCategoryEmoji(dc)}</span>
-                          <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">{dc}</span>
+                          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{dc}</span>
                         </div>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600">
+                        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-600">
                           {formatDate(transaction.createdAt)}
                         </span>
                         {transaction.source === 'chat' && (
@@ -292,7 +293,7 @@ const TransactionList = ({ onTransactionChange }) => {
 
                     {/* Right: Premium Currency & Quick Actions */}
                     <div className="flex flex-col items-end gap-2.5">
-                      <div className={`text-sm font-black whitespace-nowrap tracking-tighter ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
+                      <div className={`text-sm font-bold whitespace-nowrap tracking-tight ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
                         {isPositive ? '+' : '-'}{formatCurrency(transaction.amount, currency)}
                       </div>
                       <div className="flex gap-1 sm:gap-1.5 transition-all">
@@ -333,14 +334,14 @@ const TransactionList = ({ onTransactionChange }) => {
         {/* Pagination Controls - Executive Density */}
         {filteredTransactions.length > PAGE_SIZE && (
           <div className="py-6 px-5 flex items-center justify-between border-t border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/[0.01]">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-600">
-              Audit Page <span className="text-gray-900 dark:text-white">{page}</span> of {totalPages}
+            <div className={THEME.typography.label}>
+              Page <span className="text-gray-900 dark:text-white">{page}</span> of {totalPages}
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 rounded-xl border border-gray-200/50 dark:border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 disabled:opacity-20 hover:bg-white dark:hover:bg-white/10 transition-all"
+                className={`px-4 py-2 rounded-xl border border-gray-200/50 dark:border-white/10 ${THEME.typography.label} disabled:opacity-20 hover:bg-white dark:hover:bg-white/10 transition-all`}
               >
                 Back
               </button>
@@ -363,7 +364,7 @@ const TransactionList = ({ onTransactionChange }) => {
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 rounded-xl border border-gray-200/50 dark:border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 disabled:opacity-20 hover:bg-white dark:hover:bg-white/10 transition-all"
+                className={`px-4 py-2 rounded-xl border border-gray-200/50 dark:border-white/10 ${THEME.typography.label} disabled:opacity-20 hover:bg-white dark:hover:bg-white/10 transition-all`}
               >
                 Next
               </button>

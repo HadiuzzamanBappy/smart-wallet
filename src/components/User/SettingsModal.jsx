@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  Settings,
   Moon,
   Sun,
   Monitor,
@@ -15,14 +14,12 @@ import {
   ShieldCheck,
   Database
 } from 'lucide-react';
+import { THEME } from '../../config/theme';
 import Modal from '../UI/base/Modal';
 import ConfirmDialog from '../UI/base/ConfirmDialog';
-import GlassCard from '../UI/base/GlassCard';
 import Button from '../UI/base/Button';
 import Select from '../UI/base/Select';
 import GlassInput from '../UI/base/GlassInput';
-import GlassBadge from '../UI/base/GlassBadge';
-import IconBox from '../UI/base/IconBox';
 
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -85,7 +82,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
     const previousTheme = initialThemeRef.current;
     try {
       setPersistStatus('saving');
-      
+
       // Update theme locally only
       if (settings.theme) {
         setTheme(settings.theme);
@@ -94,7 +91,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
       // Remove theme from settings before saving to DB
       const { theme: _theme, ...dbSettings } = settings;
       const result = await updateUserProfile(user.uid, dbSettings);
-      
+
       if (result.success) {
         if (refreshUserProfile) await refreshUserProfile();
         setPersistStatus('success');
@@ -259,12 +256,12 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2.5">
-                <Sun className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Appearance Suite</span>
+                <Sun className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                <span className={`${THEME.typography.label} text-gray-400 dark:text-gray-500`}>Appearance Suite</span>
               </div>
               {persistStatus !== 'idle' && (
-                <div className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${persistStatus === 'success' 
-                  ? 'bg-emerald-500/5 text-emerald-600 border-emerald-500/10' 
+                <div className={`px-2.5 py-1 rounded-lg ${THEME.typography.label} border ${persistStatus === 'success'
+                  ? 'bg-emerald-500/5 text-emerald-600 border-emerald-500/10'
                   : persistStatus === 'error' ? 'bg-rose-500/5 text-rose-600 border-rose-500/10' : 'bg-gray-500/5 text-gray-600 border-gray-500/10'}`}>
                   {persistStatus === 'saving' ? 'Syncing...' : persistStatus === 'success' ? 'Vault Updated' : 'Sync Error'}
                 </div>
@@ -283,8 +280,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                       : 'bg-gray-50/50 dark:bg-white/[0.01] border-gray-100 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-gray-200 dark:hover:border-white/10'
                       }`}
                   >
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-teal-600 dark:text-teal-400' : 'text-gray-400 dark:text-gray-600'}`} />
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600'}`}>
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-600'}`} />
+                    <span className={`${THEME.typography.label} ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600'}`}>
                       {t.label}
                     </span>
                   </button>
@@ -297,8 +294,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-3">
               <label className="flex items-center gap-2.5 px-1">
-                <Globe className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Localization</span>
+                <Globe className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                <span className={`${THEME.typography.label} text-gray-400 dark:text-gray-500`}>Localization</span>
               </label>
               <Select
                 value={settings.language}
@@ -308,11 +305,11 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
             </div>
             <div className="space-y-3">
               <label className="flex items-center gap-2.5 px-1">
-                <Smartphone className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Build Status</span>
+                <Smartphone className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                <span className={`${THEME.typography.label} text-gray-400 dark:text-gray-500`}>Build Status</span>
               </label>
               <div className="h-11 bg-gray-50/50 dark:bg-white/[0.01] border border-gray-100 dark:border-white/5 rounded-2xl flex items-center px-4">
-                <span className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em]">v1.2.0 AUDITED</span>
+                <span className={`${THEME.typography.label} text-gray-400 dark:text-gray-600`}>v1.2.0 AUDITED</span>
               </div>
             </div>
           </div>
@@ -320,8 +317,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
           {/* Intelligence Settings */}
           <div className="p-6 rounded-2xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 shadow-sm">
             <div className="flex items-center gap-2.5 mb-6">
-              <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-              <span className="text-[10px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Privacy & Intelligence</span>
+              <ShieldCheck className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+              <span className={`${THEME.typography.label} text-gray-900 dark:text-white`}>Privacy & Intelligence</span>
             </div>
             <div className="space-y-6">
               {[
@@ -330,8 +327,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               ].map(item => (
                 <label key={item.key} className="flex items-center justify-between cursor-pointer group">
                   <div className="flex-1 pr-4">
-                    <p className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-widest group-hover:text-teal-600 transition-colors">{item.label}</p>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest mt-1.5 opacity-60 leading-none">{item.desc}</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white tracking-tight group-hover:text-primary-600 transition-colors">{item.label}</p>
+                    <p className={`${THEME.typography.label} mt-1 opacity-60 leading-none`}>{item.desc}</p>
                   </div>
                   <div className="relative inline-flex items-center cursor-pointer ml-4">
                     <input
@@ -350,8 +347,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
           {/* Data Governance */}
           <div className="space-y-4 pt-2">
             <div className="flex items-center gap-2.5 px-1">
-              <Database className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-              <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Sovereignty Controls</span>
+              <Database className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+              <span className={`${THEME.typography.label} text-gray-400 dark:text-gray-500`}>Sovereignty Controls</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <button
@@ -359,10 +356,10 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                 className="flex items-center justify-between p-5 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.03] hover:border-teal-500/30 transition-all group shadow-sm"
               >
                 <div className="text-left">
-                  <p className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-widest">Vault Export</p>
-                  <p className="text-[9px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest mt-1.5 opacity-60">JSON Snapshot</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white tracking-tight">Vault Export</p>
+                  <p className={`${THEME.typography.label} mt-1 opacity-60`}>JSON Snapshot</p>
                 </div>
-                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                   <Download className="w-4 h-4" />
                 </div>
               </button>
@@ -391,7 +388,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                       {importResult.success ? 'Vault Integrated' : 'Integration Failed'}
                     </p>
                     <p className="text-[9px] font-black mt-1 uppercase tracking-[0.1em] leading-relaxed opacity-60">
-                      {importResult.success 
+                      {importResult.success
                         ? `Audit complete: ${importResult.imported} of ${importResult.total} entries synchronized.`
                         : importResult.error || 'Identity verification mismatch.'}
                     </p>
@@ -405,8 +402,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               className="w-full flex items-center justify-between p-5 rounded-2xl bg-rose-500/[0.03] dark:bg-rose-500/[0.01] border border-rose-500/10 hover:bg-rose-500/10 transition-all group mt-2 shadow-sm"
             >
               <div className="text-left">
-                <p className="text-[11px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">Purge Protocol</p>
-                <p className="text-[9px] text-rose-500/40 dark:text-rose-500/20 font-black uppercase tracking-widest mt-1.5 leading-none">Total Vault Erasure</p>
+                <p className="text-sm font-bold text-rose-600 dark:text-rose-400 tracking-tight">Purge Protocol</p>
+                <p className={`${THEME.typography.label} text-rose-500/40 dark:text-rose-500/20 mt-1 leading-none`}>Total Vault Erasure</p>
               </div>
               <div className="w-8 h-8 rounded-lg bg-rose-500/5 flex items-center justify-center text-rose-400 group-hover:text-rose-600 transition-colors">
                 <Trash2 className="w-4 h-4" />
@@ -539,8 +536,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
             <CheckCircle className="w-10 h-10 text-emerald-600 dark:text-emerald-500 opacity-60" />
           </div>
           <div className="text-center space-y-3">
-            <p className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Vault Purged</p>
-            <p className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest px-8 leading-relaxed opacity-60">
+            <p className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Vault Purged</p>
+            <p className={`${THEME.typography.label} px-8 leading-relaxed opacity-60`}>
               Operational logs and ledger entries have been permanently decommissioned.
             </p>
           </div>

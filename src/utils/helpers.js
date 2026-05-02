@@ -1,4 +1,22 @@
-import { getCurrencyConfig, DEFAULTS, BUDGET_WARNING_LEVELS } from '../config/constants';
+import { getCurrencyConfig, DEFAULTS, BUDGET_WARNING_LEVELS, getCategoryConfig } from '../config/constants';
+
+/**
+ * Get category emoji
+ * @param {string} category - Category name
+ * @returns {string} Emoji
+ */
+export const getCategoryEmoji = (category) => {
+  return getCategoryConfig(category).emoji;
+};
+
+/**
+ * Get category color class for Tailwind CSS
+ * @param {string} category - Category name
+ * @returns {string} Tailwind CSS classes
+ */
+export const getCategoryColor = (category) => {
+  return getCategoryConfig(category).color;
+};
 
 /**
  * Format currency amount with dynamic currency

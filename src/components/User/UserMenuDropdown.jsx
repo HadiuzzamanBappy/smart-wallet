@@ -109,7 +109,7 @@ const UserMenuDropdown = ({
         variant={isOpen ? 'soft' : 'gray'}
         color={isOpen ? 'teal' : 'gray'}
         size="icon"
-        className={`!w-10 !h-10 !p-0 !rounded-xl overflow-hidden transition-all duration-300 ${isOpen ? 'ring-2 ring-teal-500/20' : ''}`}
+        className={`!w-10 !h-10 !p-0 !rounded-xl overflow-hidden shadow-lg shadow-gray-200 dark:shadow-black/20 transition-all duration-300 ${isOpen ? 'ring-2 ring-teal-500/20' : ''}`}
       >
         {user?.photoURL ? (
           <img

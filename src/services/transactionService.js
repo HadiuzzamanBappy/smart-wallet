@@ -2,7 +2,6 @@ import { db } from '../config/firebase';
 import {
   collection,
   addDoc,
-  setDoc,
   updateDoc,
   deleteDoc,
   doc,
@@ -19,20 +18,14 @@ import {
   encryptTransactionData,
   decryptTransactions,
   encryptUserProfile,
-  decryptUserProfile,
-  encryptData
+  decryptUserProfile
 } from '../utils/encryption';
 import {
   normalizeDateToTimestamp,
   computeTransactionFingerprint,
-  computeTransactionEffects,
   validateTransaction,
-  validateTotalsNotNegative,
-  validateRepaymentAmount,
   calculateUpdatedPaidAmount,
-  isFullyPaid,
-  applyEffectsToTotals,
-  normalizeLoanCreditNumbers
+  isFullyPaid
 } from '../utils/transactionHelpers';
 import { APP_EVENTS } from '../config/constants';
 import { deleteSalaryPlan } from './salaryService';
@@ -562,439 +555,6 @@ export const deleteAllUserData = async (userId) => {
   }
 };
 
-// New repayment functions
-export const getOutstandingLoans = async (userId) => {
-  try {
-    const res = await getTransactions(userId, { type: 'loan' });
-    if (!res.success) return res;
-
-    // Only include loans that are not fully repaid
-    const outstanding = res.data.filter(loan => !loan.isFullyPaid)
-      .map(loan => normalizeLoanCreditNumbers(loan));
-
-    return { success: true, data: outstanding };
-  } catch (error) {
-    console.error('Error getting outstanding loans:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-/**
- * Get outstanding (unpaid) credits for a user
- * @param {string} userId - User's unique identifier
- * @returns {Promise<Object>} Success/error result with outstanding credits
- */
-export const getOutstandingCredits = async (userId) => {
-  try {
-    const res = await getTransactions(userId, { type: 'credit' });
-    if (!res.success) return res;
-
-    // Only include credits that are not fully collected
-    const outstanding = res.data.filter(credit => !credit.isFullyPaid)
-      .map(credit => normalizeLoanCreditNumbers(credit));
-
-    return { success: true, data: outstanding };
-  } catch (error) {
-    console.error('Error getting outstanding credits:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-/**
- * Get all loans (including fully paid) for comprehensive view
- * @param {string} userId - User's unique identifier
- * @returns {Promise<Object>} Success/error result with all loans
- */
-export const getAllLoans = async (userId) => {
-  try {
-    const res = await getTransactions(userId, { type: 'loan' });
-    if (!res.success) return res;
-
-    const loans = res.data.map(loan => normalizeLoanCreditNumbers(loan));
-    return { success: true, data: loans };
-  } catch (error) {
-    console.error('Error getting all loans:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-/**
- * Get all credits (including fully paid) for comprehensive view
- * @param {string} userId - User's unique identifier
- * @returns {Promise<Object>} Success/error result with all credits
- */
-export const getAllCredits = async (userId) => {
-  try {
-    const res = await getTransactions(userId, { type: 'credit' });
-    if (!res.success) return res;
-
-    const credits = res.data.map(credit => normalizeLoanCreditNumbers(credit));
-    return { success: true, data: credits };
-  } catch (error) {
-    console.error('Error getting all credits:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-/**
- * Mark a loan as (partially) repaid by creating a repayment transaction
- * @param {string} userId - User's unique identifier
- * @param {string} loanId - ID of the loan transaction
- * @param {number} repaymentAmount - Amount being repaid
- * @param {string} [description] - Optional description for the repayment
- * @returns {Promise<Object>} Success/error result with repayment transaction ID
- */
-export const markLoanAsRepaid = async (userId, loanId, repaymentAmount, description = '') => {
-  try {
-    // Get the original loan transaction
-    const loanRef = doc(db, `users/${userId}/transactions`, loanId);
-    const loanDoc = await getDoc(loanRef);
-
-    if (!loanDoc.exists()) {
-      throw new Error('Loan transaction not found');
-    }
-
-    const loanData = loanDoc.data();
-    const decryptedLoan = (await decryptTransactions([{ id: loanId, ...loanData }]))[0];
-
-    // Validate repayment amount
-    const currentPaidAmount = Number(decryptedLoan.paidAmount || 0);
-    const totalAmount = Number(decryptedLoan.amount);
-    const remainingAmount = totalAmount - currentPaidAmount;
-
-    validateRepaymentAmount(repaymentAmount, remainingAmount);
-
-    const numRepaymentAmount = Number(repaymentAmount);
-
-    // Create repayment transaction with type='repayment'
-    const repaymentTransaction = {
-      type: 'repayment',
-      // mark as repayment so delete/update logic can detect linked adjustments
-      isRepayment: true,
-      amount: numRepaymentAmount,
-      description: description || `Loan repayment - ${decryptedLoan.description}`,
-      category: decryptedLoan.category || 'loan',
-      date: new Date().toISOString().split('T')[0],
-      linkedTransactionId: loanId,
-      originalAmount: Number(decryptedLoan.amount || 0),
-      originalDescription: decryptedLoan.description || ''
-    };
-
-    const result = await addTransaction(userId, repaymentTransaction);
-
-    if (result.success) {
-      // Update original loan with payment info
-      const newPaidAmount = calculateUpdatedPaidAmount(currentPaidAmount, numRepaymentAmount);
-      const updatedLoanData = {
-        ...decryptedLoan,
-        paidAmount: newPaidAmount,
-        isFullyPaid: isFullyPaid(totalAmount, newPaidAmount),
-        lastPaymentDate: Timestamp.now(),
-        updatedAt: Timestamp.now()
-      };
-
-      const encryptedLoan = await encryptTransactionData(updatedLoanData);
-      await updateDoc(loanRef, encryptedLoan);
-
-      return {
-        success: true,
-        repaymentTransactionId: result.id,
-        remainingAmount: totalAmount - newPaidAmount
-      };
-    }
-
-    return result;
-  } catch (error) {
-    console.error('Error marking loan as repaid:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-/**
- * Mark a credit as (partially) collected by creating a collection transaction
- * @param {string} userId - User's unique identifier
- * @param {string} creditId - ID of the credit transaction
- * @param {number} collectionAmount - Amount being collected
- * @param {string} [description] - Optional description for the collection
- * @returns {Promise<Object>} Success/error result
- */
-export const markCreditAsCollected = async (userId, creditId, collectionAmount, description = '') => {
-  try {
-    // Get the original credit transaction
-    const creditRef = doc(db, `users/${userId}/transactions`, creditId);
-    const creditDoc = await getDoc(creditRef);
-
-    if (!creditDoc.exists()) {
-      throw new Error('Credit transaction not found');
-    }
-
-    const creditData = creditDoc.data();
-    const decryptedCredit = (await decryptTransactions([{ id: creditId, ...creditData }]))[0];
-
-    // Validate collection amount
-    const currentPaidAmount = Number(decryptedCredit.paidAmount || 0);
-    const totalAmount = Number(decryptedCredit.amount);
-    const remainingAmount = totalAmount - currentPaidAmount;
-
-    validateRepaymentAmount(collectionAmount, remainingAmount);
-
-    const numCollectionAmount = Number(collectionAmount);
-
-    // Create collection transaction with type='collection'
-    const collectionTransaction = {
-      type: 'collection',
-      // mark as repayment/adjustment so delete logic can treat it accordingly
-      isRepayment: true,
-      amount: numCollectionAmount,
-      description: description || `Credit collected - ${decryptedCredit.description}`,
-      category: decryptedCredit.category || 'credit',
-      date: new Date().toISOString().split('T')[0],
-      linkedTransactionId: creditId,
-      originalAmount: Number(decryptedCredit.amount || 0),
-      originalDescription: decryptedCredit.description || ''
-    };
-
-    const result = await addTransaction(userId, collectionTransaction);
-
-    if (result.success) {
-      // Update original credit with payment info
-      const newPaidAmount = calculateUpdatedPaidAmount(currentPaidAmount, numCollectionAmount);
-      const updatedCreditData = {
-        ...decryptedCredit,
-        paidAmount: newPaidAmount,
-        isFullyPaid: isFullyPaid(totalAmount, newPaidAmount),
-        lastPaymentDate: Timestamp.now(),
-        updatedAt: Timestamp.now()
-      };
-
-      const encryptedCredit = await encryptTransactionData(updatedCreditData);
-      await updateDoc(creditRef, encryptedCredit);
-    }
-
-    return result;
-  } catch (error) {
-    console.error('Error marking credit as collected:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-/**
- * Import user data previously exported by exportUserData.
- * Expects `data` to have shape: { profile: {...}, transactions: [...] }
- * This function will write transactions back into `users/{userId}/transactions`
- * and replace the user profile document fields present in the exported profile.
- * NOTE: This intentionally writes the transactions as-is (encrypted) and writes profile totals
- * to avoid double-applying balance updates. Use with caution.
- */
-export const importUserData = async (userId, data, options = { preserveIds: false, dedupe: true }) => {
-  try {
-    if (!data) throw new Error('No data provided');
-    const { profile, transactions } = data;
-
-    // Validate transactions array
-    if (!Array.isArray(transactions)) {
-      throw new Error('Invalid transactions payload');
-    }
-
-    const transactionsRef = collection(db, `users/${userId}/transactions`);
-
-    const importTag = `import-${new Date().toISOString()}`;
-
-    const result = {
-      success: true,
-      total: transactions.length,
-      imported: 0,
-      skipped: 0,
-      failed: 0,
-      errors: [],
-      overwritten: [],
-      createdIds: []
-    };
-
-    // Simple schema validation helper
-    const validTypes = ['income', 'expense', 'credit', 'loan'];
-    const isValidTx = (tx) => {
-      if (!tx) return false;
-      if (!tx.type || !validTypes.includes(tx.type)) return false;
-      const num = Number(tx.amount);
-      if (isNaN(num) || num <= 0) return false;
-      if (!tx.date) return false;
-      return true;
-    };
-
-    // Helper: compute a deterministic fingerprint for a transaction
-    const normalizeString = (s) => (String(s || '')).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
-    const computeFingerprint = async (t) => {
-      try {
-        const type = String(t.type || '').toLowerCase();
-        const amount = Number(t.amount || 0);
-        const date = (t.date && typeof t.date === 'string') ? t.date : (t.date && t.date.toDate ? t.date.toDate().toISOString().split('T')[0] : '');
-        const desc = normalizeString(t.description || t.desc || t.note || '');
-        const src = `${type}|${amount}|${date}|${desc}`;
-        const enc = new TextEncoder().encode(src);
-        const hash = await (crypto.subtle || window.crypto.subtle).digest('SHA-256', enc);
-        // convert to hex
-        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-      } catch {
-        return null;
-      }
-    };
-
-    for (const tx of transactions) {
-      try {
-        // Validate transaction schema
-        if (!isValidTx(tx)) {
-          result.skipped += 1;
-          result.errors.push({ id: tx?.id || null, error: 'Invalid transaction schema' });
-          continue;
-        }
-
-        const originalId = tx.id || tx.originalId || null;
-
-        // Compute fingerprint
-        const fingerprint = await computeFingerprint(tx);
-
-        // Check for existing doc by originalId first, then by fingerprint
-        let existingDoc = null;
-        if (originalId) {
-          const q = query(transactionsRef, where('originalId', '==', originalId), limit(1));
-          const snap = await getDocs(q);
-          if (!snap.empty) existingDoc = snap.docs[0];
-        }
-
-        if (!existingDoc && fingerprint) {
-          const q2 = query(transactionsRef, where('importFingerprint', '==', fingerprint), limit(1));
-          const snap2 = await getDocs(q2);
-          if (!snap2.empty) existingDoc = snap2.docs[0];
-        }
-
-        // Prepare tx to store and preserve timestamps
-        // IMPORTANT: strip any originalMessage fields to avoid resurrecting user messages
-        // that were intentionally removed for privacy.
-        const sanitizedTx = { ...tx };
-        if ('originalMessage' in sanitizedTx) delete sanitizedTx.originalMessage;
-        if ('originalMessage_encrypted' in sanitizedTx) delete sanitizedTx.originalMessage_encrypted;
-
-        const txToStore = {
-          ...sanitizedTx,
-          userId,
-          originalId: originalId || undefined,
-          importFingerprint: fingerprint || undefined,
-          source: importTag,
-          createdAt: tx.createdAt ? Timestamp.fromDate(new Date(tx.createdAt)) : Timestamp.now(),
-          date: tx.date ? Timestamp.fromDate(new Date(tx.date)) : Timestamp.now(),
-          updatedAt: tx.updatedAt ? Timestamp.fromDate(new Date(tx.updatedAt)) : undefined
-        };
-
-        // Remove id field so we don't accidentally try to write it into the document body
-        delete txToStore.id;
-
-        const encrypted = await encryptTransactionData(txToStore);
-
-        if (existingDoc) {
-          // There is an existing document that matches originalId or fingerprint
-          const existingId = existingDoc.id;
-          if (options.preserveIds && originalId) {
-            // User requested to preserve original IDs. If the existing doc has a different id,
-            // write the data to the originalId path and remove the old conflicting doc to avoid duplicates.
-            const targetRef = doc(db, `users/${userId}/transactions`, originalId);
-            await setDoc(targetRef, encrypted);
-            result.overwritten.push(originalId);
-            // If existing doc had a different id, remove it
-            if (existingId !== originalId) {
-              try {
-                const oldRef = doc(db, `users/${userId}/transactions`, existingId);
-                await deleteDoc(oldRef);
-              } catch (deleteErr) {
-                // non-fatal: if delete fails, continue but report
-                result.errors.push({ id: existingId, error: 'Failed to delete duplicate doc after overwrite: ' + (deleteErr?.message || String(deleteErr)) });
-              }
-            }
-          } else if (options.dedupe) {
-            // Skip importing duplicate
-            result.skipped += 1;
-          } else {
-            // Not preserving ids and not deduping: update the existing doc with new data
-            const existingRef = doc(db, `users/${userId}/transactions`, existingId);
-            await setDoc(existingRef, encrypted, { merge: true });
-            result.overwritten.push(existingId);
-          }
-        } else {
-          // No existing doc found
-          if (options.preserveIds && originalId) {
-            const targetRef = doc(db, `users/${userId}/transactions`, originalId);
-            await setDoc(targetRef, encrypted);
-            result.createdIds.push(originalId);
-          } else {
-            const newRef = await addDoc(transactionsRef, encrypted);
-            result.createdIds.push(newRef.id);
-          }
-          result.imported += 1;
-        }
-      } catch (e) {
-        result.failed += 1;
-        result.errors.push({ id: tx?.id || null, error: e?.message });
-      }
-    }
-    // Replace user profile fields from exported profile (only specific safe fields)
-    if (profile && typeof profile === 'object') {
-      const userRef = doc(db, 'users', userId);
-      const updatable = {
-        displayName: profile.displayName,
-        email: profile.email,
-        totalCreditGiven: Number(profile.totalCreditGiven) || 0,
-        totalLoanTaken: Number(profile.totalLoanTaken) || 0,
-        language: profile.language,
-        theme: profile.theme,
-        notifications: profile.notifications,
-        budgetAlerts: profile.budgetAlerts,
-        updatedAt: Timestamp.now()
-      };
-
-      // Handle salary plan restoration
-      if (profile.salaryPlan) {
-        try {
-          const encryptedSalary = await encryptData(JSON.stringify(profile.salaryPlan));
-          updatable.salaryPlan_encrypted = encryptedSalary;
-        } catch (e) {
-          console.warn("Failed to re-encrypt salary plan during import", e);
-        }
-      }
-
-      // Ensure updatable is fully encrypted before saving
-      const encryptedProfile = await encryptUserProfile(updatable);
-
-      // Remove undefined keys so setDoc doesn't set them (though encryptUserProfile should have handled it)
-      Object.keys(encryptedProfile).forEach(k => encryptedProfile[k] === undefined && delete encryptedProfile[k]);
-
-      await setDoc(userRef, encryptedProfile, { merge: true });
-    }
-
-    // Attach importSourceTag to result so caller can undo later if needed
-    result.importSourceTag = importTag;
-
-    // If the account already had transactions before import, run a reconciliation to ensure totals are accurate
-    try {
-      const existingCheck = await getTransactions(userId, { limit: 1 });
-      if (existingCheck.success && existingCheck.data && existingCheck.data.length > 0) {
-        // run reconciliation
-        const recon = await reconcileUserTotals(userId);
-        result.reconciled = !!recon.success;
-        result.totals = recon.totals || null;
-      }
-    } catch (e) {
-      console.warn('Reconciliation after import failed:', e?.message);
-      result.reconciled = false;
-      result.reconciliationError = e?.message;
-    }
-
-    return result;
-  } catch (error) {
-    console.error('Error importing user data:', error);
-    return { success: false, error: error.message };
-  }
-};
-
 /**
  * Recalculate user totals from transactions and update the user profile document.
  * Returns { success: true, totals: { balance, totalIncome, totalExpense, totalCreditGiven, totalLoanTaken } }
@@ -1043,192 +603,68 @@ export const reconcileUserTotals = async (userId) => {
     return { success: false, error: error.message };
   }
 };
-
-// Count how many repayment/collection transactions link to a given original transaction
-export const countLinkedRepayments = async (userId, originalTransactionId) => {
-  try {
-    const transactionsRef = collection(db, `users/${userId}/transactions`);
-    const q = query(transactionsRef, where('linkedTransactionId', '==', originalTransactionId));
-    const snap = await getDocs(q);
-    return { success: true, count: snap.size };
-  } catch (error) {
-    console.error('Error counting linked repayments:', error);
-    return { success: false, error: error.message };
-  }
-};
-
 /**
- * Adjust the amount of a loan or credit transaction
- * @param {string} userId - User's unique identifier
- * @param {string} transactionId - ID of the loan/credit transaction
- * @param {number} adjustmentAmount - Amount to adjust (positive to increase, negative to decrease)
- * @param {string} [reason] - Optional reason for adjustment
- * @returns {Promise<Object>} Success/error result
+ * Import user data from a Vault Export payload.
  */
-export const adjustLoanCreditAmount = async (userId, transactionId, adjustmentAmount, reason = '') => {
+export const importUserData = async (userId, payload, options = {}) => {
+  const { transactions = [] } = payload;
+  const { dedupe = true } = options;
+
+  let importedCount = 0;
+  let skippedCount = 0;
+
   try {
-    // Get the original transaction
-    const txRef = doc(db, `users/${userId}/transactions`, transactionId);
-    const txDoc = await getDoc(txRef);
-
-    if (!txDoc.exists()) {
-      throw new Error('Transaction not found');
-    }
-
-    const txData = txDoc.data();
-    const decryptedTx = (await decryptTransactions([{ id: transactionId, ...txData }]))[0];
-
-    // Verify it's a loan or credit
-    if (!['loan', 'credit'].includes(decryptedTx.type)) {
-      throw new Error('Only loan and credit transactions can be adjusted');
-    }
-
-    const numAdjustment = Number(adjustmentAmount);
-    if (isNaN(numAdjustment) || numAdjustment === 0) {
-      throw new Error('Invalid adjustment amount');
-    }
-
-    const currentAmount = Number(decryptedTx.amount || 0);
-    const newAmount = currentAmount + numAdjustment;
-
-    if (newAmount <= 0) {
-      throw new Error('Adjusted amount must be greater than zero');
-    }
-
-    // Calculate new remaining amount
-    const paidAmount = Number(decryptedTx.paidAmount || 0);
-    const newRemainingAmount = Math.max(0, newAmount - paidAmount);
-
-    // Create adjustment history entry
-    const adjustmentEntry = {
-      amount: numAdjustment,
-      reason: reason || (numAdjustment > 0 ? 'Amount increased' : 'Amount decreased'),
-      date: new Date().toISOString(),
-      timestamp: Timestamp.now(),
-      previousAmount: currentAmount,
-      newAmount: newAmount
-    };
-
-    // Get existing adjustment history or initialize empty array
-    const adjustmentHistory = decryptedTx.adjustmentHistory || [];
-    adjustmentHistory.push(adjustmentEntry);
-
-    // Update transaction with new amount and adjustment history
-    const updatedTxData = {
-      ...decryptedTx,
-      amount: newAmount,
-      remainingAmount: newRemainingAmount,
-      adjustmentHistory: adjustmentHistory,
-      isFullyPaid: isFullyPaid(newAmount, paidAmount),
-      updatedAt: Timestamp.now()
-    };
-
-    const encryptedTx = await encryptTransactionData(updatedTxData);
-    await updateDoc(txRef, encryptedTx);
-
-    // Update user's totals - adjustment affects totalLoanTaken or totalCreditGiven
-    // Create a virtual transaction representing the adjustment
-    const adjustmentTx = {
-      type: decryptedTx.type, // 'loan' or 'credit'
-      amount: numAdjustment // positive or negative adjustment
-    };
-
-    // Compute the effects of this adjustment
-    const effects = computeTransactionEffects(adjustmentTx);
-
-    // Get user profile and update totals
-    const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
-
-    if (userDoc.exists()) {
-      const encryptedUserData = userDoc.data();
-      const userData = await decryptUserProfile(encryptedUserData);
-
-      const currentTotals = {
-        balance: Number(userData.balance) || 0,
-        totalIncome: Number(userData.totalIncome) || 0,
-        totalExpense: Number(userData.totalExpense) || 0,
-        totalCreditGiven: Number(userData.totalCreditGiven) || 0,
-        totalLoanTaken: Number(userData.totalLoanTaken) || 0
-      };
-
-      // Apply adjustment effects to totals
-      const updatedTotals = applyEffectsToTotals(currentTotals, effects);
-
-      // Validate: prevent negative totals
-      validateTotalsNotNegative(updatedTotals);
-
-      // Update user profile
-      const updatedUserData = {
-        ...updatedTotals,
-        updatedAt: Timestamp.now()
-      };
-
-      const encryptedUpdatedData = await encryptUserProfile(updatedUserData);
-      await updateDoc(userRef, encryptedUpdatedData);
-    }
-
-    // Dispatch event to notify UI components
-    window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_EDITED, {
-      detail: {
-        transactionId: transactionId,
-        type: decryptedTx.type,
-        adjustment: numAdjustment
+    let existingFingerprints = new Set();
+    if (dedupe) {
+      const currentTxRes = await getTransactions(userId);
+      if (currentTxRes.success) {
+        existingFingerprints = new Set(
+          currentTxRes.data
+            .map(tx => tx.importFingerprint || tx.exportFingerprint)
+            .filter(Boolean)
+        );
       }
-    }));
+    }
+
+    const transactionsRef = collection(db, `users/${userId}/transactions`);
+
+    for (const txData of transactions) {
+      const currentFingerprint = txData.importFingerprint || txData.exportFingerprint || await computeTransactionFingerprint(txData);
+
+      if (dedupe && currentFingerprint && existingFingerprints.has(currentFingerprint)) {
+        skippedCount++;
+        continue;
+      }
+
+      const transactionToStore = {
+        ...txData,
+        userId,
+        createdAt: txData.createdAt ? Timestamp.fromDate(new Date(txData.createdAt)) : Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        date: normalizeDateToTimestamp(txData.date),
+        importFingerprint: currentFingerprint,
+        source: txData.source || 'import'
+      };
+
+      if (!options.preserveIds) {
+        delete transactionToStore.id;
+      }
+
+      const encryptedTransaction = await encryptTransactionData(transactionToStore);
+      await addDoc(transactionsRef, encryptedTransaction);
+      importedCount++;
+    }
+
+    await reconcileUserTotals(userId);
 
     return {
       success: true,
-      newAmount,
-      newRemainingAmount,
-      adjustment: adjustmentEntry
+      imported: importedCount,
+      total: transactions.length,
+      skipped: skippedCount
     };
   } catch (error) {
-    console.error('Error adjusting loan/credit amount:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-export const resetLoanCreditPayments = async (userId, transactionId) => {
-  try {
-    const transactionsRef = collection(db, `users/${userId}/transactions`);
-    const linkedQuery = query(transactionsRef, where('linkedTransactionId', '==', transactionId));
-    const linkedSnap = await getDocs(linkedQuery);
-    
-    const originalRef = doc(db, `users/${userId}/transactions/${transactionId}`);
-    const originalSnap = await getDoc(originalRef);
-    
-    if (!originalSnap.exists()) throw new Error('Original transaction not found');
-    const [originalDecrypted] = await decryptTransactions([{ id: originalSnap.id, ...originalSnap.data() }]);
-
-    await runTransaction(db, async (tx) => {
-      // 1. Delete all linked repayments
-      linkedSnap.docs.forEach(d => {
-        tx.delete(d.ref);
-      });
-
-      // 2. Reset the original transaction
-      const updatedOriginal = {
-        ...originalDecrypted,
-        paidAmount: 0,
-        isFullyPaid: false,
-        lastPaymentDate: null,
-        updatedAt: Timestamp.now()
-      };
-      
-      const encryptedOriginal = await encryptTransactionData(updatedOriginal);
-      tx.update(originalRef, encryptedOriginal);
-    });
-
-    // Dispatch events
-    window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_EDITED, { 
-      detail: { transactionId, updates: { paidAmount: 0, isFullyPaid: false } } 
-    }));
-    window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED));
-
-    return { success: true };
-  } catch (error) {
-    console.error('Error resetting loan/credit:', error);
+    console.error('Import failed:', error);
     return { success: false, error: error.message };
   }
 };

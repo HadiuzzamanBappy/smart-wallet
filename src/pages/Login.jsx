@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { registerUser, loginUser, loginWithGoogle } from '../services/authService';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Zap, DollarSign, Euro, CircleDollarSign } from 'lucide-react';
+import { THEME } from '../config/theme';
 
 // Base UI Components
 import Button from '../components/UI/base/Button';
@@ -110,14 +111,14 @@ const Login = ({ onBack }) => {
       </div>
 
       {/* Subtle Atmospheric Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/[0.03] dark:bg-teal-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-500/[0.03] dark:bg-primary-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
 
       <div className="w-full max-w-[360px] relative z-10 space-y-5">
         {/* Compact Branding */}
         <div className="flex flex-col items-center text-center">
-          <IconBox icon={Zap} variant="glass" colorClass="text-teal-500 dark:text-teal-400" size="sm" className="mb-2" />
-          <h1 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-[0.3em] leading-none">Wallet Tracker</h1>
-          <p className="text-[8px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest mt-1">Command Center</p>
+          <IconBox icon={Zap} variant="glass" colorClass="text-primary-500 dark:text-primary-400" size="sm" className="mb-2" />
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight leading-none">Wallet Tracker</h1>
+          <p className={`${THEME.typography.label} mt-1.5 opacity-60`}>Command Center</p>
         </div>
 
         <GlassCard
@@ -136,16 +137,16 @@ const Login = ({ onBack }) => {
           )}
 
           <div className="mb-6 text-center">
-            <h2 className="text-lg font-black text-gray-900 dark:text-white leading-none mb-1">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-none mb-1.5">
               {isLogin ? 'Sign In' : 'Register'}
             </h2>
-            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">
+            <p className={`${THEME.typography.label} opacity-60`}>
               {isLogin ? 'Secure Suite Access' : 'Initialize Registry'}
             </p>
           </div>
 
           {error && (
-            <div className="mb-4 p-2.5 bg-red-500/5 dark:bg-red-500/10 border border-red-500/10 text-red-500 dark:text-red-400 text-[9px] font-black uppercase tracking-widest rounded-xl flex items-center gap-2.5">
+            <div className="mb-4 p-2.5 bg-red-500/5 dark:bg-red-500/10 border border-red-500/10 text-red-500 dark:text-red-400 text-[10px] font-bold tracking-tight rounded-xl flex items-center gap-2.5">
               <div className="w-1 h-1 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
               {error}
             </div>
@@ -154,18 +155,18 @@ const Login = ({ onBack }) => {
           <form onSubmit={handleSubmit} className="space-y-3">
             {!isLogin && (
               <div className="space-y-1">
-                <label className="block text-[8px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest px-1">
+                <label className={`${THEME.typography.label} px-1 opacity-60`}>
                   Name
                 </label>
                 <div className="relative group">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
                   <input
                     type="text"
                     name="displayName"
                     placeholder="Full name"
                     value={formData.displayName}
                     onChange={handleInputChange}
-                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-gray-50 dark:bg-white/[0.01] border border-gray-200 dark:border-white/5 text-gray-900 dark:text-white text-[12px] font-bold placeholder-gray-400 dark:placeholder-gray-800 focus:outline-none focus:ring-1 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/[0.01] border border-gray-200 dark:border-white/5 text-gray-900 dark:text-white text-[13px] font-bold placeholder-gray-400 dark:placeholder-gray-800 focus:outline-none focus:ring-1 focus:ring-primary-500/20 focus:border-primary-500/30 transition-all"
                     required={!isLogin}
                   />
                 </div>
@@ -173,36 +174,36 @@ const Login = ({ onBack }) => {
             )}
 
             <div className="space-y-1">
-              <label className="block text-[8px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest px-1">
+              <label className={`${THEME.typography.label} px-1 opacity-60`}>
                 Email
               </label>
               <div className="relative group">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
                 <input
                   type="email"
                   name="email"
                   placeholder="name@company.com"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-gray-50 dark:bg-white/[0.01] border border-gray-200 dark:border-white/5 text-gray-900 dark:text-white text-[12px] font-bold placeholder-gray-400 dark:placeholder-gray-800 focus:outline-none focus:ring-1 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/[0.01] border border-gray-200 dark:border-white/5 text-gray-900 dark:text-white text-[13px] font-bold placeholder-gray-400 dark:placeholder-gray-800 focus:outline-none focus:ring-1 focus:ring-primary-500/20 focus:border-primary-500/30 transition-all"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="block text-[8px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest px-1">
+              <label className={`${THEME.typography.label} px-1 opacity-60`}>
                 Password
               </label>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-9 pr-10 py-2 rounded-xl bg-gray-50 dark:bg-white/[0.01] border border-gray-200 dark:border-white/5 text-gray-900 dark:text-white text-[12px] font-bold placeholder-gray-400 dark:placeholder-gray-800 focus:outline-none focus:ring-1 focus:ring-teal-500/20 focus:border-teal-500/30 transition-all"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-gray-50 dark:bg-white/[0.01] border border-gray-200 dark:border-white/5 text-gray-900 dark:text-white text-[13px] font-bold placeholder-gray-400 dark:placeholder-gray-800 focus:outline-none focus:ring-1 focus:ring-primary-500/20 focus:border-primary-500/30 transition-all"
                   required
                 />
                 <button
@@ -219,9 +220,9 @@ const Login = ({ onBack }) => {
               type="submit"
               loading={loading}
               fullWidth
-              size="sm"
+              size="md"
               color="teal"
-              className="mt-4 !py-2.5 shadow-xl shadow-teal-500/10 dark:shadow-teal-500/5 rounded-2xl"
+              className="mt-4 !py-3 shadow-xl shadow-primary-500/10 dark:shadow-primary-500/5 rounded-2xl"
             >
               {isLogin ? 'Sign In' : 'Initialize'}
             </Button>
@@ -234,22 +235,24 @@ const Login = ({ onBack }) => {
               fullWidth
               variant="soft"
               color="gray"
-              size="sm"
-              className="group !py-3 !bg-gray-100/50 dark:!bg-white/[0.02] border-gray-200/50 dark:border-white/10 rounded-2xl"
+              size="md"
+              className="group !py-3.5 !bg-gray-100/50 dark:!bg-white/[0.02] border-gray-200/50 dark:border-white/10 rounded-2xl"
             >
-              <svg className="w-4 h-4 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-400">Identity Portal</span>
+              <span className="inline-flex items-center gap-3">
+                <svg className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform p-0.5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+                <span className="text-[13px] font-bold text-gray-700 dark:text-gray-300">Identity Portal</span>
+              </span>
             </Button>
 
             <div className="text-center">
               <button
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-[8px] font-black text-gray-500 hover:text-teal-600 dark:text-gray-600 dark:hover:text-teal-400 uppercase tracking-[0.2em] transition-all"
+                className={`${THEME.typography.label} hover:text-primary-600 dark:hover:text-primary-400 transition-all`}
               >
                 {isLogin ? "Join the Suite" : "Go to Login"}
               </button>
@@ -259,8 +262,8 @@ const Login = ({ onBack }) => {
 
         {/* Footer info */}
         <div className="text-center opacity-40">
-          <p className="text-[7px] font-black text-gray-400 dark:text-white uppercase tracking-[0.4em]">
-            &copy; 2026 Wallet Tracker
+          <p className={`${THEME.typography.label} text-gray-400 dark:text-white`}>
+            &copy; {new Date().getFullYear()} Wallet Tracker
           </p>
         </div>
       </div>

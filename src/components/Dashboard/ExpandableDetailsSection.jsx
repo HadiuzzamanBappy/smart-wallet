@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, BarChart3, FileText, PieChart, Calendar, List, 
 import Skeleton from '../UI/SkeletonLoader';
 import TransactionList from './TransactionList';
 import SpendingAnalytics from './SpendingAnalytics';
+import { THEME } from '../../config/theme';
 
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
@@ -130,38 +131,38 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
               key={section.id}
               onClick={() => toggleSection(section.id)}
               className={`group relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 border w-full sm:flex-1 ${isActive
-                  ? `bg-white dark:bg-white/[0.05] border-teal-500/50 shadow-xl shadow-teal-500/10 scale-[1.02] z-10`
+                  ? `bg-white dark:bg-white/[0.05] border-primary-500/50 shadow-xl shadow-primary-500/10 scale-[1.02] z-10`
                   : `bg-gray-50/50 dark:bg-white/[0.02] border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10 shadow-sm opacity-70 hover:opacity-100`
                 }`}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 ${isActive
-                  ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
-                  : 'bg-gray-100 dark:bg-white/5 text-gray-400 group-hover:text-teal-500'
+                  ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
+                  : 'bg-gray-100 dark:bg-white/5 text-gray-400 group-hover:text-primary-500'
                 }`}>
                 <IconComponent className="w-5 h-5" />
               </div>
               <div className="text-left flex-1 min-w-0">
-                <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 leading-none ${
+                <h3 className={`${THEME.typography.label} mb-1.5 leading-none ${
                   isActive 
                     ? 'text-gray-900 dark:text-white' 
                     : 'text-gray-500 dark:text-gray-400'
                 }`}>
                   {section.title}
                 </h3>
-                <p className={`text-[9px] font-black uppercase tracking-widest leading-none opacity-40 truncate ${isActive
-                    ? 'text-teal-600 dark:text-teal-400'
+                <p className={`text-[10px] font-bold leading-none opacity-40 truncate ${isActive
+                    ? 'text-primary-600 dark:text-primary-400'
                     : 'text-gray-400 dark:text-gray-600'
                   }`}>
                   {section.description}
                 </p>
               </div>
 
-              <div className={`transition-all duration-500 ${isActive ? 'rotate-180 text-teal-500' : 'text-gray-300 group-hover:text-gray-500'}`}>
+              <div className={`transition-all duration-500 ${isActive ? 'rotate-180 text-primary-500' : 'text-gray-300 group-hover:text-gray-500'}`}>
                 <ChevronDown className="w-4 h-4" />
               </div>
               
               {isActive && (
-                <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-12 h-1 bg-teal-500 rounded-full shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+                <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-12 h-1 bg-primary-500 rounded-full shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
               )}
             </button>
           );
@@ -177,19 +178,19 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
               <div className="bg-gray-50/50 dark:bg-white/[0.02] px-6 py-4 border-b border-gray-100 dark:border-white/5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-teal-600 dark:text-teal-400 border border-gray-200/50 dark:border-white/5">
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-primary-600 dark:text-primary-400 border border-gray-200/50 dark:border-white/5">
                       {activeSection === 'transactions' ? <List className="w-5 h-5" /> : <BarChart3 className="w-5 h-5" />}
                     </div>
                     <div>
-                      <h2 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em] leading-none mb-2">
+                      <h2 className={`${THEME.typography.label} text-[11px] leading-none mb-2`}>
                         {sections.find(s => s.id === activeSection)?.title}
                       </h2>
                       <div className="flex items-center gap-3">
-                        <span className="text-[9px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest opacity-60">
+                        <span className={`${THEME.typography.label} text-[10px] opacity-60`}>
                           {sections.find(s => s.id === activeSection)?.description}
                         </span>
                         <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
-                        <span className="text-[9px] text-teal-600/60 dark:text-teal-400/60 font-black uppercase tracking-widest">Active Audit</span>
+                        <span className={`${THEME.typography.label} text-[10px] text-primary-600/60 dark:text-primary-400/60`}>Active Audit</span>
                       </div>
                     </div>
                   </div>
@@ -214,4 +215,4 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   );
 };
 
-export default ExpandableDetailsSection;
+export default ExpandableDetailsSection;

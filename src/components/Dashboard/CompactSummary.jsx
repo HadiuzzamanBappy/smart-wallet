@@ -1,186 +1,31 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useTransactions } from '../../hooks/useTransactions';
+import { useSummaryStats } from '../../hooks/useSummaryStats';
 import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Eye, BarChart3 } from 'lucide-react';
 import { formatCurrencyWithUser } from '../../utils/helpers';
+import { THEME } from '../../config/theme';
 import AddTransactionModal from './AddTransactionModal';
 import LoanCreditModal from './LoanCreditModal';
 import MonthlyBreakdownModal from './MonthlyBreakdownModal';
 import { CompactSummarySkeleton } from '../UI/SkeletonLoader';
-import { APP_EVENTS } from '../../config/constants';
 
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
-import Button from '../UI/base/Button';
 import SectionHeader from '../UI/base/SectionHeader';
-import IconBox from '../UI/base/IconBox';
-import StatBadge from '../UI/base/StatBadge';
 
-const CompactSummary = ({ refreshTrigger, onRefresh }) => {
+const CompactSummary = () => {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const {
-    transactions,
-    refreshTransactions,
-    loading: txLoading,
-    smartBalance,
-    currentMonthIncome,
-    currentMonthExpense,
-    salaryPlan
-  } = useTransactions();
+    stats,
+    loading: showSkeleton,
+    refreshing,
+    refreshData
+  } = useSummaryStats(user, userProfile, refreshUserProfile);
 
-  const [stats, setStats] = useState({
-    thisMonthIncome: 0,
-    thisMonthExpense: 0,
-    thisWeekChange: 0,
-    allTimeCreditGiven: 0,
-    allTimeLoanTaken: 0,
-    creditDue: 0,
-    loanDue: 0,
-    balance: 0
-  });
-  const [loading, setLoading] = useState(txLoading);
-  const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [showMonthlyBreakdown, setShowMonthlyBreakdown] = useState(false);
-
-  const refreshData = async () => {
-    if (refreshing) return;
-    setRefreshing(true);
-    try {
-      if (onRefresh) {
-        await onRefresh();
-        await loadData();
-      } else {
-        await refreshTransactions();
-        await loadData();
-      }
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  const calculateStats = useCallback((transactions) => {
-    const now = new Date();
-    const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    let weekBalance = 0;
-
-    transactions.forEach(transaction => {
-      const createdDate = new Date(transaction.createdAt);
-      const amount = parseFloat(transaction.amount) || 0;
-      if (createdDate >= lastWeek) {
-        if (transaction.type === 'income') weekBalance += amount;
-        else weekBalance -= amount;
-      }
-    });
-
-    let allTimeCreditGiven = 0;
-    let allTimeCreditDue = 0;
-    let allTimeLoanTaken = 0;
-    let allTimeLoanDue = 0;
-
-    if (salaryPlan?.plan?.loanDetails) {
-      salaryPlan.plan.loanDetails.forEach(loan => {
-        allTimeLoanTaken += (loan.totalLeft || 0);
-        allTimeLoanDue += (loan.totalLeft || 0);
-      });
-    }
-
-    transactions.forEach(tx => {
-      const type = (tx.type || '').toLowerCase();
-      const amount = Number(tx.amount || 0);
-      if (type === 'credit') {
-        allTimeCreditGiven += amount;
-        allTimeCreditDue += amount;
-      } else if (type === 'loan') {
-        allTimeLoanTaken += amount;
-        allTimeLoanDue += amount;
-      } else if (type === 'collection') {
-        allTimeCreditDue -= amount;
-      } else if (type === 'repayment') {
-        allTimeLoanDue -= amount;
-      }
-    });
-
-    allTimeCreditDue = Math.max(0, allTimeCreditDue);
-    allTimeLoanDue = Math.max(0, allTimeLoanDue);
-
-    setStats({
-      balance: smartBalance,
-      thisMonthIncome: currentMonthIncome,
-      thisMonthExpense: currentMonthExpense,
-      thisWeekChange: weekBalance,
-      allTimeCreditGiven: allTimeCreditGiven,
-      allTimeLoanTaken: allTimeLoanTaken,
-      creditDue: allTimeCreditDue,
-      loanDue: allTimeLoanDue
-    });
-  }, [smartBalance, currentMonthIncome, currentMonthExpense, salaryPlan]);
-
-  const loadData = useCallback(async (silent = false) => {
-    if (!user) return;
-    if (!silent) setLoading(true);
-    try {
-      if (transactions && transactions.length >= 0) {
-        await calculateStats(transactions);
-      }
-    } catch (error) {
-      console.error('Error calculating stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, transactions, calculateStats]);
-
-  useEffect(() => {
-    if (!txLoading) setLoading(false);
-  }, [txLoading]);
-
-  useEffect(() => {
-    if (user?.uid && transactions !== null) {
-      loadData(true);
-    }
-  }, [user?.uid, transactions, loadData]);
-
-  useEffect(() => {
-    if (refreshTrigger && user?.uid) {
-      loadData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshTrigger, user?.uid]);
-
-  const stableRefreshUserProfile = useCallback(refreshUserProfile, [refreshUserProfile]);
-
-  useEffect(() => {
-    const handleTransactionUpdate = async () => {
-      setRefreshing(true);
-      try {
-        try {
-          await stableRefreshUserProfile();
-        } catch (error) {
-          console.warn('Failed to refresh user profile:', error);
-        }
-        await loadData(true);
-      } finally {
-        setTimeout(() => setRefreshing(false), 300);
-      }
-    };
-
-    window.addEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTransactionUpdate);
-    window.addEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTransactionUpdate);
-    window.addEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTransactionUpdate);
-    window.addEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTransactionUpdate);
-
-    return () => {
-      window.removeEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTransactionUpdate);
-      window.removeEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTransactionUpdate);
-      window.removeEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTransactionUpdate);
-      window.removeEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTransactionUpdate);
-    };
-  }, [loadData, stableRefreshUserProfile]);
-
-  const hasData = transactions && transactions.length > 0;
-  const showSkeleton = refreshing || ((loading || txLoading) && !hasData);
 
   const summaryCards = [
     {
@@ -204,9 +49,9 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       value: formatCurrencyWithUser(stats.creditDue || 0, userProfile),
       total: formatCurrencyWithUser(stats.allTimeCreditGiven || 0, userProfile),
       icon: Wallet,
-      color: 'text-teal-500',
-      bgColor: 'bg-teal-500/10',
-      border: 'border-teal-500/20',
+      color: 'text-brand-teal',
+      bgColor: 'bg-brand-teal/10',
+      border: 'border-brand-teal/20',
       onClick: () => setShowCreditModal(true),
       isClickable: (stats.creditDue || 0) > 0
     },
@@ -215,9 +60,9 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
       value: formatCurrencyWithUser(stats.loanDue || 0, userProfile),
       total: formatCurrencyWithUser(stats.allTimeLoanTaken || 0, userProfile),
       icon: DollarSign,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10',
-      border: 'border-blue-500/20',
+      color: 'text-brand-blue',
+      bgColor: 'bg-brand-blue/10',
+      border: 'border-brand-blue/20',
       onClick: () => setShowLoanModal(true),
       isClickable: (stats.loanDue || 0) > 0
     }
@@ -256,25 +101,27 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
             const spanClass = index >= 2 ? 'col-span-2 md:col-span-1' : '';
 
             return (
-              <div
+              <GlassCard
                 key={index}
-                className={`${spanClass} group relative overflow-hidden rounded-2xl p-4 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 transition-all duration-300 ${card.isClickable ? 'cursor-pointer hover:bg-white dark:hover:bg-white/[0.04] active:scale-[0.98]' : ''}`}
+                className={spanClass}
                 onClick={card.onClick}
+                hover={card.isClickable}
+                padding="p-4"
               >
                 <div className="flex items-center gap-3.5 relative z-10">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.bgColor} ${card.color} border ${card.border} transition-transform group-hover:scale-110`}>
-                    <card.icon className="w-4.5 h-4.5" />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.bgColor} ${card.color} border ${card.border} transition-transform group-hover:scale-110`}>
+                    <card.icon className="w-5 h-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-1 leading-none">
+                    <div className={`${THEME.typography.label} mb-1`}>
                       {card.label}
                     </div>
                     <div className="flex items-baseline gap-2 flex-wrap min-w-0">
-                      <span className="text-sm font-black text-gray-900 dark:text-white truncate tracking-tighter">
+                      <span className={`${THEME.typography.value} truncate`}>
                         {card.value}
                       </span>
                       {card.total && (
-                        <span className="text-[9px] font-black text-gray-400 dark:text-gray-600 truncate uppercase tracking-tighter opacity-60">
+                        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-600 truncate tracking-tight opacity-60">
                           / {card.total}
                         </span>
                       )}
@@ -282,36 +129,29 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
                   </div>
 
                   {card.isClickable && (
-                    <div className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg bg-gray-100/50 dark:bg-white/5 text-gray-400 group-hover:text-teal-500 transition-colors">
+                    <div className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg bg-gray-100/50 dark:bg-white/5 text-gray-400 group-hover:text-primary-500 transition-colors">
                       <Eye className="w-3 h-3" />
                     </div>
                   )}
                 </div>
-                {/* Refined decorative background glow */}
-                <div className={`absolute -bottom-8 -right-8 w-16 h-16 rounded-full blur-3xl opacity-[0.05] dark:opacity-[0.1] ${card.bgColor}`} />
-              </div>
+              </GlassCard>
             );
           })}
         </div>
       )}
 
       {/* Modals */}
-      <AddTransactionModal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSuccess={async () => {
-          try {
-            await stableRefreshUserProfile();
-          } catch (err) {
-            console.warn('CompactSummary: failed to refresh profile after add', err);
-          }
-          await loadData();
-        }}
-      />
+      {showAddModal && (
+        <AddTransactionModal
+          open={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={refreshData}
+        />
+      )}
 
-      <LoanCreditModal open={showLoanModal} onClose={() => setShowLoanModal(false)} type="loans" />
-      <LoanCreditModal open={showCreditModal} onClose={() => setShowCreditModal(false)} type="credits" />
-      <MonthlyBreakdownModal open={showMonthlyBreakdown} onClose={() => setShowMonthlyBreakdown(false)} />
+      {showLoanModal && <LoanCreditModal open={showLoanModal} onClose={() => setShowLoanModal(false)} type="loans" />}
+      {showCreditModal && <LoanCreditModal open={showCreditModal} onClose={() => setShowCreditModal(false)} type="credits" />}
+      {showMonthlyBreakdown && <MonthlyBreakdownModal open={showMonthlyBreakdown} onClose={() => setShowMonthlyBreakdown(false)} />}
     </div>
   );
 };

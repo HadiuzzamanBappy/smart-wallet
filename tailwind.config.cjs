@@ -9,13 +9,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        brand: {
+          teal: '#14b8a6', // teal-500
+          blue: '#2563eb', // blue-600
+          navy: '#0f172a', // slate-900
+          rose: '#f43f5e', // rose-500
+          amber: '#f59e0b', // amber-500
+        },
         primary: {
-          50: '#eff6ff',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
+          50: '#f0fdfa',
+          500: '#14b8a6',
+          600: '#0d9488',
+          700: '#0f766e',
         },
       },
+      boxShadow: {
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
+        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+      },
+      backdropBlur: {
+        'xs': '2px',
+      }
     },
   },
   plugins: [

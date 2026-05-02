@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import { formatCurrencyWithUser } from '../../utils/helpers';
+import { THEME } from '../../config/theme';
 import LoadingSpinner from '../UI/LoadingSpinner';
 
 // Base UI Components
@@ -87,8 +88,8 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
             <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
               <Calendar className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 dark:text-gray-600 mb-2">No Reports Available</h3>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400/60 max-w-[200px] leading-relaxed">
+            <h3 className={`${THEME.typography.label} mb-2 tracking-[0.3em]`}>No Reports Available</h3>
+            <p className={`${THEME.typography.label} opacity-60 max-w-[200px] leading-relaxed`}>
               Generate transactions to activate your intelligence suite.
             </p>
           </div>
@@ -96,7 +97,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
           <>
             {/* Month Selector */}
             <div className="px-1">
-              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2.5 px-1">Select Reporting Period</label>
+              <label className={`${THEME.typography.label} mb-2.5 px-1`}>Select Reporting Period</label>
               <Select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
@@ -112,7 +113,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                 <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
                   <Calendar className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 dark:text-gray-600">No Records Found</h3>
+                <h3 className={THEME.typography.label}>No Records Found</h3>
               </div>
             ) : (
               <div className="space-y-5">
@@ -123,12 +124,12 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                       <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                         <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Total Inflow</span>
+                      <span className={`${THEME.typography.label} text-emerald-600 dark:text-emerald-400`}>Total Inflow</span>
                     </div>
-                    <div className="text-lg font-black text-gray-900 dark:text-white tracking-tighter">
+                    <div className={THEME.typography.value}>
                       {formatCurrencyWithUser(selectedData.income, userProfile)}
                     </div>
-                    <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 mt-2">
+                    <div className={`${THEME.typography.label} opacity-60 mt-2`}>
                       {selectedData.incomeCount} Logs
                     </div>
                   </div>
@@ -138,12 +139,12 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                       <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center">
                         <TrendingDown className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400">Total Outflow</span>
+                      <span className={`${THEME.typography.label} text-rose-600 dark:text-rose-400`}>Total Outflow</span>
                     </div>
-                    <div className="text-lg font-black text-gray-900 dark:text-white tracking-tighter">
+                    <div className={THEME.typography.value}>
                       {formatCurrencyWithUser(selectedData.expense, userProfile)}
                     </div>
-                    <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 mt-2">
+                    <div className={`${THEME.typography.label} opacity-60 mt-2`}>
                       {selectedData.expenseCount} Logs
                     </div>
                   </div>
@@ -151,8 +152,8 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
 
                 {/* Net Change */}
                 <div className="p-4 rounded-2xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Net Surplus / Deficit</span>
-                  <div className={`px-3 py-1 rounded-lg text-sm font-black tracking-tighter border ${selectedData.income - selectedData.expense >= 0 
+                  <span className={THEME.typography.label}>Net Surplus / Deficit</span>
+                  <div className={`px-3 py-1 rounded-lg text-sm font-bold tracking-tight border ${selectedData.income - selectedData.expense >= 0 
                     ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20' 
                     : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'}`}>
                     {selectedData.income - selectedData.expense >= 0 ? '+' : ''}
@@ -162,7 +163,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
 
                 {/* Transaction Details */}
                 <div className="space-y-3.5">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 px-1">Detailed Ledger ({selectedData.transactions.length})</h4>
+                  <h4 className={`${THEME.typography.label} opacity-80 px-1`}>Detailed Ledger ({selectedData.transactions.length})</h4>
                   <div className="space-y-2 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
                     {selectedData.transactions
                       .filter(tx => tx.type === 'income' || tx.type === 'expense')
@@ -171,20 +172,20 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                         <div key={tx.id} className="p-4 rounded-xl bg-white/50 dark:bg-white/[0.01] border border-gray-100/50 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.04] transition-all group">
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex-1 min-w-0">
-                              <div className="text-xs font-black text-gray-900 dark:text-white truncate tracking-tight">
+                              <div className="text-xs font-bold text-gray-900 dark:text-white truncate tracking-tight">
                                 {tx.description}
                               </div>
                               <div className="flex items-center gap-3 mt-1.5">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600">
+                                <span className={THEME.typography.label}>
                                   {new Date(tx.date || tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 </span>
                                 <div className="w-1 h-1 rounded-full bg-gray-200 dark:bg-gray-800" />
-                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600">
+                                <span className={THEME.typography.label}>
                                   {tx.category}
                                 </span>
                               </div>
                             </div>
-                            <div className={`text-sm font-black tracking-tighter whitespace-nowrap ${tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
+                            <div className={`text-sm font-bold tracking-tight whitespace-nowrap ${tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
                               {tx.type === 'income' ? '+' : '-'}{formatCurrencyWithUser(tx.amount, userProfile)}
                             </div>
                           </div>

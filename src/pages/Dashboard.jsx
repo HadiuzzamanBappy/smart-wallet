@@ -135,8 +135,8 @@ const Dashboard = () => {
           onRefresh={handleProfileRefresh}
         />
 
-        <main className="max-w-[1400px] mx-auto px-4 sm:px-8 py-8 sm:py-12 relative z-10">
-          <div className="space-y-8 sm:space-y-12">
+        <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-12 pt-20 sm:pt-24 relative z-10">
+          <div className="space-y-6 sm:space-y-12">
             <CompactSummary onRefresh={handleRefresh} />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

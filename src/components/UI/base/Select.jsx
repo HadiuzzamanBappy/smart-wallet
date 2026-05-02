@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
+import { THEME } from '../../../config/theme';
 
 /**
  * Select - Standardized themed select/dropdown component.
@@ -15,15 +16,15 @@ const Select = ({
     ...props
 }) => {
     const sizeClasses = {
-        sm: 'py-2 px-3 text-[12px] h-9',
-        md: 'py-2.5 px-4 text-[13px] h-10',
-        lg: 'py-3 px-5 text-[15px] h-12'
+        sm: 'py-2 px-3 text-[12px] h-10',
+        md: 'py-3 px-4 text-[13px] h-12',
+        lg: 'py-4 px-5 text-[15px] h-14'
     };
 
     return (
         <div className={`${fullWidth ? 'w-full' : ''}`}>
             {label && (
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2 px-1">
+                <label className={THEME.typography.label}>
                     {label}
                 </label>
             )}
@@ -34,14 +35,14 @@ const Select = ({
                     onChange={onChange}
                     className={`
                         appearance-none w-full pr-10
-                        bg-gray-50/80 dark:bg-white/[0.02]
-                        border border-gray-200 dark:border-white/10
-                        rounded-xl font-bold text-gray-900 dark:text-white
+                        ${THEME.glass.input}
+                        border border-gray-200/50 dark:border-white/5
+                        rounded-2xl font-bold text-gray-900 dark:text-white
                         outline-none transition-all cursor-pointer
-                        hover:bg-gray-100 dark:hover:bg-white/5
-                        focus:ring-4 focus:ring-teal-500/10
-                        focus:border-teal-500/50
-                        shadow-sm focus:shadow-md
+                        hover:brightness-105
+                        focus:ring-4 focus:ring-primary-500/10
+                        focus:border-primary-500/50
+                        shadow-glass dark:shadow-glass-dark
                         ${sizeClasses[size] || sizeClasses.md}
                         ${className}
                     `}
@@ -57,7 +58,7 @@ const Select = ({
                         </option>
                     ))}
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-600 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-600 group-hover:text-brand-teal transition-colors">
                     <ChevronDown className="w-4 h-4" />
                 </div>
             </div>

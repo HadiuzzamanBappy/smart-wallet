@@ -5,9 +5,10 @@ import { useTransactions } from '../../hooks/useTransactions';
 import useLocalRefresh from '../../hooks/useLocalRefresh';
 import { formatCurrency } from '../../utils/helpers';
 import UserMenuDropdown from '../User/UserMenuDropdown';
-import { getOutstandingCredits, getOutstandingLoans } from '../../services/transactionService';
+import { getOutstandingCredits, getOutstandingLoans } from '../../services/debtService';
 import Skeleton, { HeaderSkeleton } from './SkeletonLoader';
 import { APP_EVENTS } from '../../config/constants';
+import { THEME } from '../../config/theme';
 
 // Base UI Components
 import Button from './base/Button';
@@ -133,7 +134,7 @@ const Header = ({
 
     return (
         <>
-            <header className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm border-b border-gray-100 dark:border-white/5 sticky top-0 z-40">
+            <header className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm border-b border-gray-100 dark:border-white/5 fixed top-0 left-0 right-0 w-full z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center space-x-3">
@@ -148,11 +149,11 @@ const Header = ({
                             />
                             <Wallet className="w-6 h-6 text-gray-900 dark:text-white" style={{ display: 'none' }} />
                             <div>
-                                <h1 className="text-base font-black text-gray-900 dark:text-white tracking-tight">
+                                <h1 className="text-base font-bold text-gray-900 dark:text-white tracking-tight">
                                     Smart Wallet
                                 </h1>
-                                <div className="flex items-center gap-2 text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
-                                    <Wallet className="w-3 h-3 text-teal-600 dark:text-teal-400" />
+                                <div className={`flex items-center gap-2 ${THEME.typography.label} text-gray-400 dark:text-gray-500`}>
+                                    <Wallet className="w-3 h-3 text-primary-600 dark:text-primary-400" />
                                     {isRefreshing || isLocalRefreshing ? (
                                         <div className="flex items-center gap-2">
                                             <Skeleton width="w-16" height="h-3" />
@@ -171,7 +172,7 @@ const Header = ({
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-3">
                             {/* Add Transaction Button */}
                             <div className="flex sm:hidden">
                                 <Button
@@ -180,7 +181,7 @@ const Header = ({
                                     icon={Plus}
                                     size="icon"
                                     variant="soft"
-                                    className="!rounded-xl"
+                                    className="!w-10 !h-10 !rounded-xl shadow-lg shadow-emerald-500/10"
                                 />
                             </div>
                             <div className="hidden sm:flex">

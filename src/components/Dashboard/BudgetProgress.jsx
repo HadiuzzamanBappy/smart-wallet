@@ -5,6 +5,7 @@ import { calculateBudgetStatus, getCurrentMonthSpending, formatCurrency } from '
 import { AlertTriangle, CheckCircle, Target, TrendingUp } from 'lucide-react';
 import { BudgetSkeleton } from '../UI/SkeletonLoader';
 import { getSalaryPlan } from '../../services/salaryService';
+import { THEME } from '../../config/theme';
 
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
@@ -105,7 +106,7 @@ const BudgetProgress = () => {
     const remaining = Math.max(0, (budgetStatus.budget || 0) - currentSpending);
 
     return (
-        <div className="rounded-2xl p-4 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 shadow-sm transition-colors duration-500">
+        <GlassCard padding="p-4" className="shadow-sm transition-colors duration-500">
             <div className="flex items-start justify-between gap-2 mb-4">
                 <div className="flex items-center gap-4">
                     <IconBox 
@@ -114,20 +115,20 @@ const BudgetProgress = () => {
                         colorClass={colors.color}
                         bgClass={colors.bg}
                         size="md"
-                        className={`!rounded-xl border ${budgetStatus.warningLevel === 'danger' ? 'border-rose-500/30' : 'border-gray-200 dark:border-white/20'}`}
+                        className={`!rounded-xl border ${budgetStatus.warningLevel === 'danger' ? 'border-rose-500/30' : 'border-gray-200/50 dark:border-white/10'}`}
                     />
                     <div>
-                        <div className={`text-[10px] font-black uppercase tracking-[0.2em] ${colors.color} mb-1.5`}>
+                        <div className={`${THEME.typography.label} ${colors.color} mb-1.5`}>
                             {budgetStatus.status}
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">Limit:</span>
-                            <span className="text-xs font-black text-gray-900 dark:text-white tracking-tight">{formatCurrency(budgetLimit, currency)}</span>
+                            <span className={THEME.typography.label}>Limit:</span>
+                            <span className="text-xs font-bold text-gray-900 dark:text-white tracking-tight">{formatCurrency(budgetLimit, currency)}</span>
                         </div>
                     </div>
                 </div>
 
-                <div className={`text-sm font-black tracking-tighter ${colors.color}`}>{percentage}%</div>
+                <div className={`text-sm font-bold tracking-tight ${colors.color}`}>{percentage}%</div>
             </div>
 
             <div className="w-full h-2 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden mb-4">
@@ -140,18 +141,18 @@ const BudgetProgress = () => {
             <div className="flex items-end justify-between">
                 <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-gray-900 dark:text-white tracking-tighter">{formatCurrency(currentSpending, currency)}</span>
-                        <span className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">Spent</span>
+                        <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight">{formatCurrency(currentSpending, currency)}</span>
+                        <span className={THEME.typography.label}>Spent</span>
                     </div>
                     {fixedSpending > 0 && (
-                        <div className="text-[9px] font-black uppercase tracking-tight text-gray-400 dark:text-gray-600">
+                        <div className={`${THEME.typography.label} opacity-70`}>
                             Incl. <span className="text-gray-600 dark:text-gray-400">{formatCurrency(fixedSpending, currency)}</span> fixed ops
                         </div>
                     )}
                 </div>
                 
                 <div className="text-right">
-                    <div className={`text-[11px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border ${budgetStatus.exceeded 
+                    <div className={`${THEME.typography.label} px-2.5 py-1 rounded-lg border ${budgetStatus.exceeded 
                         ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' 
                         : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'}`}>
                         {budgetStatus.exceeded 
@@ -161,8 +162,8 @@ const BudgetProgress = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </GlassCard>
     );
 };
 
-export default BudgetProgress;
+export default BudgetProgress;
