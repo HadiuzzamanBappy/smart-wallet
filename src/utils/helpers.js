@@ -16,7 +16,7 @@ export const formatCurrency = (amount, currency = DEFAULTS.CURRENCY) => {
     maximumFractionDigits: config.decimals
   }).format(amount || 0);
 
-  // Prefix symbol (e.g., '$' or 'ট') with a thin space for readability when symbol is non-ASCII
+  // Prefix symbol (e.g., '$' or '৳') with a thin space for readability when symbol is non-ASCII
   const space = config.symbol && config.symbol.length > 1 ? '\u00A0' : '\u00A0';
   return `${config.symbol}${space}${formattedNumber}`;
 };

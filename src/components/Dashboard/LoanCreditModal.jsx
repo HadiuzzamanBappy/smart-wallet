@@ -66,10 +66,10 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
     const totalOriginalAmount = displayedItems.reduce((s, it) => s + (Number(it.amount) || 0), 0);
     const totalRemaining = displayedItems.reduce((s, it) => s + (Number(it.remainingAmount) || 0), 0);
 
-    const loadData = React.useCallback(async () => {
+    const loadData = React.useCallback(async (silent = false) => {
         if (!user?.uid) return;
 
-        setLoading(true);
+        if (!silent) setLoading(true);
         try {
             const result = isLoans
                 ? await getAllLoans(user.uid)
@@ -84,7 +84,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
             console.error('Error loading data:', error);
             showToast('Failed to load data', 'error');
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     }, [user?.uid, isLoans]);
 
@@ -142,7 +142,23 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         const itemId = showPaymentModal.id;
         setProcessing(prev => ({ ...prev, [itemId]: true }));
 
+        // 2. Optimistic UI Update for the list
+        setItems(prev => prev.map(it => {
+            if (it.id === itemId) {
+                const newPaid = (Number(it.paidAmount) || 0) + amount;
+                const newRem = Math.max(0, (Number(it.amount) || 0) - newPaid);
+                return {
+                    ...it,
+                    paidAmount: newPaid,
+                    remainingAmount: newRem,
+                    isFullyPaid: newRem <= 0
+                };
+            }
+            return it;
+        }));
+
         try {
+            // 3. Persistent update in background
             const result = isLoans
                 ? await markLoanAsRepaid(user.uid, itemId, amount, paymentDescription)
                 : await markCreditAsCollected(user.uid, itemId, amount, paymentDescription);
@@ -150,9 +166,8 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
             if (result.success) {
                 const actionText = isLoans ? 'repayment' : 'collection';
                 showToast(`${formatCurrencyWithUser(amount, userProfile)} ${actionText} recorded successfully`);
-                setShowPaymentModal(null);
-                if (paymentAmountRef.current) paymentAmountRef.current.value = '';
                 setPaymentDescription('');
+                setShowPaymentModal(null);
 
                 // Dispatch transaction added event to notify other components
                 window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_ADDED, {
@@ -164,14 +179,17 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                     }
                 }));
 
-                // Refresh data and transactions
-                await Promise.all([loadData(), refreshTransactions()]);
+                // Refresh data silently
+                loadData(true);
+                refreshTransactions(true);
             } else {
                 showToast(result.error || `Failed to record ${isLoans ? 'repayment' : 'collection'}`, 'error');
+                loadData(true); // reload to sync back
             }
         } catch (error) {
             console.error('Error processing payment:', error);
             showToast(`Failed to record ${isLoans ? 'repayment' : 'collection'}`, 'error');
+            loadData(true);
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
         }
@@ -201,17 +219,33 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
             return;
         }
 
+        // 1. Set processing state
         setProcessing(prev => ({ ...prev, [itemId]: true }));
 
+        // 2. Optimistic UI Update for the list
+        setItems(prev => prev.map(it => {
+            if (it.id === itemId) {
+                const paid = Number(it.paidAmount) || 0;
+                const newRem = Math.max(0, newAmount - paid);
+                return {
+                    ...it,
+                    amount: newAmount,
+                    remainingAmount: newRem,
+                    isFullyPaid: newRem <= 0
+                };
+            }
+            return it;
+        }));
+
         try {
+            // 3. Persistent update in background
             const result = await adjustLoanCreditAmount(user.uid, itemId, adjustment, adjustmentReason);
 
             if (result.success) {
                 const actionText = adjustment > 0 ? 'increased' : 'decreased';
                 showToast(`Amount ${actionText} by ${formatCurrencyWithUser(Math.abs(adjustment), userProfile)}`);
-                setShowAdjustmentModal(null);
-                if (adjustmentAmountRef.current) adjustmentAmountRef.current.value = '';
                 setAdjustmentReason('');
+                setShowAdjustmentModal(null);
 
                 // Dispatch transaction edited event to notify other components (summary, analytics, etc.)
                 window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_EDITED, {
@@ -222,14 +256,17 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                     }
                 }));
 
-                // Refresh data and transactions to update summary
-                await Promise.all([loadData(), refreshTransactions()]);
+                // Refresh data silently
+                loadData(true);
+                refreshTransactions(true);
             } else {
                 showToast(result.error || 'Failed to adjust amount', 'error');
+                loadData(true);
             }
         } catch (error) {
             console.error('Error adjusting amount:', error);
             showToast('Failed to adjust amount', 'error');
+            loadData(true);
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
         }
@@ -241,175 +278,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         }
     }, [open, user?.uid, type, loadData]);
 
-    const PaymentModal = () => {
-        if (!showPaymentModal) return null;
 
-        return (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in">
-                <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-white/10">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">
-                            {isLoans ? 'Record Repayment' : 'Record Collection'}
-                        </h3>
-                        <button
-                            onClick={() => setShowPaymentModal(null)}
-                            className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-                        >
-                            <X className="w-5 h-5 text-gray-500" />
-                        </button>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5">
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">
-                                    Original
-                                </label>
-                                <div className="text-sm font-black text-gray-700 dark:text-gray-300">
-                                    {formatCurrencyWithUser(showPaymentModal.amount, userProfile)}
-                                </div>
-                            </div>
-
-                            <div className="bg-orange-500/5 p-3 rounded-2xl border border-orange-500/10">
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-orange-500 mb-1">
-                                    Remaining
-                                </label>
-                                <div className="text-sm font-black text-orange-500">
-                                    {formatCurrencyWithUser(showPaymentModal.remainingAmount, userProfile)}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
-                                {isLoans ? 'Repayment' : 'Collection'} Amount
-                            </label>
-                            <input
-                                ref={paymentAmountRef}
-                                type="number"
-                                className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
-                                placeholder="0.00"
-                                defaultValue={showPaymentModal.remainingAmount}
-                                max={showPaymentModal.remainingAmount}
-                                step="0.01"
-                                onInput={(e) => setPaymentInputHasValue(String(e.target.value).trim() !== '')}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
-                                Notes (Optional)
-                            </label>
-                            <input
-                                type="text"
-                                value={paymentDescription}
-                                onChange={(e) => setPaymentDescription(e.target.value)}
-                                className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
-                                placeholder="Any additional details?"
-                            />
-                        </div>
-
-                        <div className="flex gap-3 pt-4">
-                            <button
-                                onClick={() => setShowPaymentModal(null)}
-                                className="flex-1 h-12 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handlePaymentSubmit}
-                                disabled={!paymentInputHasValue || processing[showPaymentModal.id]}
-                                className="flex-[2] h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
-                            >
-                                {processing[showPaymentModal.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                                Record {isLoans ? 'Repayment' : 'Collection'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const AdjustmentModal = () => {
-        if (!showAdjustmentModal) return null;
-
-        return (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in">
-                <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-white/10">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">
-                            Adjust {isLoans ? 'Loan' : 'Credit'}
-                        </h3>
-                        <button
-                            onClick={() => setShowAdjustmentModal(null)}
-                            className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-                        >
-                            <X className="w-5 h-5 text-gray-500" />
-                        </button>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="bg-white/5 p-3 rounded-2xl border border-white/5 mb-4">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">
-                                Current Balance
-                            </label>
-                            <div className="text-lg font-black text-gray-700 dark:text-gray-300">
-                                {formatCurrencyWithUser(showAdjustmentModal.amount, userProfile)}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
-                                Adjustment Amount
-                            </label>
-                            <input
-                                ref={adjustmentAmountRef}
-                                type="number"
-                                className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
-                                placeholder="+/- 0.00"
-                                step="0.01"
-                                onInput={(e) => setAdjustmentInputHasValue(String(e.target.value).trim() !== '')}
-                            />
-                            <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 px-1">
-                                + for increase, - for decrease
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
-                                Reason
-                            </label>
-                            <input
-                                type="text"
-                                value={adjustmentReason}
-                                onChange={(e) => setAdjustmentReason(e.target.value)}
-                                className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
-                                placeholder="Why this adjustment?"
-                            />
-                        </div>
-
-                        <div className="flex gap-3 pt-4">
-                            <button
-                                onClick={() => setShowAdjustmentModal(null)}
-                                className="flex-1 h-12 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleAdjustmentSubmit}
-                                disabled={!adjustmentInputHasValue || processing[showAdjustmentModal.id]}
-                                className="flex-[2] h-12 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 active:scale-[0.98]"
-                            >
-                                {processing[showAdjustmentModal.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit3 className="w-4 h-4" />}
-                                Apply Adjustment
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     return (
         <>
@@ -571,8 +440,169 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 </div>
             </Modal>
 
-            <PaymentModal />
-            <AdjustmentModal />
+            {/* Record Payment Dialog */}
+            {showPaymentModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in">
+                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-white/10">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">
+                                {isLoans ? 'Record Repayment' : 'Record Collection'}
+                            </h3>
+                            <button
+                                onClick={() => setShowPaymentModal(null)}
+                                className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                            >
+                                <X className="w-5 h-5 text-gray-500" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-white/5 p-3 rounded-2xl border border-white/5">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">
+                                        Original
+                                    </label>
+                                    <div className="text-sm font-black text-gray-700 dark:text-gray-300">
+                                        {formatCurrencyWithUser(showPaymentModal.amount, userProfile)}
+                                    </div>
+                                </div>
+
+                                <div className="bg-orange-500/5 p-3 rounded-2xl border border-orange-500/10">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-orange-500 mb-1">
+                                        Remaining
+                                    </label>
+                                    <div className="text-sm font-black text-orange-500">
+                                        {formatCurrencyWithUser(showPaymentModal.remainingAmount, userProfile)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
+                                    {isLoans ? 'Repayment' : 'Collection'} Amount
+                                </label>
+                                <input
+                                    ref={paymentAmountRef}
+                                    type="number"
+                                    className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+                                    placeholder="0.00"
+                                    defaultValue={showPaymentModal.remainingAmount}
+                                    max={showPaymentModal.remainingAmount}
+                                    step="0.01"
+                                    onInput={(e) => setPaymentInputHasValue(String(e.target.value).trim() !== '')}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
+                                    Notes (Optional)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={paymentDescription}
+                                    onChange={(e) => setPaymentDescription(e.target.value)}
+                                    className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+                                    placeholder="Any additional details?"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    onClick={() => setShowPaymentModal(null)}
+                                    className="flex-1 h-12 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handlePaymentSubmit}
+                                    disabled={!paymentInputHasValue || processing[showPaymentModal.id]}
+                                    className="flex-[2] h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                                >
+                                    {processing[showPaymentModal.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                                    Record {isLoans ? 'Repayment' : 'Collection'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Adjustment Dialog */}
+            {showAdjustmentModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in">
+                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-white/10">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">
+                                Adjust {isLoans ? 'Loan' : 'Credit'}
+                            </h3>
+                            <button
+                                onClick={() => setShowAdjustmentModal(null)}
+                                className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                            >
+                                <X className="w-5 h-5 text-gray-500" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5 mb-4">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">
+                                    Current Balance
+                                </label>
+                                <div className="text-lg font-black text-gray-700 dark:text-gray-300">
+                                    {formatCurrencyWithUser(showAdjustmentModal.amount, userProfile)}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
+                                    Adjustment Amount
+                                </label>
+                                <input
+                                    ref={adjustmentAmountRef}
+                                    type="number"
+                                    className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+                                    placeholder="+/- 0.00"
+                                    step="0.01"
+                                    onInput={(e) => setAdjustmentInputHasValue(String(e.target.value).trim() !== '')}
+                                />
+                                <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2 px-1">
+                                    + for increase, - for decrease
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
+                                    Reason
+                                </label>
+                                <input
+                                    type="text"
+                                    value={adjustmentReason}
+                                    onChange={(e) => setAdjustmentReason(e.target.value)}
+                                    className="w-full h-12 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/10 rounded-2xl px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-teal-500/50"
+                                    placeholder="Why this adjustment?"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    onClick={() => setShowAdjustmentModal(null)}
+                                    className="flex-1 h-12 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleAdjustmentSubmit}
+                                    disabled={!adjustmentInputHasValue || processing[showAdjustmentModal.id]}
+                                    className="flex-[2] h-12 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 active:scale-[0.98]"
+                                >
+                                    {processing[showAdjustmentModal.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit3 className="w-4 h-4" />}
+                                    Apply Adjustment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Toast
                 show={toast.show}

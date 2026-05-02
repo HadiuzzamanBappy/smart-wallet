@@ -2,7 +2,7 @@ import React from 'react';
 import { HelpCircle, MessageCircle, Zap, BarChart3, Shield, Target, Calendar, CreditCard } from 'lucide-react';
 import Modal from '../UI/base/Modal';
 
-const HelpModal = ({ isOpen, onClose }) => {
+const AboutModal = ({ isOpen, onClose }) => {
   const features = [
     {
       icon: MessageCircle,
@@ -109,7 +109,7 @@ const HelpModal = ({ isOpen, onClose }) => {
 
         <div className="text-center pt-2">
           <p className="text-[9px] text-gray-400 font-bold uppercase tracking-[0.3em]">
-            Smart Wallet v3.0 · Financial Intelligence Guide
+            Smart Wallet v1.2.0 · Financial Intelligence Guide
           </p>
         </div>
       </div>
@@ -117,4 +117,4 @@ const HelpModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default HelpModal;
+export default AboutModal;

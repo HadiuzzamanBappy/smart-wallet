@@ -11,11 +11,11 @@ export const CURRENCIES = {
   BDT: {
     code: 'BDT',
     name: 'Bangladeshi Taka',
-    symbol: 'ট',
+    symbol: '৳',
     locale: 'en-BD',
     decimals: 0,
     flag: '🇧🇩',
-    label: 'ট BDT'
+    label: '৳ BDT'
   },
   USD: {
     code: 'USD',
@@ -166,6 +166,7 @@ export const PROFILE_EVENTS = {
  */
 export const DEFAULTS = {
   CURRENCY: 'BDT',
+  SYMBOL: '৳',
   PAGE_SIZE: 8,
   DATE_FORMAT: 'en-US',
   DEBOUNCE_DELAY: 50

@@ -1,6 +1,7 @@
 import { X, Plus, Trash2, Wallet2, Building2, PiggyBank, ShieldCheck, Target, ChevronRight, Sparkles, Receipt, ChevronLeft, Briefcase, Home, CreditCard, Activity, Wallet, ArrowRight } from 'lucide-react';
 import Modal from '../UI/base/Modal';
 import React, { useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import { calculatePlan } from '../../utils/salaryCalculator';
 
 const StepBar = ({ current, total, onStepClick }) => {
@@ -38,12 +39,13 @@ const StepBar = ({ current, total, onStepClick }) => {
 };
 
 const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
+  const { userProfile } = useAuth();
   const [step, setStep] = useState(0);
 
   // Ensure initialData is merged with defaults so missing keys (like loans/deposits) don't cause crashes
   const [form, setForm] = useState(() => {
     const defaults = {
-      currency: '৳ BDT',
+      currency: userProfile?.currency || 'BDT',
       salary: '',
       extra: '',
       ageBracket: '22-30',
@@ -54,6 +56,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
       familySend: '',
       bills: '',
       transport: '',
+      cashInHand: '',
       loans: [],
       deposits: [],
       goal: '',
@@ -68,6 +71,13 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
   });
 
   const update = (key, val) => setForm(f => ({ ...f, [key]: val }));
+
+  // Sync form with initialData when it arrives (handles async loading)
+  React.useEffect(() => {
+    if (initialData) {
+      setForm(f => ({ ...f, ...initialData }));
+    }
+  }, [initialData]);
 
   // Live Calculation for immediate feedback
   const livePlan = calculatePlan(form);
@@ -86,26 +96,20 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
   const renderIncome = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Preferred Currency</label>
-          <select
-            value={form.currency} onChange={e => update('currency', e.target.value)}
-            className="w-full bg-gray-900/50 border border-gray-700 rounded-xl p-3.5 text-white focus:ring-2 focus:ring-teal-500/50 transition-all outline-none appearance-none cursor-pointer"
-          >
-            {["৳ BDT", "$ USD", "₹ INR", "€ EUR", "£ GBP"].map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Monthly Bank Deposit (After Tax) *</label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-mono text-sm">{sym}</span>
-            <input
-              type="number" value={form.salary} onChange={e => update('salary', e.target.value)}
-              className="w-full bg-gray-900/50 border border-gray-700 rounded-xl p-3.5 pl-10 text-white focus:ring-2 focus:ring-teal-500/50 transition-all outline-none font-mono"
-              placeholder="Your main take-home pay"
-            />
+      <div>
+        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Monthly Bank Deposit (After Tax) *</label>
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
+            <span className="text-teal-500 font-mono font-bold text-sm">{sym}</span>
           </div>
+          <input
+            type="number"
+            value={form.salary}
+            onChange={e => update('salary', e.target.value)}
+            className="w-full bg-gray-900/50 border border-gray-700 rounded-xl p-4 pl-10 text-white text-lg font-mono focus:ring-2 focus:ring-teal-500/50 transition-all outline-none placeholder:text-gray-700"
+            placeholder="0.00"
+            required
+          />
         </div>
       </div>
 
@@ -326,7 +330,6 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
   const renderSavings = () => {
     const typeConfigs = {
-      'Cash in Hand': { icon: <Wallet2 className="w-3.5 h-3.5" />, color: 'amber', border: 'border-amber-500/20', text: 'text-amber-400' },
       'FDR': { icon: <Building2 className="w-3.5 h-3.5" />, color: 'blue', border: 'border-blue-500/20', text: 'text-blue-400' },
       'Deposit': { icon: <PiggyBank className="w-3.5 h-3.5" />, color: 'teal', border: 'border-teal-500/20', text: 'text-teal-400' },
       'Sanchaypotro': { icon: <ShieldCheck className="w-3.5 h-3.5" />, color: 'emerald', border: 'border-emerald-500/20', text: 'text-emerald-400' },
@@ -334,11 +337,37 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
     };
 
     return (
-      <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
+      <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+        {/* Dedicated Cash in Hand Field */}
+        <div className="p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-2xl">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-amber-500/20 rounded-xl text-amber-400 border border-amber-500/30">
+              <Wallet2 className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-white uppercase tracking-wider">Cash in Hand / Existing Balance</h4>
+              <p className="text-[10px] text-gray-500 font-medium">Your current liquid wallet balance to start with</p>
+            </div>
+          </div>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500/50 font-mono text-sm">{sym}</span>
+            <input
+              type="number"
+              value={form.cashInHand}
+              onChange={e => update('cashInHand', e.target.value)}
+              className="w-full bg-gray-950/50 border border-amber-500/30 rounded-xl p-3.5 pl-10 text-white outline-none focus:ring-2 focus:ring-amber-500/30 font-mono transition-all"
+              placeholder="0"
+            />
+          </div>
+        </div>
+
+        <div className="h-px bg-gray-800/40 my-2" />
+
         <div className="space-y-2">
+          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1 mb-2">Other Monthly Assets / Savings</label>
           {form.deposits.length === 0 ? (
             <div className="text-center p-6 bg-gray-900/20 rounded-2xl border border-dashed border-gray-800 text-gray-600">
-              <p className="text-[9px] font-bold uppercase tracking-widest">No assets added</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest">No other assets added</p>
             </div>
           ) : (
             form.deposits.map((dep, idx) => {
@@ -353,7 +382,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
                       </div>
                       <div className="relative h-8 shrink-0">
                         <select
-                          value={dep.type || 'Cash in Hand'}
+                          value={dep.type || 'Deposit'}
                           onChange={e => {
                             const nd = [...form.deposits]; nd[idx] = { ...nd[idx], type: e.target.value }; update('deposits', nd);
                           }}
@@ -375,17 +404,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
                     {/* RIGHT: VALUES & TOGGLE */}
                     <div className="flex items-center gap-2 w-full lg:w-auto">
                       <div className="flex gap-2 flex-1 lg:flex-none">
-                        <div className="relative h-8 flex-1 lg:w-24">
-                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 font-mono">{sym}</span>
-                          <input
-                            type="number" value={dep.balance} onChange={e => {
-                              const nd = [...form.deposits]; nd[idx] = { ...nd[idx], balance: e.target.value }; update('deposits', nd);
-                            }}
-                            className="h-full w-full bg-gray-900/50 border border-gray-800 rounded-xl pl-6 pr-2 text-white text-xs font-mono outline-none focus:border-teal-500/30 transition-all"
-                            placeholder="Bal"
-                          />
-                        </div>
-                        {dep.type !== 'Cash in Hand' && dep.type !== 'Sanchaypotro' && (
+                        {dep.type !== 'Sanchaypotro' && (
                           <div className="relative h-8 flex-1 lg:w-20">
                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-teal-600/50 font-mono">{sym}</span>
                             <input
@@ -397,6 +416,16 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
                             />
                           </div>
                         )}
+                        <div className="relative h-8 flex-1 lg:w-24">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 font-mono">{sym}</span>
+                          <input
+                            type="number" value={dep.balance} onChange={e => {
+                              const nd = [...form.deposits]; nd[idx] = { ...nd[idx], balance: e.target.value }; update('deposits', nd);
+                            }}
+                            className="h-full w-full bg-gray-900/50 border border-gray-800 rounded-xl pl-6 pr-2 text-white text-xs font-mono outline-none focus:border-teal-500/30 transition-all"
+                            placeholder="Bal"
+                          />
+                        </div>
                       </div>
 
                       <div className="flex gap-1">
@@ -424,7 +453,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
           )}
 
           <button
-            onClick={() => update('deposits', [...form.deposits, { type: 'Cash in Hand', name: '', monthly: '', balance: '', useForGoal: true }])}
+            onClick={() => update('deposits', [...form.deposits, { type: 'Deposit', name: '', monthly: '', balance: '', useForGoal: true }])}
             className="w-full flex items-center justify-center space-x-2 py-3 bg-gray-900/30 border border-dashed border-gray-800 rounded-2xl text-gray-500 hover:text-teal-400 hover:border-teal-500/30 transition-all group"
           >
             <Plus className="w-3 h-3" />
@@ -437,9 +466,16 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
   const renderGoals = () => {
     const goalVal = parseFloat(form.goal) || 0;
-    const selectedAssets = (form.deposits || []).filter(d => d.useForGoal !== false).reduce((s, d) => s + (parseFloat(d.balance) || 0), 0);
-    const gap = Math.max(goalVal - selectedAssets, 0);
-    const monthly = gap > 0 ? gap / (parseFloat(form.goalMonths) || 12) : 0;
+    const goalMonths = parseFloat(form.goalMonths) || 12;
+    const cashInHand = parseFloat(form.cashInHand) || 0;
+    
+    const currentAssets = (form.deposits || []).filter(d => d.useForGoal !== false).reduce((s, d) => s + (parseFloat(d.balance) || 0), 0);
+    const monthlySavings = (form.deposits || []).filter(d => d.useForGoal !== false).reduce((s, d) => s + (parseFloat(d.monthly) || 0), 0);
+    
+    const projectedSavings = monthlySavings * goalMonths;
+    const totalProjected = currentAssets + cashInHand + projectedSavings;
+    const gap = Math.max(goalVal - totalProjected, 0);
+    const monthly = gap > 0 ? gap / goalMonths : 0;
 
     return (
       <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -480,8 +516,18 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
               </div>
 
               <div className="flex justify-between items-center text-[10px]">
-                <span className="text-emerald-500/70">Applied Assets</span>
-                <span className="font-mono text-emerald-400">-{c(selectedAssets)}</span>
+                <span className="text-gray-500">Current Assets</span>
+                <span className="font-mono text-teal-400/80">-{c(currentAssets)}</span>
+              </div>
+
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-gray-500">Cash in Hand</span>
+                <span className="font-mono text-emerald-400/80">-{c(cashInHand)}</span>
+              </div>
+
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-gray-500">Projected Savings ({goalMonths} mo)</span>
+                <span className="font-mono text-indigo-400/80">-{c(projectedSavings)}</span>
               </div>
 
               <div className="pt-2.5 border-t border-gray-800/40 flex justify-between items-center">
@@ -587,13 +633,13 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
                 <div className="text-sm sm:text-base font-mono font-bold text-amber-400 truncate">{c(livePlan.totalEMI)}</div>
               </div>
               <div className="px-1 border-r border-gray-800/50 last:border-0 md:border-r flex flex-col items-center justify-center text-center min-h-[35px]">
-                <div className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Saved</div>
+                <div className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Saved / mo</div>
                 <div className="text-sm sm:text-base font-mono font-bold text-emerald-400 truncate">{c(livePlan.actualSavings)}</div>
               </div>
               <div className="px-1 border-r border-gray-800/50 last:border-0 md:border-r flex flex-col items-center justify-center text-center min-h-[35px]">
                 <div className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-1">Goal / mo</div>
                 <div className="text-sm sm:text-base font-mono font-bold text-indigo-400 truncate">
-                  {c(livePlan.goal > 0 ? livePlan.monthlyForGoal : livePlan.disposable * 0.2)}
+                  {c(livePlan.monthlyForGoal)}
                 </div>
               </div>
               <div className="px-1 flex flex-col items-center justify-center text-center min-h-[35px]">

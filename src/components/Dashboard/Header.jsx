@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Wallet, Plus, RefreshCw, DollarSign, X } from 'lucide-react';
+import { Wallet, Plus, RefreshCw, DollarSign, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useTransactions } from '../../hooks/useTransactions';
 import useLocalRefresh from '../../hooks/useLocalRefresh';
 import { formatCurrency } from '../../utils/helpers';
 import UserMenuDropdown from '../User/UserMenuDropdown';
@@ -17,8 +18,11 @@ const Header = ({
     isRefreshing = false
 }) => {
     const { userProfile, user } = useAuth();
+    const { smartBalance: totalWealth, netSurplus: surplus, salaryPlan, monthlyNetFlowTransactions } = useTransactions();
+    const cashInHand = salaryPlan?.plan?.cashInHand || 0;
+    const monthlySurplus = surplus;
+    const balance = totalWealth;
 
-    const balance = userProfile?.balance || 0;
     // legacy modal state removed; using compact floating panel instead
     const [showFloatingBalance, setShowFloatingBalance] = useState(false);
     const [entered, setEntered] = useState(false);
@@ -40,12 +44,21 @@ const Header = ({
             let cDue = 0;
             let lDue = 0;
 
+            // 1. Add Plan-based loans as the baseline
+            if (salaryPlan?.plan?.loanDetails) {
+                salaryPlan.plan.loanDetails.forEach(loan => {
+                    lDue += Number(loan.totalLeft || 0);
+                });
+            }
+
+            // 2. Add Transaction-based credits
             if (creditsResult.success && Array.isArray(creditsResult.data)) {
                 creditsResult.data.forEach(c => {
                     cDue += Number(c.remainingAmount || 0);
                 });
             }
 
+            // 3. Add/Adjust with Transaction-based loans
             if (loansResult.success && Array.isArray(loansResult.data)) {
                 loansResult.data.forEach(l => {
                     lDue += Number(l.remainingAmount || 0);
@@ -57,7 +70,7 @@ const Header = ({
         } catch (err) {
             console.warn('Header: failed to refresh dues', err);
         }
-    }, [user?.uid]);
+    }, [user?.uid, salaryPlan]);
 
     const handleBalanceClick = async () => {
         // Only refresh local dues (no global summary refresh) and show floating panel
@@ -80,18 +93,6 @@ const Header = ({
         setShowFloatingBalance(true);
         // trigger enter animation on next frame
         requestAnimationFrame(() => setEntered(true));
-
-        // start hide timer: begin close animation after 5s
-        hideTimerRef.current = setTimeout(() => {
-            setIsClosing(true);
-            setEntered(false);
-            // after animation finishes, remove from DOM
-            closeTimerRef.current = setTimeout(() => {
-                setShowFloatingBalance(false);
-                setIsClosing(false);
-                closeTimerRef.current = null;
-            }, 300); // match transition duration
-        }, 5000);
     };
 
     // Close floating panel on unmount and clear timers
@@ -227,18 +228,60 @@ const Header = ({
                             >
                                 <X className="w-4 h-4" />
                             </button>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-sm opacity-90">Current Balance</div>
-                                    <div className="text-2xl font-bold mt-1">{formatCurrency(balance, userProfile?.currency || 'BDT')}</div>
-                                    <div className="text-xs opacity-80 mt-1">Updated just now</div>
-                                </div>
-                                <div className="flex flex-col items-end space-y-2">
-                                    <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full">
-                                        <span className="text-sm">Net Due: {formatCurrency((creditDue - loanDue), userProfile?.currency || 'BDT')}</span>
+                            <div className="flex flex-col gap-4 select-none">
+                                <div className="space-y-4 animate-in fade-in duration-500">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="text-[10px] uppercase font-black tracking-widest opacity-80 mb-1 text-amber-200">Total Wealth</div>
+                                            <div className="text-3xl font-black">{formatCurrency(totalWealth, userProfile?.currency || 'BDT')}</div>
+                                            <div className="text-[9px] mt-1 opacity-70 font-bold">Total Liquid Money + Plan Margin</div>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <div className="text-[10px] uppercase font-black tracking-widest opacity-80 mb-1 text-teal-200">Spendable</div>
+                                            <div className="px-3 py-1 bg-white/10 rounded-lg">
+                                                <div className="text-sm font-black">{formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')}</div>
+                                            </div>
+                                            <div className="text-[10px] mt-2 opacity-90 font-bold flex items-center justify-end gap-2 text-amber-200">
+                                                <span className="uppercase tracking-tighter text-[9px] opacity-70">Required:</span>
+                                                <span className="text-white">{formatCurrency((salaryPlan?.plan?.actualSavings || 0) + (salaryPlan?.plan?.monthlyForGoal || 0), userProfile?.currency || 'BDT')}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className={`px-3 py-1 rounded-full text-xs ${(creditDue - loanDue) > 0 ? 'bg-blue-100 text-blue-800' : (creditDue - loanDue) < 0 ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-                                        {(creditDue - loanDue) > 0 ? 'More due to you' : (creditDue - loanDue) < 0 ? 'You owe more' : 'Balanced'}
+
+                                    <div className="pt-3 border-t border-white/10 space-y-2">
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-teal-200 mb-2 flex items-center justify-between">
+                                            <span>Breakdown</span>
+                                            <span className="text-[9px] opacity-50 lowercase italic font-normal tracking-normal">Running month math</span>
+                                        </div>
+
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="opacity-70">Monthly Plan Margin (Income - Fixed)</span>
+                                            <span className="font-bold">+{formatCurrency(salaryPlan?.plan?.disposable || 0, userProfile?.currency || 'BDT')}</span>
+                                        </div>
+
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="opacity-70">Initial Cash in Hand</span>
+                                            <span className="font-bold">+{formatCurrency(cashInHand, userProfile?.currency || 'BDT')}</span>
+                                        </div>
+
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="opacity-70">Transaction Net Flow (Repayments/Loans)</span>
+                                            <span className={`font-bold ${monthlyNetFlowTransactions >= 0 ? 'text-emerald-300' : 'text-orange-300'}`}>
+                                                {monthlyNetFlowTransactions >= 0 ? '+' : ''}{formatCurrency(monthlyNetFlowTransactions, userProfile?.currency || 'BDT')}
+                                            </span>
+                                        </div>
+
+                                        <div className="pt-2 mt-2 border-t border-white/5 flex justify-between items-center text-sm font-black text-white">
+                                            <span>Total Assets</span>
+                                            <span>{formatCurrency(totalWealth, userProfile?.currency || 'BDT')}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-center justify-center ${creditDue >= loanDue ? 'bg-emerald-500/20 text-emerald-200' : 'bg-red-500/20 text-red-200'}`}>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">
+                                            {creditDue >= loanDue ? 'Net Receivable: ' : 'Net Due: '}
+                                            {formatCurrency(Math.abs(creditDue - loanDue), userProfile?.currency || 'BDT')}
+                                        </span>
                                     </div>
                                 </div>
                             </div>

@@ -6,7 +6,7 @@ import SalaryResult from '../components/SalaryManager/SalaryResult';
 import { RefreshCw } from 'lucide-react';
 
 export default function SalaryManager({ userId, onClose, initialView }) {
-  const [view, setView] = useState('loading'); // 'loading' | 'wizard' | 'result'
+  const [view, setView] = useState(initialView || 'loading'); // Start with initialView if possible
   const [currentForm, setCurrentForm] = useState(null);
   const [currentPlan, setCurrentPlan] = useState(null);
   const [currentAdvice, setCurrentAdvice] = useState(null);
@@ -24,9 +24,11 @@ export default function SalaryManager({ userId, onClose, initialView }) {
           };
           setCurrentPlan(recalculated);
           setCurrentAdvice(plan.aiAdvice);
-
-          // Respect initialView if provided, otherwise default to result
-          setView(initialView || 'result');
+          
+          // Only change view if it was still loading
+          if (view === 'loading') {
+            setView(initialView || 'result');
+          }
         } else {
           setView('wizard');
         }
@@ -36,7 +38,7 @@ export default function SalaryManager({ userId, onClose, initialView }) {
       }
     };
     if (userId) fetchPlan();
-  }, [userId, initialView]);
+  }, [userId, initialView]); // view is NOT in dependencies to avoid loops
 
   const handleWizardComplete = (formData) => {
     const planData = calculatePlan(formData);

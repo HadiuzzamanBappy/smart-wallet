@@ -303,12 +303,26 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
           balance: 0,
           totalIncome: 0,
           totalExpense: 0,
+          totalCreditGiven: 0,
+          totalLoanTaken: 0,
           transactionsCount: 0
         });
 
         // Notify other parts of the app that the profile changed (so UI updates immediately)
         try {
-          window.dispatchEvent(new CustomEvent(PROFILE_EVENTS.PROFILE_UPDATED, { detail: { uid: user.uid, profile: { balance: 0, totalIncome: 0, totalExpense: 0, transactionsCount: 0 } } }));
+          window.dispatchEvent(new CustomEvent(PROFILE_EVENTS.PROFILE_UPDATED, { 
+            detail: { 
+              uid: user.uid, 
+              profile: { 
+                balance: 0, 
+                totalIncome: 0, 
+                totalExpense: 0, 
+                totalCreditGiven: 0,
+                totalLoanTaken: 0,
+                transactionsCount: 0 
+              } 
+            } 
+          }));
         } catch (err) {
           console.warn('Failed to dispatch wallet:profile-updated event', err);
         }

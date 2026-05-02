@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { getTransactions } from '../services/transactionService';
+import { getSalaryPlan } from '../services/salaryService';
 import { computeTransactionEffects } from '../utils/transactionHelpers';
 import { TransactionContext } from './createTransactionContext';
 
@@ -9,10 +10,12 @@ export const TransactionProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [salaryPlan, setSalaryPlan] = useState(null);
 
-  const loadTransactions = useCallback(async (forceRefresh = false) => {
+  const loadTransactions = useCallback(async (forceRefresh = false, silent = false) => {
     if (!user) {
       setTransactions([]);
+      setSalaryPlan(null);
       setLoading(false);
       return;
     }
@@ -21,83 +24,134 @@ export const TransactionProvider = ({ children }) => {
       return; // Don't reload if we already have data unless forced
     }
 
-    setLoading(true);
+    if (!silent) {
+      setLoading(true);
+    }
     setError(null);
-    
+
     try {
-      const result = await getTransactions(user.uid);
-      if (result.success) {
-        setTransactions(result.data);
+      const [txResult, planResult] = await Promise.all([
+        getTransactions(user.uid),
+        getSalaryPlan(user.uid)
+      ]);
+
+      if (txResult.success) {
+        setTransactions(txResult.data);
       } else {
-        setError(result.error || 'Failed to load transactions');
+        setError(txResult.error || 'Failed to load transactions');
         setTransactions([]);
+      }
+
+      if (planResult) {
+        setSalaryPlan(planResult);
       }
     } catch (err) {
       setError(err.message);
       setTransactions([]);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [user, transactions.length]);
 
-  const refreshTransactions = useCallback(() => {
-    return loadTransactions(true);
+  const refreshTransactions = useCallback((silent = false) => {
+    return loadTransactions(true, silent);
   }, [loadTransactions]);
 
-  // Load transactions when user changes
+  // Load transactions and plan when user changes
   useEffect(() => {
     if (user?.uid) {
       loadTransactions();
     }
   }, [user?.uid, loadTransactions]);
 
+  // Listen for plan updates
+  useEffect(() => {
+    const handlePlanUpdate = () => refreshTransactions(true);
+    window.addEventListener('salary-plan-updated', handlePlanUpdate);
+    return () => window.removeEventListener('salary-plan-updated', handlePlanUpdate);
+  }, [refreshTransactions]);
+
+  // Optimistic updates
+  const removeTransaction = useCallback((id) => {
+    setTransactions(prev => prev.filter(tx => tx.id !== id));
+  }, []);
+
+  const updateTransactionLocally = useCallback((id, updates) => {
+    setTransactions(prev => prev.map(tx => tx.id === id ? { ...tx, ...updates } : tx));
+  }, []);
+
+  const addTransactionLocally = useCallback((tx) => {
+    setTransactions(prev => [tx, ...prev]);
+  }, []);
+
   // Calculate derived data
   const currentMonthTransactions = React.useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+
     return transactions.filter(tx => {
       const txDate = new Date(tx.createdAt);
       return txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear;
     });
   }, [transactions]);
 
-  // Exclude repayment/collection transactions from income/expense aggregation
-  const currentMonthIncome = React.useMemo(() => {
+  // Aggregated Monthly Income (Transactions only - for display)
+  const currentMonthIncomeTransactions = React.useMemo(() => {
     return currentMonthTransactions
       .filter(tx => tx.type === 'income')
-      .reduce((sum, tx) => sum + tx.amount, 0);
+      .reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
   }, [currentMonthTransactions]);
 
-  const currentMonthExpense = React.useMemo(() => {
+  // Aggregated Monthly Expense (Transactions only - for display)
+  const currentMonthExpenseTransactions = React.useMemo(() => {
     return currentMonthTransactions
       .filter(tx => tx.type === 'expense')
-      .reduce((sum, tx) => sum + tx.amount, 0);
+      .reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
   }, [currentMonthTransactions]);
 
-  // Aggregate totals excluding repayments/collections
-  const totalIncome = React.useMemo(() => {
-    return transactions
-      .filter(tx => tx.type === 'income')
-      .reduce((sum, tx) => sum + tx.amount, 0);
-  }, [transactions]);
+  // Total Net Flow for balance calculation (includes Loans/Credits/etc)
+  const monthlyNetFlowTransactions = React.useMemo(() => {
+    return currentMonthTransactions.reduce((sum, tx) => {
+      const type = (tx.type || '').toLowerCase();
+      const amount = Number(tx.amount) || 0;
+      if (['income', 'loan', 'collection'].includes(type)) return sum + amount;
+      if (['expense', 'credit', 'repayment'].includes(type)) return sum - amount;
+      return sum;
+    }, 0);
+  }, [currentMonthTransactions]);
 
-  const totalExpense = React.useMemo(() => {
-    return transactions
-      .filter(tx => tx.type === 'expense')
-      .reduce((sum, tx) => sum + tx.amount, 0);
-  }, [transactions]);
+  // Fixed Monthly Values from Plan
+  const monthlyFixedIncome = React.useMemo(() => {
+    if (!salaryPlan?.plan) return 0;
+    return salaryPlan.plan.totalIncome || 0;
+  }, [salaryPlan]);
 
-  // Compute balance by summing each transaction's effect. This allows repayment
-  // transactions (isRepayment) to only affect balance and not the income/expense totals.
+  const monthlyFixedExpense = React.useMemo(() => {
+    if (!salaryPlan?.plan) return 0;
+    // For display (the 'Expended' card), we only count actual living costs (Rent, Bills, etc.)
+    // We EXCLUDE Loans (EMI), Savings, and Goals as they are transfers/investments, not lifestyle costs.
+    return (salaryPlan.plan.totalFixedCosts || 0);
+  }, [salaryPlan]);
+
+  const cashInHand = React.useMemo(() => {
+    if (!salaryPlan?.plan) return 0;
+    return parseFloat(salaryPlan.plan.cashInHand) || 0;
+  }, [salaryPlan]);
+
+  // Combine Transactions + Fixed Plan
+  const currentMonthIncome = currentMonthIncomeTransactions + monthlyFixedIncome;
+  const currentMonthExpense = currentMonthExpenseTransactions + monthlyFixedExpense;
+
+  // Legacy Balance (DB Sum)
   const balance = React.useMemo(() => {
     return transactions.reduce((sum, tx) => {
       try {
         const eff = computeTransactionEffects(tx);
         return sum + (eff.balance || 0);
       } catch {
-        // Fallback: preserve legacy behavior for unknown tx
         if (tx.type === 'income') return sum + (tx.amount || 0);
         if (tx.type === 'expense') return sum - (tx.amount || 0);
         if (tx.type === 'credit') return sum - (tx.amount || 0);
@@ -107,23 +161,45 @@ export const TransactionProvider = ({ children }) => {
     }, 0);
   }, [transactions]);
 
+  /**
+   * SMART BALANCE CALCULATION (Auto-Deduct Model)
+   * Wallet = Net Surplus (Income - Fixed - Savings - Goal) + Cash in Hand + Actual Extra Transactions
+   * This assumes fixed costs are "gone" immediately, matching a "Spendable Money" mental model.
+   */
+  const smartBalance = (salaryPlan?.plan?.disposable || 0) + cashInHand + monthlyNetFlowTransactions;
+  const netSurplus = (salaryPlan?.plan?.netBalance || 0) + cashInHand + monthlyNetFlowTransactions;
+
+  /**
+   * LIQUID BALANCE (Actual Wallet)
+   * Wallet = All-time Transactions Sum + Initial Cash in Hand
+   * This is the REAL money the user has right now.
+   */
+  const liquidBalance = balance + cashInHand;
+
   const value = {
     // Data
     transactions,
+    salaryPlan,
     currentMonthTransactions,
     currentMonthIncome,
     currentMonthExpense,
-    totalIncome,
-    totalExpense,
     balance,
-    
+    smartBalance,
+    netSurplus,
+    liquidBalance,
+    monthlyNetFlowTransactions,
+    netBalance: currentMonthIncome - currentMonthExpense,
+
     // State
     loading,
     error,
-    
+
     // Actions
     loadTransactions,
-    refreshTransactions
+    refreshTransactions,
+    removeTransaction,
+    updateTransactionLocally,
+    addTransactionLocally
   };
 
   return (

@@ -1,9 +1,10 @@
+import { getCurrencySymbol } from '../config/constants';
+
 export function calculatePlan(form) {
   const n = (v) => parseFloat(v) || 0;
 
   // ── CURRENCY SYMBOL ──────────────────────────────────────────
-  // Extract just the symbol part (e.g. "৳ BDT" → "৳", "$ USD" → "$")
-  const currencySymbol = (form.currency || '৳ BDT').split(' ')[0];
+  const currencySymbol = getCurrencySymbol(form.currency);
   const fmt = (val) => `${currencySymbol}${Math.round(val || 0).toLocaleString()}`;
 
   // ── BASE INCOME ──────────────────────────────────────────────
@@ -22,15 +23,19 @@ export function calculatePlan(form) {
   const totalFixed      = totalFixedCosts + totalEMI;
 
   // ── SAVINGS & ASSETS ──────────────────────────────────────────
-  const totalAssets     = (form.deposits || []).reduce((s, d) => s + n(d.balance), 0);
-  const goalAssets      = (form.deposits || []).filter(d => d.useForGoal !== false).reduce((s, d) => s + n(d.balance), 0);
-
+  const cashInHand      = n(form.cashInHand);
+  const totalAssets     = (form.deposits || []).reduce((s, d) => s + n(d.balance), 0) + cashInHand;
   const actualSavings   = (form.deposits || []).reduce((s, d) => s + n(d.monthly), 0);
   
-  // Calculate Goal Target (Deduct selected assets from goal)
+  // Calculate Goal Target using PROJECTED assets (Current + Monthly * Months)
   const goal            = n(form.goal);
   const goalMonths      = n(form.goalMonths) || 12;
-  const remainingGoal   = Math.max(goal - goalAssets, 0);
+  
+  const currentGoalAssets = (form.deposits || []).filter(d => d.useForGoal !== false).reduce((s, d) => s + n(d.balance), 0) + cashInHand;
+  const monthlyGoalSavings = (form.deposits || []).filter(d => d.useForGoal !== false).reduce((s, d) => s + n(d.monthly), 0);
+  
+  const projectedAssets = currentGoalAssets + (monthlyGoalSavings * goalMonths);
+  const remainingGoal   = Math.max(goal - projectedAssets, 0);
   const monthlyForGoal  = remainingGoal > 0 ? remainingGoal / goalMonths : 0;
 
   // ── NET BALANCE (Everything Deducted) ────────────────────────
@@ -76,13 +81,16 @@ export function calculatePlan(form) {
       .toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
   }));
 
-  // ── EMERGENCY FUND ───────────────────────────────────────────
-  // CFP guideline — 6 months of total monthly expenses
-  const monthlyExpenses = totalFixed + needsBudget;
-  const efTarget        = monthlyExpenses * 6;
-  const efGap           = Math.max(efTarget - totalAssets, 0); // Use totalAssets here
+  // ── EMERGENCY FUND & RUNWAY ─────────────────────────────────
+  // Essential monthly cash burn (Fixed + EMI + Needs)
+  const essentialExpenses = totalFixed + needsBudget;
+  const efTarget        = essentialExpenses * 6;
+  const efGap           = Math.max(efTarget - totalAssets, 0);
   const efProgress      = efTarget > 0 ? Math.min(totalAssets / efTarget, 1) : 1;
-  const efMonths        = actualSavings > 0 ? Math.ceil(efGap / actualSavings) : 999;
+  const buildMonths     = actualSavings > 0 ? Math.ceil(efGap / actualSavings) : 999;
+  
+  // Runway: How many months you can survive with current assets if income stops
+  const runwayMonths    = essentialExpenses > 0 ? totalAssets / essentialExpenses : 999;
 
   // ── DAILY & CATEGORY SPENDING LIMITS ─────────────────────────
   const dailyFoodMax      = needsBudget / 30;   // All of Needs ÷ 30 days for food budget
@@ -97,11 +105,11 @@ export function calculatePlan(form) {
   const flags = [];
 
   // Goal Achievement Flag
-  if (goal > 0 && goalAssets >= goal) {
+  if (goal > 0 && currentGoalAssets >= goal) {
     flags.push({
       type: 'ok',
       rule: 'Purchase Goal',
-      msg: `Your selected assets (${fmt(goalAssets)}) already cover your goal of ${fmt(goal)}. You are ready to purchase!`,
+      msg: `Your selected assets (${fmt(currentGoalAssets)}) already cover your goal of ${fmt(goal)}. You are ready to purchase!`,
     });
   }
 
@@ -197,11 +205,11 @@ export function calculatePlan(form) {
   }
 
   // 6. Emergency fund
-  if (efMonths > 36 && actualSavings > 0) {
+  if (buildMonths > 36 && actualSavings > 0) {
     flags.push({
       type: 'warn',
       rule: 'Emergency Fund',
-      msg: `At current savings rate it will take ${efMonths > 500 ? '∞' : efMonths} months to build your 6-month safety net (${fmt(efTarget)}). Consider boosting monthly deposits.`,
+      msg: `At current savings rate it will take ${buildMonths > 500 ? '∞' : buildMonths} months to build your 6-month safety net (${fmt(efTarget)}). Consider boosting monthly deposits.`,
     });
   }
 
@@ -224,13 +232,15 @@ export function calculatePlan(form) {
     // Bar chart ratios (actual)
     fixedRatio, loanRatio, savingsRatio, goalRatio, freeRatio,
     // Emergency fund
-    efTarget, efGap, efProgress, efMonths, monthlyExpenses,
+    efTarget, efGap, efProgress, buildMonths, runwayMonths, essentialExpenses,
     // Spending limits
     dailyFoodMax, personalMax, entertainmentMax, clothingMax,
     // Goal
     goal, remainingGoal, goalMonths, monthlyForGoal, canAffordGoal,
+    currentGoalAssets, projectedAssets, goalAssets: currentGoalAssets,
     // Meta
     flags, currency: form.currency, currencySymbol,
+    cashInHand: n(form.cashInHand),
     calculatedAt: new Date().toISOString(),
   };
 }

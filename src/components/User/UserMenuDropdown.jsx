@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
-import { 
-  User, 
-  Settings, 
-  LogOut, 
-  ChevronDown
+import {
+  User,
+  Settings,
+  LogOut,
+  ChevronDown,
+  Loader2
 } from 'lucide-react';
 import { HelpCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { logoutUser } from '../../services/authService';
-import HelpModal from './HelpModal';
+import AboutModal from './AboutModal';
 
-const UserMenuDropdown = ({ 
-  onOpenProfile, 
+const UserMenuDropdown = ({
+  onOpenProfile,
   onOpenSettings,
   onOpenHelp,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { userProfile } = useAuth();
-  
+  const { userProfile, user } = useAuth();
+
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -100,7 +101,7 @@ const UserMenuDropdown = ({
     },
     {
       icon: HelpCircle,
-      label: 'Help & Tips',
+      label: 'About',
       onClick: () => {
         if (typeof onOpenHelp === 'function') return onOpenHelp();
         setIsHelpOpen(true);
@@ -120,8 +121,17 @@ const UserMenuDropdown = ({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 p-1.5 pr-2.5 rounded-xl bg-white dark:bg-white/[0.05] hover:bg-gray-100 dark:hover:bg-white/[0.1] border border-gray-200 dark:border-white/10 transition-all active:scale-95"
       >
-        <div className="w-7 h-7 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-lg flex items-center justify-center text-white text-[11px] font-black shadow-lg shadow-teal-500/20">
-          {userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+        <div className="w-7 h-7 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-lg flex items-center justify-center text-white text-[11px] font-black shadow-lg shadow-teal-500/20 overflow-hidden">
+          {user?.photoURL ? (
+            <img
+              src={user.photoURL}
+              alt={userProfile?.displayName}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'
+          )}
         </div>
         <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -159,11 +169,10 @@ const UserMenuDropdown = ({
                       }
                     }}
                     disabled={isSignOut && logoutLoading}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                      isSignOut 
-                        ? 'text-red-500 hover:bg-red-500/10' 
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
-                    } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : 'active:scale-[0.98]'}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${isSignOut
+                      ? 'text-red-500 hover:bg-red-500/10'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
+                      } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : 'active:scale-[0.98]'}`}
                   >
                     <Icon className="w-4 h-4 opacity-70" />
                     <span className="flex-1 text-left uppercase tracking-widest">{item.label}</span>
@@ -177,7 +186,7 @@ const UserMenuDropdown = ({
           </div>
         </>
       )}
-      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      <AboutModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </div>
   );
 };

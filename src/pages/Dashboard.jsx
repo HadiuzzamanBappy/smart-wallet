@@ -14,9 +14,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useTransactions } from '../hooks/useTransactions';
 import { useToast } from '../hooks/useToast';
 import dynamicTranslator from '../services/dynamicTranslation';
-import { db } from '../config/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
 import { APP_EVENTS } from '../config/constants';
+import { updateUserProfile } from '../services/authService';
 
 const Dashboard = () => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -90,8 +89,7 @@ const Dashboard = () => {
       setCurrentLanguage('en');
       if (user) {
         try {
-          const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, { language: 'en' });
+          await updateUserProfile(user.uid, { language: 'en' });
         } catch (error) {
           console.error('Error updating user language preference:', error);
         }
@@ -101,8 +99,7 @@ const Dashboard = () => {
       await dynamicTranslator.translatePage('bn');
       if (user) {
         try {
-          const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, { language: 'bn' });
+          await updateUserProfile(user.uid, { language: 'bn' });
         } catch (error) {
           console.error('Error updating user language preference:', error);
         }
@@ -111,13 +108,13 @@ const Dashboard = () => {
   };
 
   const handleTransactionUpdate = () => {
-    refreshTransactions();
+    refreshTransactions(true);
     success('Transaction updated successfully!');
     try { window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { source: 'transaction-update' } })); } catch { /* ignore */ }
   };
 
   const handleTransactionAdded = () => {
-    refreshTransactions();
+    refreshTransactions(true);
     success('Transaction added successfully!');
     try { window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTIONS_UPDATED, { detail: { source: 'transaction-add' } })); } catch { /* ignore */ }
   };
@@ -138,7 +135,6 @@ const Dashboard = () => {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="space-y-6">
             <CompactSummary onRefresh={handleRefresh} />
-            <BudgetProgress onSettingsClick={() => setShowProfileModal(true)} />
             <SalaryHomeCard
               userId={user.uid}
               onOpen={(mode) => {
@@ -146,6 +142,7 @@ const Dashboard = () => {
                 setShowSalaryManager(true);
               }}
             />
+            <BudgetProgress />
             <ExpandableDetailsSection onTransactionChange={handleTransactionUpdate} />
           </div>
         </main>
@@ -166,7 +163,7 @@ const Dashboard = () => {
         onClose={() => setShowProfileModal(false)}
         onSave={() => {
           success('Profile updated successfully!');
-          refreshTransactions();
+          refreshTransactions(true);
         }}
       />
 

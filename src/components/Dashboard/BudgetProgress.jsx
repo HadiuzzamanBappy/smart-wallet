@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import { calculateBudgetStatus, getCurrentMonthSpending, formatCurrency } from '../../utils/helpers';
-import { AlertTriangle, CheckCircle, Target, TrendingUp, Settings } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Target, TrendingUp } from 'lucide-react';
 import { BudgetSkeleton } from '../UI/SkeletonLoader';
 import { getSalaryPlan } from '../../services/salaryService';
 
-const BudgetProgress = ({ onSettingsClick }) => {
+const BudgetProgress = () => {
     const { userProfile, user } = useAuth();
     const { transactions, loading: transactionLoading } = useTransactions();
     const [loading, setLoading] = useState(true);
@@ -33,7 +33,8 @@ const BudgetProgress = ({ onSettingsClick }) => {
         return () => window.removeEventListener('salary-plan-updated', handleUpdate);
     }, [transactionLoading, transactions, user?.uid, fetchPlan]);
 
-    if (loading) {
+    const hasData = transactions && transactions.length > 0;
+    if (loading && !hasData) {
         return (
             <div className="w-full">
                 <BudgetSkeleton />
@@ -41,35 +42,25 @@ const BudgetProgress = ({ onSettingsClick }) => {
         );
     }
 
-    // Include fixed expenses from salary plan if available
+    // Hide if no salary plan is available
+    if (!planData) {
+        return null;
+    }
+
+    // Auto-calculate budget limit from Salary Plan
+    // Formula: Limit = Income - Savings - Goal - Loans (as requested)
+    const budgetLimit = (planData.totalIncome - planData.actualSavings - planData.monthlyForGoal - planData.totalEMI);
+
+    // Include fixed expenses (Rent/Bills) from salary plan if available
     const transactionSpending = getCurrentMonthSpending(transactions);
-    const fixedSpending = planData?.totalFixed || 0;
+    // Rent and Bills are part of the 'Lifestyle' budget, so we add them to the actual spending
+    const fixedSpending = (planData?.rent || 0) + (planData?.bills || 0) + (planData?.transport || 0) + (planData?.familySend || 0);
     const currentSpending = transactionSpending + fixedSpending;
-    
-    const budgetStatus = calculateBudgetStatus(userProfile?.monthlyBudget, currentSpending);
+
+    const budgetStatus = calculateBudgetStatus(budgetLimit, currentSpending);
 
     if (!budgetStatus.hasValidBudget) {
-        return (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                            <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div>
-                            <h3 className="font-medium text-gray-900 dark:text-white text-sm">Set Lifestyle Ceiling</h3>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">Set a global monthly limit for all spending</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={onSettingsClick}
-                        className="p-2 -m-2 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                    >
-                        <Settings className="w-4 h-4 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400" />
-                    </button>
-                </div>
-            </div>
-        );
+        return null;
     }
 
     const getStatusColors = (warningLevel) => {
@@ -133,17 +124,16 @@ const BudgetProgress = ({ onSettingsClick }) => {
                     </div>
                     <div>
                         <div className={`text-[10px] font-black uppercase tracking-widest ${colors.textColor}`}>
-                            Lifestyle Monitor: {budgetStatus.status}
+                            {budgetStatus.status}
                         </div>
-                        <div className="text-[11px] text-gray-500 dark:text-gray-400">Monthly spending capacity</div>
+                        <div className="text-[11px] text-gray-500 dark:text-gray-400">
+                            Limit: <span className="font-bold">{formatCurrency(budgetLimit, currency)}</span>
+                        </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-1">
                     <div className={`text-sm font-bold ${colors.textColor}`}>{percentage}%</div>
-                    <button onClick={onSettingsClick} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                        <Settings className={`w-3.5 h-3.5 text-gray-400`} />
-                    </button>
                 </div>
             </div>
 

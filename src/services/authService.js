@@ -24,11 +24,6 @@ export const registerUser = async (email, password, displayName) => {
       email: user.email,
       displayName: displayName || 'User',
       currency: 'BDT',
-      balance: 0,
-      totalIncome: 0,
-      totalExpense: 0,
-      totalCreditGiven: 0,
-      totalLoanTaken: 0,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     };
@@ -71,11 +66,6 @@ export const loginWithGoogle = async () => {
         email: user.email,
         displayName: user.displayName || 'User',
         currency: 'BDT',
-        balance: 0,
-        totalIncome: 0,
-        totalExpense: 0,
-        totalCreditGiven: 0,
-        totalLoanTaken: 0,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       };

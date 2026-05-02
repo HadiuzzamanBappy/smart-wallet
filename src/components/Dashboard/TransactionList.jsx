@@ -20,14 +20,14 @@ import Modal from '../UI/base/Modal';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { TransactionListSkeleton } from '../UI/SkeletonLoader';
 
-const TransactionList = ({ onTransactionUpdate }) => {
+const TransactionList = ({ onTransactionChange }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const {
     transactions,
     loading: transactionLoading,
-    refreshTransactions
+    refreshTransactions,
+    removeTransaction
   } = useTransactions();
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [deletingTransaction, setDeletingTransaction] = useState(null);
   const [linkedCount, setLinkedCount] = useState(0);
@@ -54,49 +54,63 @@ const TransactionList = ({ onTransactionUpdate }) => {
   const handleDelete = async () => {
     if (!deletingTransaction) return;
 
-    setDeleteLoading(true);
+    const targetId = deletingTransaction.id;
+    const backupTx = { ...deletingTransaction };
+    
+    // We don't removeTransaction instantly anymore to ensure dialog shows loading
+    // instead of disappearing instantly.
+    
+    setPreparingDelete(true); // Reuse preparingDelete for the actual deletion loading state
+
     try {
-      const result = await deleteTransaction(user.uid, deletingTransaction.id, deletingTransaction);
+      // 3. Persistent deletion
+      const result = await deleteTransaction(user.uid, targetId, backupTx);
       if (result.success) {
+        // Now we can remove from UI
+        removeTransaction(targetId);
+        
+        // Silent refresh of other data (like balance)
         await refreshUserProfile();
-        await refreshTransactions();
-        onTransactionUpdate?.();
+        await refreshTransactions(true); 
+        onTransactionChange?.();
+        
+        // Finally close dialog
+        setDeletingTransaction(null);
+        setLinkedCount(0);
+      } else {
+        console.error('Delete failed:', result.error);
+        // Error handling: keep dialog open or show error
       }
     } catch (error) {
       console.error('Error deleting transaction:', error);
     } finally {
-      setDeleteLoading(false);
-      setDeletingTransaction(null);
-      setLinkedCount(0);
+      setPreparingDelete(false);
     }
   };
 
   const handlePrepareDelete = async (transaction) => {
-    if (!user || !user.uid) {
-      // fallback to opening dialog without count
-      setLinkedCount(0);
-      setDeletingTransaction(transaction);
-      return;
-    }
+    // 1. Open dialog instantly
+    setDeletingTransaction(transaction);
+    setLinkedCount(0);
 
+    if (!user || !user.uid) return;
+
+    // 2. Perform background check while dialog is already visible
     setPreparingDelete(true);
     try {
       const res = await countLinkedRepayments(user.uid, transaction.id);
       if (res && res.success) setLinkedCount(res.count || 0);
-      else setLinkedCount(0);
     } catch (err) {
       console.warn('Failed to count linked repayments before delete:', err?.message || err);
-      setLinkedCount(0);
     } finally {
       setPreparingDelete(false);
-      setDeletingTransaction(transaction);
     }
   };
 
   const handleEditSuccess = async () => {
     await refreshUserProfile();
-    await refreshTransactions();
-    onTransactionUpdate?.();
+    await refreshTransactions(true); // silent refresh
+    onTransactionChange?.();
   };
 
   // Filter transactions
@@ -269,8 +283,8 @@ const TransactionList = ({ onTransactionUpdate }) => {
                         {getCategoryEmoji(dc)}
                       </div>
                       {/* small status badge (up/down) */}
-                      <div className={`absolute -right-1 -bottom-1 w-5 h-5 rounded-full flex items-center justify-center text-xs ${transaction.type === 'income' || transaction.type === 'collection' ? 'bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300'}`}>
-                        {(transaction.type === 'income' || transaction.type === 'collection') ? (
+                      <div className={`absolute -right-1 -bottom-1 w-5 h-5 rounded-full flex items-center justify-center text-xs ${['income', 'loan', 'collection'].includes(transaction.type) ? 'bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300'}`}>
+                        {['income', 'loan', 'collection'].includes(transaction.type) ? (
                           <TrendingUp className="w-3 h-3" />
                         ) : (
                           <TrendingDown className="w-3 h-3" />
@@ -295,7 +309,7 @@ const TransactionList = ({ onTransactionUpdate }) => {
 
                     {/* Right: amount and CTA (single row on desktop, stacked on mobile) */}
                     <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-3">
-                      <div className={`text-sm font-semibold whitespace-nowrap ${getAmountColor(transaction.type)}`}>{(transaction.type === 'income' || transaction.type === 'collection') ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</div>
+                      <div className={`text-sm font-semibold whitespace-nowrap ${getAmountColor(transaction.type)}`}>{['income', 'loan', 'collection'].includes(transaction.type) ? '+' : '-'}{formatCurrency(transaction.amount, currency)}</div>
                       <div className="flex gap-1 flex-wrap justify-end">
                         {(transaction.type === 'repayment' || transaction.type === 'collection') && (
                           <button type="button" onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors" title="View details"><Eye className="w-4 h-4" /></button>
@@ -437,7 +451,7 @@ const TransactionList = ({ onTransactionUpdate }) => {
         }
         confirmText="Delete"
         type="danger"
-        loading={deleteLoading || preparingDelete}
+        loading={preparingDelete}
       />
     </>
   );

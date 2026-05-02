@@ -51,11 +51,6 @@ export const AuthProvider = ({ children }) => {
               email: u.email,
               displayName: defaultDisplayName,
               currency: 'BDT',
-              balance: 0,
-              totalIncome: 0,
-              totalExpense: 0,
-              totalCreditGiven: 0,
-              totalLoanTaken: 0,
               theme: 'system',
               createdAt: Timestamp.now(),
               updatedAt: Timestamp.now()

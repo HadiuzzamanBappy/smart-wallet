@@ -58,7 +58,7 @@ const getEncryptionKey = async () => {
 export const encryptData = async (data) => {
   try {
     if (data === null || data === undefined) return data;
-    
+
     const key = await getEncryptionKey();
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
     const dataString = String(data);
@@ -91,18 +91,35 @@ export const encryptData = async (data) => {
  * @param {string} encryptedData - Base64 encoded encrypted data
  * @returns {Promise<string>} Decrypted data
  */
+/**
+ * Decrypt sensitive data
+ * @param {string} encryptedData - Base64 encoded encrypted data
+ * @returns {Promise<string>} Decrypted data or original if not encrypted
+ */
 export const decryptData = async (encryptedData) => {
   try {
     if (!encryptedData || typeof encryptedData !== 'string') return encryptedData;
-    
+
+    // Check if it looks like our encrypted format (at least 12 bytes IV + data)
+    // Minimal length for AES-GCM (12 bytes IV + 16 bytes auth tag + at least 1 byte data)
+    // Base64 of 29 bytes is around 40 chars.
+    if (encryptedData.length < 20) return encryptedData;
+
     const key = await getEncryptionKey();
-    
+
     // Convert from base64
-    const combined = new Uint8Array(
-      atob(encryptedData)
-        .split('')
-        .map(char => char.charCodeAt(0))
-    );
+    let combined;
+    try {
+      combined = new Uint8Array(
+        atob(encryptedData)
+          .split('')
+          .map(char => char.charCodeAt(0))
+      );
+    } catch {
+      return encryptedData; // Not valid base64, return as is
+    }
+
+    if (combined.length < 13) return encryptedData; // Too short to be IV + Data
 
     // Extract IV and encrypted data
     const iv = combined.slice(0, 12);
@@ -118,29 +135,44 @@ export const decryptData = async (encryptedData) => {
     );
 
     return new TextDecoder().decode(decryptedData);
-  } catch (error) {
-    console.error('Decryption failed:', error);
-    return encryptedData; // Fallback to original data
+  } catch {
+    // If decryption fails, it's likely not encrypted or encrypted with a different key
+    // In "Hybrid" mode, we return the original data to support plain-text legacy data
+    return encryptedData;
   }
 };
 
-/**
- * Encrypt transaction data before storing
- * @param {Object} transactionData - Transaction object
- * @returns {Promise<Object>} Transaction with encrypted sensitive fields
- */
 export const encryptTransactionData = async (transactionData) => {
   const encrypted = { ...transactionData };
-  
-  // Encrypt sensitive fields and remove originals for privacy
-  if (encrypted.amount !== undefined) {
-    encrypted.amount_encrypted = await encryptData(encrypted.amount);
-    delete encrypted.amount; // Remove original field completely
+
+  // 1. Numeric fields
+  const numericFields = ['amount', 'paidAmount', 'originalAmount'];
+  for (const field of numericFields) {
+    if (encrypted[field] !== undefined && encrypted[field] !== null) {
+      encrypted[`${field}_encrypted`] = await encryptData(encrypted[field]);
+      delete encrypted[field];
+    }
+  }
+
+  // 2. Text/categorical fields
+  const textFields = ['description', 'category', 'type', 'originalDescription'];
+  for (const field of textFields) {
+    if (encrypted[field]) {
+      encrypted[`${field}_encrypted`] = await encryptData(encrypted[field]);
+      delete encrypted[field];
+    }
+  }
+
+  // 3. Debt status
+  if (encrypted.isFullyPaid !== undefined) {
+    encrypted.isFullyPaid_encrypted = await encryptData(encrypted.isFullyPaid ? 'true' : 'false');
+    delete encrypted.isFullyPaid;
   }
   
-  if (encrypted.description) {
-    encrypted.description_encrypted = await encryptData(encrypted.description);
-    delete encrypted.description; // Remove original field completely
+  // 4. Complex fields (Arrays/Objects)
+  if (encrypted.adjustmentHistory) {
+    encrypted.adjustmentHistory_encrypted = await encryptData(JSON.stringify(encrypted.adjustmentHistory));
+    delete encrypted.adjustmentHistory;
   }
 
   return encrypted;
@@ -148,23 +180,72 @@ export const encryptTransactionData = async (transactionData) => {
 
 /**
  * Decrypt transaction data after retrieving
+ * Supports "Hybrid" mode where some fields might be raw (migration state)
  * @param {Object} transactionData - Transaction object with encrypted fields
  * @returns {Promise<Object>} Transaction with decrypted sensitive fields
  */
 export const decryptTransactionData = async (transactionData) => {
+  if (!transactionData) return transactionData;
   const decrypted = { ...transactionData };
-  
-  // Decrypt sensitive fields or provide defaults
-  if (decrypted.amount_encrypted) {
-    decrypted.amount = parseFloat(await decryptData(decrypted.amount_encrypted));
-  } else if (decrypted.amount === undefined) {
-    decrypted.amount = 0; // Default for missing amount
+
+  // 1. Numeric Fields Decryption
+  const numericFields = [
+    { key: 'amount', default: 0 },
+    { key: 'paidAmount', default: 0 },
+    { key: 'originalAmount', default: 0 }
+  ];
+
+  for (const field of numericFields) {
+    const encKey = `${field.key}_encrypted`;
+    if (decrypted[encKey]) {
+      const val = await decryptData(decrypted[encKey]);
+      decrypted[field.key] = parseFloat(val);
+    }
+
+    // Fallback to raw or default
+    if (decrypted[field.key] === undefined || isNaN(decrypted[field.key])) {
+      decrypted[field.key] = Number(transactionData[field.key]) || field.default;
+    }
+  }
+
+  // 2. Text Fields Decryption
+  const textFields = [
+    { key: 'description', default: 'Transaction' },
+    { key: 'category', default: 'other' },
+    { key: 'type', default: 'expense' },
+    { key: 'originalDescription', default: '' }
+  ];
+
+  for (const field of textFields) {
+    const encKey = `${field.key}_encrypted`;
+    if (decrypted[encKey]) {
+      decrypted[field.key] = await decryptData(decrypted[encKey]);
+    }
+
+    // Fallback to raw or default
+    if (decrypted[field.key] === undefined || decrypted[field.key] === null) {
+      decrypted[field.key] = transactionData[field.key] || field.default;
+    }
+  }
+
+  // 3. Status Fields Decryption
+  if (decrypted.isFullyPaid_encrypted) {
+    const val = await decryptData(decrypted.isFullyPaid_encrypted);
+    decrypted.isFullyPaid = val === 'true';
+  } else if (decrypted.isFullyPaid === undefined) {
+    decrypted.isFullyPaid = transactionData.isFullyPaid !== undefined ? transactionData.isFullyPaid : true;
   }
   
-  if (decrypted.description_encrypted) {
-    decrypted.description = await decryptData(decrypted.description_encrypted);
-  } else if (decrypted.description === undefined) {
-    decrypted.description = 'Transaction'; // Default for missing description
+  // 4. Complex Fields Decryption
+  if (decrypted.adjustmentHistory_encrypted) {
+    try {
+      const val = await decryptData(decrypted.adjustmentHistory_encrypted);
+      decrypted.adjustmentHistory = JSON.parse(val);
+    } catch (e) {
+      console.warn("Failed to decrypt adjustment history", e);
+    }
+  } else if (!decrypted.adjustmentHistory && transactionData.adjustmentHistory) {
+    decrypted.adjustmentHistory = transactionData.adjustmentHistory;
   }
 
   return decrypted;
@@ -176,6 +257,7 @@ export const decryptTransactionData = async (transactionData) => {
  * @returns {Promise<Array>} Array of decrypted transactions
  */
 export const decryptTransactions = async (transactions) => {
+  if (!Array.isArray(transactions)) return [];
   return Promise.all(transactions.map(decryptTransactionData));
 };
 
@@ -185,96 +267,115 @@ export const decryptTransactions = async (transactions) => {
  * @returns {Promise<Object>} Profile with encrypted sensitive fields
  */
 export const encryptUserProfile = async (profileData) => {
+  if (!profileData) return profileData;
   const encrypted = { ...profileData };
   
-  // Encrypt numeric/sensitive fields and remove original fields for privacy
-  if (encrypted.balance !== undefined && encrypted.balance !== null) {
-    encrypted.balance_encrypted = await encryptData(encrypted.balance);
-    delete encrypted.balance; // Remove original field completely
-  }
-  
-  if (encrypted.totalIncome !== undefined && encrypted.totalIncome !== null) {
-    encrypted.totalIncome_encrypted = await encryptData(encrypted.totalIncome);
-    delete encrypted.totalIncome; // Remove original field completely
-  }
-  
-  if (encrypted.totalExpense !== undefined && encrypted.totalExpense !== null) {
-    encrypted.totalExpense_encrypted = await encryptData(encrypted.totalExpense);
-    delete encrypted.totalExpense; // Remove original field completely
-  }
-  
-  if (encrypted.monthlyBudget !== undefined && encrypted.monthlyBudget !== null) {
-    encrypted.monthlyBudget_encrypted = await encryptData(encrypted.monthlyBudget);
-    delete encrypted.monthlyBudget; // Remove original field completely
-  }
-  
-  // Also encrypt other numeric fields that might be present
-  if (encrypted.totalCreditGiven !== undefined && encrypted.totalCreditGiven !== null) {
-    encrypted.totalCreditGiven_encrypted = await encryptData(encrypted.totalCreditGiven);
-    delete encrypted.totalCreditGiven; // Remove original field completely
-  }
-  
-  if (encrypted.totalLoanTaken !== undefined && encrypted.totalLoanTaken !== null) {
-    encrypted.totalLoanTaken_encrypted = await encryptData(encrypted.totalLoanTaken);
-    delete encrypted.totalLoanTaken; // Remove original field completely
+  // 1. Numeric fields (Financial data)
+  const numericFields = [
+    'balance', 'totalIncome', 'totalExpense', 'monthlyBudget', 
+    'totalCreditGiven', 'totalLoanTaken'
+  ];
+
+  // 2. Personal/Setting fields (Identity & Preferences)
+  const personalFields = [
+    'email', 'displayName', 'currency', 'theme', 'language', 
+    'notifications', 'budgetAlerts'
+  ];
+
+  // Encrypt numeric fields
+  for (const field of numericFields) {
+    if (encrypted[field] !== undefined && encrypted[field] !== null) {
+      encrypted[`${field}_encrypted`] = await encryptData(encrypted[field]);
+      delete encrypted[field];
+    }
   }
 
+  // Encrypt personal fields
+  for (const field of personalFields) {
+    if (encrypted[field] !== undefined && encrypted[field] !== null) {
+      // Convert everything to string for encryption
+      const val = typeof encrypted[field] === 'object' ? JSON.stringify(encrypted[field]) : String(encrypted[field]);
+      encrypted[`${field}_encrypted`] = await encryptData(val);
+      delete encrypted[field];
+    }
+  }
+  
   return encrypted;
 };
 
 /**
  * Decrypt user profile data after retrieving
+ * Supports "Hybrid" mode where some fields might be raw
  * @param {Object} profileData - User profile object with encrypted fields
  * @returns {Promise<Object>} Profile with decrypted sensitive fields
  */
 export const decryptUserProfile = async (profileData) => {
+  if (!profileData) return profileData;
   const decrypted = { ...profileData };
   
-  // Decrypt numeric fields or provide defaults
-  if (decrypted.balance_encrypted) {
-    decrypted.balance = parseFloat(await decryptData(decrypted.balance_encrypted)) || 0;
-  } else if (decrypted.balance === undefined) {
-    decrypted.balance = 0; // Default for new fields
-  }
-  
-  if (decrypted.totalIncome_encrypted) {
-    decrypted.totalIncome = parseFloat(await decryptData(decrypted.totalIncome_encrypted)) || 0;
-  } else if (decrypted.totalIncome === undefined) {
-    decrypted.totalIncome = 0; // Default for new fields
-  }
-  
-  if (decrypted.totalExpense_encrypted) {
-    decrypted.totalExpense = parseFloat(await decryptData(decrypted.totalExpense_encrypted)) || 0;
-  } else if (decrypted.totalExpense === undefined) {
-    decrypted.totalExpense = 0; // Default for new fields
-  }
-  
-  if (decrypted.monthlyBudget_encrypted) {
-    decrypted.monthlyBudget = parseFloat(await decryptData(decrypted.monthlyBudget_encrypted)) || 0;
-  } else if (decrypted.monthlyBudget === undefined) {
-    decrypted.monthlyBudget = 0; // Default for new fields
-  }
-  
-  // Decrypt additional numeric fields if present
-  if (decrypted.totalCreditGiven_encrypted) {
-    decrypted.totalCreditGiven = parseFloat(await decryptData(decrypted.totalCreditGiven_encrypted)) || 0;
-  } else if (decrypted.totalCreditGiven === undefined) {
-    decrypted.totalCreditGiven = 0; // Default for new fields
-  }
-  
-  if (decrypted.totalLoanTaken_encrypted) {
-    decrypted.totalLoanTaken = parseFloat(await decryptData(decrypted.totalLoanTaken_encrypted)) || 0;
-  } else if (decrypted.totalLoanTaken === undefined) {
-    decrypted.totalLoanTaken = 0; // Default for new fields
+  // 1. Decrypt numeric fields
+  const numericFields = [
+    { key: 'balance', default: 0 },
+    { key: 'totalIncome', default: 0 },
+    { key: 'totalExpense', default: 0 },
+    { key: 'monthlyBudget', default: 0 },
+    { key: 'totalCreditGiven', default: 0 },
+    { key: 'totalLoanTaken', default: 0 }
+  ];
+
+  for (const field of numericFields) {
+    const encKey = `${field.key}_encrypted`;
+    if (decrypted[encKey]) {
+      const val = await decryptData(decrypted[encKey]);
+      decrypted[field.key] = parseFloat(val) || 0;
+    }
+    
+    // Fallback to raw field
+    if (decrypted[field.key] === undefined || (decrypted[field.key] === 0 && profileData[field.key] !== undefined)) {
+      decrypted[field.key] = parseFloat(profileData[field.key]) || field.default;
+    }
   }
 
-  // Decrypt salary manager plan if exists
-  if (decrypted.salaryPlan_encrypted) {
-    try {
-      const decryptedString = await decryptData(decrypted.salaryPlan_encrypted);
-      decrypted.salaryPlan = JSON.parse(decryptedString);
-    } catch (e) {
-      console.warn("Failed to decrypt salary plan in profile", e);
+  // 2. Decrypt personal/setting fields
+  const personalFields = [
+    { key: 'email', default: '' },
+    { key: 'displayName', default: 'User' },
+    { key: 'currency', default: 'BDT' },
+    { key: 'theme', default: 'system' },
+    { key: 'language', default: 'en' }
+  ];
+
+  for (const field of personalFields) {
+    const encKey = `${field.key}_encrypted`;
+    if (decrypted[encKey]) {
+      decrypted[field.key] = await decryptData(decrypted[encKey]);
+    }
+    
+    // Fallback to raw field
+    if (!decrypted[field.key] && profileData[field.key]) {
+      decrypted[field.key] = profileData[field.key];
+    }
+    
+    // Final default
+    if (!decrypted[field.key]) {
+      decrypted[field.key] = field.default;
+    }
+  }
+
+  // 3. Decrypt boolean/object settings
+  const complexFields = ['notifications', 'budgetAlerts'];
+  for (const key of complexFields) {
+    const encKey = `${key}_encrypted`;
+    if (decrypted[encKey]) {
+      const val = await decryptData(decrypted[encKey]);
+      try {
+        // Try parsing as JSON if it was a boolean or object
+        decrypted[key] = JSON.parse(val);
+      } catch {
+        decrypted[key] = val; // String fallback
+      }
+    } else if (decrypted[key] === undefined && profileData[key] !== undefined) {
+      decrypted[key] = profileData[key];
     }
   }
 
@@ -288,15 +389,11 @@ export const decryptUserProfile = async (profileData) => {
  */
 export const encryptMessageData = async (messageData) => {
   const encrypted = { ...messageData };
-  
-  // Encrypt message content
+
   if (encrypted.message) {
     encrypted.message_encrypted = await encryptData(encrypted.message);
-    delete encrypted.message; // Remove original field completely for privacy
+    delete encrypted.message;
   }
-  
-  // Note: originalMessage is no longer supported/stored for privacy reasons.
-  // If a caller passes originalMessage, we intentionally ignore it here.
 
   return encrypted;
 };
@@ -307,14 +404,17 @@ export const encryptMessageData = async (messageData) => {
  * @returns {Promise<Object>} Message with decrypted content
  */
 export const decryptMessageData = async (messageData) => {
+  if (!messageData) return messageData;
   const decrypted = { ...messageData };
-  
-  // Decrypt message content
+
   if (decrypted.message_encrypted) {
     decrypted.message = await decryptData(decrypted.message_encrypted);
   }
-  
-  // originalMessage_encrypted is intentionally not supported anymore. Do not attempt to decrypt it.
+
+  // Fallback to raw message if decryption didn't happen
+  if (decrypted.message === undefined && messageData.message) {
+    decrypted.message = messageData.message;
+  }
 
   return decrypted;
 };

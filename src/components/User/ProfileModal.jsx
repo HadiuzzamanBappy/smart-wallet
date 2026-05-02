@@ -21,18 +21,14 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
   const [formData, setFormData] = useState({
     displayName: detectDefaultName(),
-    currency: userProfile?.currency || 'BDT',
-    monthlyBudget: userProfile?.monthlyBudget || '',
-    budgetAlerts: userProfile?.budgetAlerts !== false
+    currency: userProfile?.currency || 'BDT'
   });
 
   // Keep form in sync when modal opens or when the auth/profile updates
   useEffect(() => {
     setFormData({
       displayName: detectDefaultName(),
-      currency: userProfile?.currency || 'BDT',
-      monthlyBudget: userProfile?.monthlyBudget || '',
-      budgetAlerts: userProfile?.budgetAlerts !== false
+      currency: userProfile?.currency || 'BDT'
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, userProfile]);
@@ -50,12 +46,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     setLoading(true);
 
     try {
-      const updateData = {
-        ...formData,
-        monthlyBudget: formData.monthlyBudget ? Number(formData.monthlyBudget) : 0
-      };
-
-      const result = await updateUserProfile(user.uid, updateData);
+      const result = await updateUserProfile(user.uid, formData);
 
       if (result.success) {
         // Refresh user profile to get updated data
@@ -124,8 +115,17 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
       <form id={formId} onSubmit={handleSubmit} className="space-y-6">
         {/* User Info */}
         <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white text-lg font-semibold">
-            {userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+          <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white text-lg font-semibold overflow-hidden">
+            {user?.photoURL ? (
+              <img 
+                src={user.photoURL} 
+                alt={formData.displayName} 
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'
+            )}
           </div>
           <div>
             <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
@@ -175,41 +175,6 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
               </option>
             ))}
           </select>
-        </div>
-
-        {/* Monthly Budget (Global Ceiling) */}
-        <div>
-          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">
-            Monthly Spending Limit
-          </label>
-          <input
-            type="number"
-            name="monthlyBudget"
-            value={formData.monthlyBudget}
-            onChange={handleInputChange}
-            className="input-field"
-            placeholder="e.g. 50000"
-            min="0"
-            step="1"
-          />
-          <p className="text-[10px] text-gray-400 mt-1.5 leading-relaxed">
-            Set a global ceiling for your total monthly spending (fixed + extra). This acts as your master lifestyle monitor.
-          </p>
-        </div>
-
-        {/* Budget Alerts */}
-        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700/50">
-          <input
-            type="checkbox"
-            id="budgetAlerts"
-            name="budgetAlerts"
-            checked={formData.budgetAlerts}
-            onChange={handleInputChange}
-            className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 bg-white dark:bg-gray-700"
-          />
-          <label htmlFor="budgetAlerts" className="text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer">
-            Enable ceiling alerts
-          </label>
         </div>
 
       </form>

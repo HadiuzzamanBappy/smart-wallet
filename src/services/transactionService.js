@@ -26,8 +26,6 @@ import {
   normalizeDateToTimestamp,
   computeTransactionFingerprint,
   computeTransactionEffects,
-  computeTransactionDelta,
-  reverseTransactionEffects,
   validateTransaction,
   validateTotalsNotNegative,
   validateRepaymentAmount,
@@ -105,19 +103,6 @@ export const updateUserBalance = async (userId, txOrType, maybeAmount) => {
       throw new Error('User not found');
     }
 
-    // Decrypt existing profile
-    const encryptedUserData = userDoc.data();
-    const userData = await decryptUserProfile(encryptedUserData);
-
-    // Extract current totals
-    const currentTotals = {
-      balance: Number(userData.balance) || 0,
-      totalIncome: Number(userData.totalIncome) || 0,
-      totalExpense: Number(userData.totalExpense) || 0,
-      totalCreditGiven: Number(userData.totalCreditGiven) || 0,
-      totalLoanTaken: Number(userData.totalLoanTaken) || 0
-    };
-
     // Backwards compatible invocation: updateUserBalance(userId, type, amount)
     let tx = null;
     if (typeof txOrType === 'string') {
@@ -134,18 +119,9 @@ export const updateUserBalance = async (userId, txOrType, maybeAmount) => {
       throw new Error('Invalid type or amount for updateUserBalance');
     }
 
-    // Compute transaction effects using helper
-    const effects = computeTransactionEffects(tx);
-
-    // Apply effects to current totals
-    const updatedTotals = applyEffectsToTotals(currentTotals, effects);
-
-    // Validate: prevent negative totals
-    validateTotalsNotNegative(updatedTotals);
-
-    // Prepare encrypted update
+    // Prepare encrypted update (excluding redundant calculated fields)
     const updatedData = {
-      ...updatedTotals,
+      // We no longer save balance/income/expense as they are calculated on the fly
       updatedAt: Timestamp.now()
     };
 
@@ -164,15 +140,11 @@ export const getTransactions = async (userId, filters = {}) => {
     const transactionsRef = collection(db, `users/${userId}/transactions`);
     let q = query(transactionsRef, orderBy('createdAt', 'desc'));
 
-    if (filters.type) {
-      q = query(q, where('type', '==', filters.type));
-    }
-
-    if (filters.category) {
-      q = query(q, where('category', '==', filters.category));
-    }
-
-    if (filters.limit) {
+    // We CANNOT filter by 'type' or 'category' in Firestore anymore because they are encrypted.
+    // We must fetch and filter locally.
+    // If a limit is provided, we fetch a larger batch or all to ensure we find enough matches after local filtering.
+    // For now, if type/category filters are used, we fetch all to ensure correctness.
+    if (filters.limit && !filters.type && !filters.category) {
       q = query(q, limit(filters.limit));
     }
 
@@ -180,13 +152,27 @@ export const getTransactions = async (userId, filters = {}) => {
     const encryptedTransactions = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-      date: doc.data().date.toDate(),
-      createdAt: doc.data().createdAt.toDate(),
-      updatedAt: doc.data().updatedAt?.toDate() || doc.data().createdAt.toDate() // fallback to createdAt if updatedAt doesn't exist
+      date: doc.data().date?.toDate() || new Date(),
+      createdAt: doc.data().createdAt?.toDate() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate() || doc.data().createdAt?.toDate() || new Date()
     }));
 
     // Decrypt the transactions
-    const transactions = await decryptTransactions(encryptedTransactions);
+    let transactions = await decryptTransactions(encryptedTransactions);
+
+    // Apply local filtering for encrypted fields
+    if (filters.type) {
+      transactions = transactions.filter(tx => tx.type === filters.type);
+    }
+
+    if (filters.category) {
+      transactions = transactions.filter(tx => tx.category === filters.category);
+    }
+
+    // Apply limit locally if it wasn't applied in the query
+    if (filters.limit) {
+      transactions = transactions.slice(0, filters.limit);
+    }
 
     return { success: true, data: transactions };
   } catch (error) {
@@ -250,34 +236,6 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
         throw new Error('User not found');
       }
 
-      const encryptedUserData = userSnap.data();
-      const userData = await decryptUserProfile(encryptedUserData);
-
-      // Extract current totals
-      let currentTotals = {
-        balance: Number(userData.balance) || 0,
-        totalIncome: Number(userData.totalIncome) || 0,
-        totalExpense: Number(userData.totalExpense) || 0,
-        totalCreditGiven: Number(userData.totalCreditGiven) || 0,
-        totalLoanTaken: Number(userData.totalLoanTaken) || 0
-      };
-
-      // Reverse the transaction effect using helper
-      const reverseEffects = reverseTransactionEffects({
-        type: transactionType,
-        amount: transactionAmount,
-        isRepayment: decryptedTx.isRepayment,
-        repaymentFor: decryptedTx.repaymentFor
-      });
-
-      console.debug(`[DELETE] Reverse effects:`, reverseEffects);
-      console.debug(`[DELETE] Current balance before reversal: ${currentTotals.balance}`);
-
-      // Apply reversed effects
-      currentTotals = applyEffectsToTotals(currentTotals, reverseEffects);
-
-      console.debug(`[DELETE] New balance after reversal: ${currentTotals.balance}`);
-
       // If deleting a repayment, update the linked original's paidAmount
       if (decryptedTx.isRepayment && decryptedTx.linkedTransactionId) {
         try {
@@ -301,43 +259,22 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
         }
       }
 
-      // Cascade-delete linked repayments and reverse their effects
+      // Cascade-delete linked repayments
       if (linkedRepayments.length > 0) {
         console.debug(`[DELETE] Cascade-deleting ${linkedRepayments.length} linked repayments`);
         for (const linked of linkedRepayments) {
           try {
             const linkedRef = doc(db, `users/${userId}/transactions/${linked.id}`);
-            const [linkedDecrypted] = await decryptTransactions([{ id: linked.id, ...linked.data }]);
-
-            console.debug(`[DELETE] Cascade-delete linked: type=${linkedDecrypted.type}, amount=${linkedDecrypted.amount}`);
-
-            // Reverse the linked repayment's effect
-            const linkedReverseEffects = reverseTransactionEffects({
-              type: linkedDecrypted.type,
-              amount: linkedDecrypted.amount,
-              isRepayment: linkedDecrypted.isRepayment,
-              repaymentFor: linkedDecrypted.repaymentFor
-            });
-
-            console.debug(`[DELETE] Linked reverse effects:`, linkedReverseEffects);
-
-            currentTotals = applyEffectsToTotals(currentTotals, linkedReverseEffects);
-
             // Delete the linked repayment
             tx.delete(linkedRef);
           } catch (err) {
             console.warn('Failed to cascade-delete linked repayment:', err?.message || err);
           }
         }
-        console.debug(`[DELETE] Balance after cascade deletes: ${currentTotals.balance}`);
       }
 
-      // Validate no negative totals
-      validateTotalsNotNegative(currentTotals);
-
-      // Prepare encrypted update
+      // Prepare encrypted update (we only update the timestamp now)
       const updatedData = {
-        ...currentTotals,
         updatedAt: Timestamp.now()
       };
 
@@ -452,27 +389,9 @@ export const updateTransaction = async (transactionId, updates) => {
 
     // Compute new values
     const newAmount = rest.amount !== undefined ? Number(rest.amount) : oldAmount;
-    const newType = rest.type || oldType;
 
     // Encrypt the updates
     const encryptedUpdates = await encryptTransactionData({ ...updatesWithTimestamp, amount: newAmount });
-
-    // Compute delta using helper
-    const oldTransaction = {
-      type: oldType,
-      amount: oldAmount,
-      isRepayment: oldDecrypted.isRepayment,
-      repaymentFor: oldDecrypted.repaymentFor
-    };
-
-    const newTransaction = {
-      type: newType,
-      amount: newAmount,
-      isRepayment: rest.isRepayment !== undefined ? rest.isRepayment : oldDecrypted.isRepayment,
-      repaymentFor: rest.repaymentFor || oldDecrypted.repaymentFor
-    };
-
-    const delta = computeTransactionDelta(oldTransaction, newTransaction);
 
     // Read and update user profile
     const userRef = doc(db, 'users', userId);
@@ -481,24 +400,7 @@ export const updateTransaction = async (transactionId, updates) => {
       throw new Error('User not found');
     }
 
-    const encryptedUserData = userDocSnapshot.data();
-    const userData = await decryptUserProfile(encryptedUserData);
-
-    const currentTotals = {
-      balance: Number(userData.balance) || 0,
-      totalIncome: Number(userData.totalIncome) || 0,
-      totalExpense: Number(userData.totalExpense) || 0,
-      totalCreditGiven: Number(userData.totalCreditGiven) || 0,
-      totalLoanTaken: Number(userData.totalLoanTaken) || 0
-    };
-
-    const updatedTotals = applyEffectsToTotals(currentTotals, delta);
-
-    // Validate no negative totals
-    validateTotalsNotNegative(updatedTotals);
-
     const updatedProfilePlain = {
-      ...updatedTotals,
       updatedAt: Timestamp.now()
     };
 
@@ -661,40 +563,16 @@ export const deleteAllUserData = async (userId) => {
 };
 
 // New repayment functions
-/**
- * Get outstanding (unpaid) loans for a user
- * @param {string} userId - User's unique identifier
- * @returns {Promise<Object>} Success/error result with outstanding loans
- */
 export const getOutstandingLoans = async (userId) => {
   try {
-    const transactionsRef = collection(db, `users/${userId}/transactions`);
-    const q = query(transactionsRef, where('type', '==', 'loan'));
+    const res = await getTransactions(userId, { type: 'loan' });
+    if (!res.success) return res;
 
-    const querySnapshot = await getDocs(q);
-    const loans = [];
+    // Only include loans that are not fully repaid
+    const outstanding = res.data.filter(loan => !loan.isFullyPaid)
+      .map(loan => normalizeLoanCreditNumbers(loan));
 
-    for (const docSnap of querySnapshot.docs) {
-      const decryptedTransactions = await decryptTransactions([{
-        id: docSnap.id,
-        ...docSnap.data()
-      }]);
-
-      const loan = decryptedTransactions[0];
-      // Only include loans that are not fully repaid
-      if (!loan.isFullyPaid) {
-        loans.push(normalizeLoanCreditNumbers(loan));
-      }
-    }
-
-    // Sort by createdAt descending
-    loans.sort((a, b) => {
-      const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
-      const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
-      return dateB - dateA;
-    });
-
-    return { success: true, data: loans };
+    return { success: true, data: outstanding };
   } catch (error) {
     console.error('Error getting outstanding loans:', error);
     return { success: false, error: error.message };
@@ -708,33 +586,14 @@ export const getOutstandingLoans = async (userId) => {
  */
 export const getOutstandingCredits = async (userId) => {
   try {
-    const transactionsRef = collection(db, `users/${userId}/transactions`);
-    const q = query(transactionsRef, where('type', '==', 'credit'));
+    const res = await getTransactions(userId, { type: 'credit' });
+    if (!res.success) return res;
 
-    const querySnapshot = await getDocs(q);
-    const credits = [];
+    // Only include credits that are not fully collected
+    const outstanding = res.data.filter(credit => !credit.isFullyPaid)
+      .map(credit => normalizeLoanCreditNumbers(credit));
 
-    for (const docSnap of querySnapshot.docs) {
-      const decryptedTransactions = await decryptTransactions([{
-        id: docSnap.id,
-        ...docSnap.data()
-      }]);
-
-      const credit = decryptedTransactions[0];
-      // Only include credits that are not fully collected
-      if (!credit.isFullyPaid) {
-        credits.push(normalizeLoanCreditNumbers(credit));
-      }
-    }
-
-    // Sort by createdAt descending
-    credits.sort((a, b) => {
-      const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
-      const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
-      return dateB - dateA;
-    });
-
-    return { success: true, data: credits };
+    return { success: true, data: outstanding };
   } catch (error) {
     console.error('Error getting outstanding credits:', error);
     return { success: false, error: error.message };
@@ -748,29 +607,10 @@ export const getOutstandingCredits = async (userId) => {
  */
 export const getAllLoans = async (userId) => {
   try {
-    const transactionsRef = collection(db, `users/${userId}/transactions`);
-    const q = query(transactionsRef, where('type', '==', 'loan'));
+    const res = await getTransactions(userId, { type: 'loan' });
+    if (!res.success) return res;
 
-    const querySnapshot = await getDocs(q);
-    const loans = [];
-
-    for (const docSnap of querySnapshot.docs) {
-      const decryptedTransactions = await decryptTransactions([{
-        id: docSnap.id,
-        ...docSnap.data()
-      }]);
-
-      const loan = decryptedTransactions[0];
-      loans.push(normalizeLoanCreditNumbers(loan));
-    }
-
-    // Sort by createdAt descending
-    loans.sort((a, b) => {
-      const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
-      const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
-      return dateB - dateA;
-    });
-
+    const loans = res.data.map(loan => normalizeLoanCreditNumbers(loan));
     return { success: true, data: loans };
   } catch (error) {
     console.error('Error getting all loans:', error);
@@ -785,29 +625,10 @@ export const getAllLoans = async (userId) => {
  */
 export const getAllCredits = async (userId) => {
   try {
-    const transactionsRef = collection(db, `users/${userId}/transactions`);
-    const q = query(transactionsRef, where('type', '==', 'credit'));
+    const res = await getTransactions(userId, { type: 'credit' });
+    if (!res.success) return res;
 
-    const querySnapshot = await getDocs(q);
-    const credits = [];
-
-    for (const docSnap of querySnapshot.docs) {
-      const decryptedTransactions = await decryptTransactions([{
-        id: docSnap.id,
-        ...docSnap.data()
-      }]);
-
-      const credit = decryptedTransactions[0];
-      credits.push(normalizeLoanCreditNumbers(credit));
-    }
-
-    // Sort by createdAt descending
-    credits.sort((a, b) => {
-      const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
-      const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
-      return dateB - dateA;
-    });
-
+    const credits = res.data.map(credit => normalizeLoanCreditNumbers(credit));
     return { success: true, data: credits };
   } catch (error) {
     console.error('Error getting all credits:', error);
@@ -1115,16 +936,12 @@ export const importUserData = async (userId, data, options = { preserveIds: fals
         result.errors.push({ id: tx?.id || null, error: e?.message });
       }
     }
-
     // Replace user profile fields from exported profile (only specific safe fields)
     if (profile && typeof profile === 'object') {
       const userRef = doc(db, 'users', userId);
       const updatable = {
         displayName: profile.displayName,
         email: profile.email,
-        balance: Number(profile.balance) || 0,
-        totalIncome: Number(profile.totalIncome) || 0,
-        totalExpense: Number(profile.totalExpense) || 0,
         totalCreditGiven: Number(profile.totalCreditGiven) || 0,
         totalLoanTaken: Number(profile.totalLoanTaken) || 0,
         language: profile.language,
@@ -1144,10 +961,13 @@ export const importUserData = async (userId, data, options = { preserveIds: fals
         }
       }
 
-      // Remove undefined keys so updateDoc doesn't set them
-      Object.keys(updatable).forEach(k => updatable[k] === undefined && delete updatable[k]);
+      // Ensure updatable is fully encrypted before saving
+      const encryptedProfile = await encryptUserProfile(updatable);
 
-      await setDoc(userRef, updatable, { merge: true });
+      // Remove undefined keys so setDoc doesn't set them (though encryptUserProfile should have handled it)
+      Object.keys(encryptedProfile).forEach(k => encryptedProfile[k] === undefined && delete encryptedProfile[k]);
+
+      await setDoc(userRef, encryptedProfile, { merge: true });
     }
 
     // Attach importSourceTag to result so caller can undo later if needed
