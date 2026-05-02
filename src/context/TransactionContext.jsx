@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { getTransactions } from '../services/transactionService';
 import { getSalaryPlan } from '../services/salaryService';
@@ -162,12 +162,38 @@ export const TransactionProvider = ({ children }) => {
   }, [transactions]);
 
   /**
-   * SMART BALANCE CALCULATION (Auto-Deduct Model)
-   * Wallet = Net Surplus (Income - Fixed - Savings - Goal) + Cash in Hand + Actual Extra Transactions
-   * This assumes fixed costs are "gone" immediately, matching a "Spendable Money" mental model.
+   * OPENING BALANCE (Carry-over from previous months)
+   * This calculates the sum of all transactions before the current month began.
    */
-  const smartBalance = (salaryPlan?.plan?.disposable || 0) + cashInHand + monthlyNetFlowTransactions;
-  const netSurplus = (salaryPlan?.plan?.netBalance || 0) + cashInHand + monthlyNetFlowTransactions;
+  const openingBalance = useMemo(() => {
+    const now = new Date();
+    const firstOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return transactions.reduce((sum, tx) => {
+      const txDate = new Date(tx.date || tx.createdAt);
+      if (txDate < firstOfCurrentMonth) {
+        try {
+          const eff = computeTransactionEffects(tx);
+          return sum + (eff.balance || 0);
+        } catch {
+          if (tx.type === 'income') return sum + (tx.amount || 0);
+          if (tx.type === 'expense') return sum - (tx.amount || 0);
+          if (tx.type === 'credit') return sum - (tx.amount || 0);
+          if (tx.type === 'loan') return sum + (tx.amount || 0);
+          return sum;
+        }
+      }
+      return sum;
+    }, 0);
+  }, [transactions, computeTransactionEffects]);
+
+  /**
+   * SMART BALANCE CALCULATION (Auto-Deduct Model)
+   * Wallet = Net Surplus (Income - Fixed - Savings - Goal) + Opening Balance + Initial Cash + Actual Extra Transactions
+   * This ensures previous month's leftovers (surplus) are carried over automatically.
+   */
+  const smartBalance = (salaryPlan?.plan?.disposable || 0) + cashInHand + openingBalance + monthlyNetFlowTransactions;
+  const netSurplus = (salaryPlan?.plan?.netBalance || 0) + cashInHand + openingBalance + monthlyNetFlowTransactions;
 
   /**
    * LIQUID BALANCE (Actual Wallet)
