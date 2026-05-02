@@ -30,10 +30,10 @@ const IconBox = ({
     };
 
     const variants = {
-        glass: 'bg-white/5 backdrop-blur-md border border-white/10 shadow-xl',
-        soft: bgClass || 'bg-current/10',
+        glass: 'bg-gray-100/50 dark:bg-white/5 backdrop-blur-md border border-gray-200/50 dark:border-white/10 shadow-sm',
+        soft: bgClass || 'bg-current/[0.08]',
         solid: bgClass || 'bg-current',
-        ghost: 'bg-transparent border border-white/5'
+        ghost: 'bg-transparent border border-gray-100 dark:border-white/5'
     };
 
     const variantStyle = variants[variant] || variants.soft;

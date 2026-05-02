@@ -12,9 +12,9 @@ const SectionHeader = ({ icon: Icon, title, subtitle, children, className = '' }
                         {subtitle}
                     </div>
                 )}
-                <h2 className="text-sm font-black uppercase tracking-[0.3em] text-gray-500 flex items-center gap-2">
-                    {Icon && <Icon className="w-4 h-4" />}
-                    <span className={subtitle ? "text-xl font-black text-gray-900 dark:text-white tracking-tight normal-case" : ""}>
+                <h2 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 flex items-center gap-2">
+                    {Icon && <Icon className="w-4 h-4 text-teal-500" />}
+                    <span className={subtitle ? "text-xl font-black text-gray-900 dark:text-white tracking-tight normal-case" : "text-gray-900 dark:text-white"}>
                         {title}
                     </span>
                 </h2>

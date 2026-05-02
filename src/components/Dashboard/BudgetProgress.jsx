@@ -70,29 +70,29 @@ const BudgetProgress = () => {
         switch (warningLevel) {
             case 'danger':
                 return {
-                    color: 'text-rose-400',
-                    bg: 'bg-rose-400/10',
+                    color: 'text-rose-600 dark:text-rose-400',
+                    bg: 'bg-rose-500/10',
                     progressFill: 'bg-rose-500',
                     icon: AlertTriangle
                 };
             case 'warning':
                 return {
-                    color: 'text-amber-400',
-                    bg: 'bg-amber-400/10',
+                    color: 'text-amber-600 dark:text-amber-400',
+                    bg: 'bg-amber-500/10',
                     progressFill: 'bg-amber-500',
                     icon: AlertTriangle
                 };
             case 'caution':
                 return {
-                    color: 'text-sky-400',
-                    bg: 'bg-sky-400/10',
+                    color: 'text-sky-600 dark:text-sky-400',
+                    bg: 'bg-sky-500/10',
                     progressFill: 'bg-sky-500',
                     icon: TrendingUp
                 };
             default:
                 return {
-                    color: 'text-emerald-400',
-                    bg: 'bg-emerald-400/10',
+                    color: 'text-emerald-600 dark:text-emerald-400',
+                    bg: 'bg-emerald-500/10',
                     progressFill: 'bg-emerald-500',
                     icon: CheckCircle
                 };
@@ -105,21 +105,24 @@ const BudgetProgress = () => {
     const remaining = Math.max(0, (budgetStatus.budget || 0) - currentSpending);
 
     return (
-        <GlassCard padding="p-3" className="border-white/5">
-            <div className="flex items-start justify-between gap-2 mb-3">
-                <div className="flex items-center gap-3">
+        <div className="rounded-2xl p-4 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 shadow-sm transition-colors duration-500">
+            <div className="flex items-start justify-between gap-2 mb-4">
+                <div className="flex items-center gap-4">
                     <IconBox 
-                        icon={colors.icon} 
-                        colorClass={colors.color} 
-                        bgClass={colors.bg} 
+                        icon={colors.icon}
+                        variant="glass"
+                        colorClass={colors.color}
+                        bgClass={colors.bg}
                         size="md"
+                        className={`!rounded-xl border ${budgetStatus.warningLevel === 'danger' ? 'border-rose-500/30' : 'border-gray-200 dark:border-white/20'}`}
                     />
                     <div>
-                        <div className={`text-[10px] font-black uppercase tracking-[0.2em] ${colors.color} mb-0.5`}>
+                        <div className={`text-[10px] font-black uppercase tracking-[0.2em] ${colors.color} mb-1.5`}>
                             {budgetStatus.status}
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <StatBadge label="LIMIT" value={formatCurrency(budgetLimit, currency)} variant="gray" />
+                        <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">Limit:</span>
+                            <span className="text-xs font-black text-gray-900 dark:text-white tracking-tight">{formatCurrency(budgetLimit, currency)}</span>
                         </div>
                     </div>
                 </div>
@@ -127,36 +130,38 @@ const BudgetProgress = () => {
                 <div className={`text-sm font-black tracking-tighter ${colors.color}`}>{percentage}%</div>
             </div>
 
-            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mb-3">
+            <div className="w-full h-2 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden mb-4">
                 <div
-                    className={`h-full rounded-full transition-all duration-1000 ease-out ${colors.progressFill}`}
+                    className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.1)] ${colors.progressFill}`}
                     style={{ width: `${percentage}%` }}
                 />
             </div>
 
             <div className="flex items-end justify-between">
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-white">{formatCurrency(currentSpending, currency)}</span>
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Spent</span>
+                        <span className="text-sm font-black text-gray-900 dark:text-white tracking-tighter">{formatCurrency(currentSpending, currency)}</span>
+                        <span className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">Spent</span>
                     </div>
                     {fixedSpending > 0 && (
-                        <div className="text-[9px] text-gray-500 font-bold uppercase tracking-tight opacity-60">
-                            Incl. {formatCurrency(fixedSpending, currency)} fixed costs
+                        <div className="text-[9px] font-black uppercase tracking-tight text-gray-400 dark:text-gray-600">
+                            Incl. <span className="text-gray-600 dark:text-gray-400">{formatCurrency(fixedSpending, currency)}</span> fixed ops
                         </div>
                     )}
                 </div>
                 
                 <div className="text-right">
-                    <div className={`text-xs font-black ${budgetStatus.exceeded ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    <div className={`text-[11px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border ${budgetStatus.exceeded 
+                        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' 
+                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'}`}>
                         {budgetStatus.exceeded 
-                            ? `${formatCurrency(currentSpending - budgetLimit, currency)} OVER` 
-                            : `${formatCurrency(remaining, currency)} LEFT`
+                            ? `${formatCurrency(currentSpending - budgetLimit, currency)} Over` 
+                            : `${formatCurrency(remaining, currency)} Left`
                         }
                     </div>
                 </div>
             </div>
-        </GlassCard>
+        </div>
     );
 };
 

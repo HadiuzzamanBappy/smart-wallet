@@ -121,8 +121,8 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="space-y-2">
         <label className="flex items-center gap-2 px-1">
-          <Briefcase className="w-3.5 h-3.5 text-teal-500" />
-          <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Base Salary (After Tax)</span>
+          <Briefcase className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+          <span className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Base Salary (After Tax)</span>
         </label>
         <GlassInput
           type="number"
@@ -135,8 +135,8 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
       <div className="space-y-2">
         <label className="flex items-center gap-2 px-1">
-          <Sparkles className="w-3.5 h-3.5 text-teal-500" />
-          <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Side Revenue</span>
+          <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+          <span className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Side Revenue</span>
         </label>
         <GlassInput
           type="number"
@@ -146,9 +146,9 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 pt-2">
+      <div className="grid grid-cols-2 gap-5 pt-2">
         <div className="space-y-2">
-          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Age Bracket</label>
+          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">Age Bracket</label>
           <Select
             value={form.ageBracket}
             onChange={e => update('ageBracket', e.target.value)}
@@ -161,7 +161,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
           />
         </div>
         <div className="space-y-2">
-          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Location Tier</label>
+          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">Location Tier</label>
           <Select
             value={form.cityTier}
             onChange={e => update('cityTier', e.target.value)}
@@ -186,14 +186,14 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
           <button
             key={item.key}
             onClick={() => update(item.key, !form[item.key])}
-            className={`flex items-center gap-3 p-4 rounded-2xl border transition-all duration-300 ${
+            className={`flex items-center gap-3 p-5 rounded-2xl border transition-all duration-300 shadow-sm ${
               form[item.key] 
-                ? 'bg-teal-500/10 border-teal-500/30 text-white' 
-                : 'bg-white/5 border-white/5 text-gray-500 hover:bg-white/10 hover:border-white/10'
+                ? 'bg-teal-500/10 border-teal-500/30 text-gray-900 dark:text-white' 
+                : 'bg-gray-100 dark:bg-white/5 border-gray-200/50 dark:border-white/5 text-gray-500 hover:bg-gray-200/50 dark:hover:bg-white/10 hover:border-gray-300 dark:hover:border-white/10'
             }`}
           >
-            <item.icon className={`w-4 h-4 ${form[item.key] ? 'text-teal-400' : 'text-gray-500'}`} />
-            <span className="text-[11px] font-bold uppercase tracking-widest">{item.label}</span>
+            <item.icon className={`w-4 h-4 ${form[item.key] ? 'text-teal-600 dark:text-teal-400' : 'text-gray-400'}`} />
+            <span className="text-[11px] font-black uppercase tracking-widest">{item.label}</span>
           </button>
         ))}
       </div>
@@ -201,22 +201,22 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
       <div className="grid grid-cols-2 gap-5">
         {form.hasRent && (
           <div className="space-y-2 animate-in zoom-in-95 duration-200">
-            <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Monthly Rent</label>
+            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">Monthly Rent</label>
             <GlassInput type="number" value={form.rent} onChange={e => update('rent', e.target.value)} placeholder="0" />
           </div>
         )}
         {form.hasFamilySend && (
           <div className="space-y-2 animate-in zoom-in-95 duration-200">
-            <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Family Support</label>
+            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">Family Support</label>
             <GlassInput type="number" value={form.familySend} onChange={e => update('familySend', e.target.value)} placeholder="0" />
           </div>
         )}
         <div className="space-y-2">
-          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Utilities</label>
+          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">Utilities</label>
           <GlassInput type="number" value={form.bills} onChange={e => update('bills', e.target.value)} placeholder="Bills & Subs" />
         </div>
         <div className="space-y-2">
-          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Transport</label>
+          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">Transport</label>
           <GlassInput type="number" value={form.transport} onChange={e => update('transport', e.target.value)} placeholder="Commute" />
         </div>
       </div>
@@ -225,17 +225,17 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
   const renderLoans = () => (
     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="space-y-3">
+      <div className="space-y-4">
         {form.loans.map((loan, idx) => (
-          <GlassCard key={idx} padding="p-3" className="bg-white/5 border-white/5">
-            <div className="flex gap-3 items-center">
-              <div className="flex-1 space-y-3">
+          <GlassCard key={idx} padding="p-4" className="bg-gray-50/50 dark:bg-white/5 border-gray-100 dark:border-white/5">
+            <div className="flex gap-4 items-center">
+              <div className="flex-1 space-y-4">
                 <GlassInput
                   value={loan.name}
                   onChange={e => { const nl = [...form.loans]; nl[idx].name = e.target.value; update('loans', nl); }}
                   placeholder="Debt Title (Bank, Personal...)"
                 />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <GlassInput
                     type="number"
                     value={loan.emi}
@@ -252,7 +252,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
               </div>
               <button
                 onClick={() => update('loans', form.loans.filter((_, i) => i !== idx))}
-                className="p-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all active:scale-90"
+                className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-all active:scale-90 border border-rose-100 dark:border-rose-500/10"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -261,7 +261,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
         ))}
 
         <Button
-          variant="ghost"
+          variant="soft"
           color="gray"
           fullWidth
           onClick={() => update('loans', [...form.loans, { name: '', emi: '', remaining: '' }])}
@@ -277,8 +277,8 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="space-y-2">
         <label className="flex items-center gap-2 px-1">
-          <Wallet2 className="w-3.5 h-3.5 text-amber-500" />
-          <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Liquid Cash in Hand</span>
+          <Wallet2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
+          <span className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Liquid Cash in Hand</span>
         </label>
         <GlassInput
           type="number"
@@ -288,11 +288,11 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {form.deposits.map((dep, idx) => (
-          <GlassCard key={idx} padding="p-4" className="bg-white/5 border-white/5">
-            <div className="space-y-3">
-              <div className="flex gap-3">
+          <GlassCard key={idx} padding="p-5" className="bg-gray-50/50 dark:bg-white/5 border-gray-100 dark:border-white/5">
+            <div className="space-y-4">
+              <div className="flex gap-4">
                 <Select
                   value={dep.type}
                   onChange={e => { const nd = [...form.deposits]; nd[idx].type = e.target.value; update('deposits', nd); }}
@@ -302,7 +302,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
                     { value: 'Sanchaypotro', label: 'Sanchaypotro' },
                     { value: 'Others', label: 'Other Asset' }
                   ]}
-                  className="w-32"
+                  className="w-36"
                 />
                 <GlassInput
                   value={dep.name}
@@ -312,12 +312,12 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
                 />
                 <button
                   onClick={() => update('deposits', form.deposits.filter((_, i) => i !== idx))}
-                  className="p-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
+                  className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-all border border-rose-100 dark:border-rose-500/10"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <GlassInput
                   type="number"
                   value={dep.monthly}
@@ -336,7 +336,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
         ))}
 
         <Button
-          variant="ghost"
+          variant="soft"
           color="gray"
           fullWidth
           onClick={() => update('deposits', [...form.deposits, { type: 'Deposit', name: '', monthly: '', balance: '', useForGoal: true }])}
@@ -350,13 +350,13 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
   const renderGoals = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-5">
         <div className="space-y-2">
-          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Goal Value</label>
+          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">Goal Value</label>
           <GlassInput type="number" value={form.goal} onChange={e => update('goal', e.target.value)} placeholder="Target Price" />
         </div>
         <div className="space-y-2">
-          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Horizon (Months)</label>
+          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">Horizon (Months)</label>
           <Select
             value={form.goalMonths}
             onChange={e => update('goalMonths', e.target.value)}
@@ -366,25 +366,25 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
       </div>
 
       {form.goal > 0 && (
-        <GlassCard className="bg-teal-500/5 border-teal-500/10" padding="p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <IconBox icon={Target} size="sm" color="teal" variant="glass" />
-            <span className="text-[11px] font-black text-white uppercase tracking-widest">Plan Projection</span>
+        <GlassCard className="bg-teal-50 dark:bg-teal-500/5 border-teal-100 dark:border-teal-500/10 shadow-sm" padding="p-6">
+          <div className="flex items-center gap-4 mb-5">
+            <IconBox icon={Target} size="sm" colorClass="text-teal-600 dark:text-teal-400" variant="glass" />
+            <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-widest">Plan Projection</span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {[
-              { label: 'Target Value', val: c(form.goal), color: 'text-white' },
-              { label: 'Asset Offset', val: c(livePlan.projectedAssets), color: 'text-teal-400' },
-              { label: 'Net Gap', val: c(livePlan.remainingGoal), color: 'text-amber-400' }
+              { label: 'Target Value', val: c(form.goal), color: 'text-gray-900 dark:text-white' },
+              { label: 'Asset Offset', val: c(livePlan.projectedAssets), color: 'text-teal-600 dark:text-teal-400' },
+              { label: 'Net Gap', val: c(livePlan.remainingGoal), color: 'text-amber-600 dark:text-amber-400' }
             ].map(item => (
               <div key={item.label} className="flex justify-between items-center text-[11px]">
-                <span className="font-bold text-gray-500 uppercase tracking-wider">{item.label}</span>
+                <span className="font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest opacity-70">{item.label}</span>
                 <span className={`font-mono font-black ${item.color}`}>{item.val}</span>
               </div>
             ))}
-            <div className="pt-3 border-t border-white/5 flex justify-between items-center">
-              <span className="text-[11px] font-black text-teal-500 uppercase tracking-[0.2em]">Required / mo</span>
-              <span className="text-lg font-mono font-black text-white">{c(livePlan.monthlyForGoal)}</span>
+            <div className="pt-4 border-t border-gray-100 dark:border-white/5 flex justify-between items-center">
+              <span className="text-[11px] font-black text-teal-600 dark:text-teal-500 uppercase tracking-widest">Required / mo</span>
+              <span className="text-xl font-mono font-black text-gray-900 dark:text-white tracking-tighter">{c(livePlan.monthlyForGoal)}</span>
             </div>
           </div>
         </GlassCard>
@@ -411,7 +411,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
           <Button
             color="teal"
-            className="min-w-[140px]"
+            className="min-w-[160px]"
             onClick={nextStep}
             disabled={step === 0 && !form.salary}
             icon={step === 4 ? Check : ChevronRight}
@@ -426,32 +426,32 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
         <StepBar current={step} total={5} />
 
         {/* Intelligence Summary Island */}
-        <GlassCard padding="p-5" className="bg-[#0f172a]/80 border-white/5">
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-y-4 items-center">
+        <div className="bg-gray-100/50 dark:bg-slate-900/80 backdrop-blur-xl rounded-[2rem] border border-gray-200/50 dark:border-white/5 p-6 shadow-sm">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-y-6 items-center">
             {[
-              { label: 'Income', val: c(livePlan.totalIncome), color: 'text-white' },
-              { label: 'Fixed Ops', val: c(livePlan.totalFixedCosts), color: 'text-rose-400' },
-              { label: 'Debt Load', val: c(livePlan.totalEMI), color: 'text-amber-400' },
-              { label: 'Saved', val: c(livePlan.actualSavings), color: 'text-emerald-400' },
-              { label: 'Goal Alloc', val: c(livePlan.monthlyForGoal), color: 'text-indigo-400' },
-              { label: 'Surplus', val: `${livePlan.isDeficit ? '-' : '+'}${c(Math.abs(livePlan.netBalance))}`, color: livePlan.isDeficit ? 'text-red-500' : 'text-sky-400' }
+              { label: 'Income', val: c(livePlan.totalIncome), color: 'text-gray-900 dark:text-white' },
+              { label: 'Fixed Ops', val: c(livePlan.totalFixedCosts), color: 'text-rose-600 dark:text-rose-400' },
+              { label: 'Debt Load', val: c(livePlan.totalEMI), color: 'text-amber-600 dark:text-amber-400' },
+              { label: 'Saved', val: c(livePlan.actualSavings), color: 'text-emerald-600 dark:text-emerald-400' },
+              { label: 'Goal Alloc', val: c(livePlan.monthlyForGoal), color: 'text-indigo-600 dark:text-indigo-400' },
+              { label: 'Surplus', val: `${livePlan.isDeficit ? '-' : '+'}${c(Math.abs(livePlan.netBalance))}`, color: livePlan.isDeficit ? 'text-rose-600 dark:text-rose-500' : 'text-sky-600 dark:text-sky-400' }
             ].map((metric, i) => (
-              <div key={metric.label} className={`flex flex-col items-center text-center px-1 ${i < 5 ? 'md:border-r border-white/5' : ''}`}>
-                <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">{metric.label}</span>
+              <div key={metric.label} className={`flex flex-col items-center text-center px-1 ${i < 5 ? 'md:border-r border-gray-200 dark:border-white/5' : ''}`}>
+                <span className="text-[8px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 opacity-70">{metric.label}</span>
                 <span className={`text-[11px] font-mono font-black truncate max-w-full ${metric.color}`}>{metric.val}</span>
               </div>
             ))}
           </div>
 
-          <div className="mt-5 space-y-2">
-            <div className="h-1.5 w-full bg-white/5 rounded-full flex overflow-hidden border border-white/5 shadow-inner">
+          <div className="mt-6 space-y-3">
+            <div className="h-2 w-full bg-gray-200 dark:bg-white/5 rounded-full flex overflow-hidden border border-gray-200 dark:border-white/5 shadow-inner">
               <div className="h-full bg-rose-500 transition-all duration-700" style={{ width: `${Math.min(livePlan.fixedRatio * 100, 100)}%` }} />
               <div className="h-full bg-amber-500 transition-all duration-700 border-l border-black/20" style={{ width: `${Math.min(livePlan.loanRatio * 100, 100)}%` }} />
               <div className="h-full bg-emerald-500 transition-all duration-700 border-l border-black/20" style={{ width: `${Math.min(livePlan.savingsRatio * 100, 100)}%` }} />
               <div className="h-full bg-indigo-500 transition-all duration-700 border-l border-black/20" style={{ width: `${Math.min(livePlan.goalRatio * 100, 100)}%` }} />
               <div className="h-full bg-sky-400 transition-all duration-700 border-l border-black/20" style={{ width: `${Math.max(0, 100 - (livePlan.fixedRatio + livePlan.loanRatio + livePlan.savingsRatio + livePlan.goalRatio) * 100)}%` }} />
             </div>
-            <div className="flex justify-between px-0.5">
+            <div className="flex justify-between px-1">
               {[
                 { label: 'Fixed', color: 'bg-rose-500', pct: Math.round(livePlan.fixedRatio * 100) },
                 { label: 'Debt', color: 'bg-amber-500', pct: Math.round(livePlan.loanRatio * 100) },
@@ -459,14 +459,14 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
                 { label: 'Goal', color: 'bg-indigo-500', pct: Math.round(livePlan.goalRatio * 100) },
                 { label: 'Free', color: 'bg-sky-400', pct: Math.round(livePlan.freeRatio * 100) }
               ].map(leg => (
-                <div key={leg.label} className="flex items-center gap-1">
-                  <div className={`w-1.5 h-1.5 rounded-full ${leg.color}`} />
-                  <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{leg.pct}%</span>
+                <div key={leg.label} className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${leg.color}`} />
+                  <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{leg.pct}%</span>
                 </div>
               ))}
             </div>
           </div>
-        </GlassCard>
+        </div>
 
         {/* Dynamic Form View */}
         <div className="min-h-[320px]">

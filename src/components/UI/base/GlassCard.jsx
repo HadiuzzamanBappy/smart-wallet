@@ -9,9 +9,9 @@ const GlassCard = ({
     onClick, 
     hover = false, 
     padding = 'p-4',
-    border = 'border-white/10',
-    bgColor = 'bg-white/[0.03] dark:bg-gray-800/40',
-    glowColor = 'bg-teal-500/30'
+    border = 'border-gray-200/60 dark:border-white/5',
+    bgColor = 'bg-white/80 dark:bg-white/[0.03]',
+    glowColor = 'bg-teal-500/20'
 }) => {
     const isClickable = !!onClick;
     
@@ -22,7 +22,7 @@ const GlassCard = ({
                 relative overflow-hidden transition-all duration-300
                 rounded-2xl border ${border} ${bgColor}
                 ${padding} ${className}
-                ${isClickable || hover ? 'cursor-pointer hover:bg-white/[0.06] hover:border-white/20 active:scale-[0.98]' : ''}
+                ${isClickable || hover ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.06] hover:border-gray-300 dark:hover:border-white/20 active:scale-[0.98]' : ''}
                 group
             `}
         >

@@ -255,12 +255,21 @@ const SpendingAnalytics = () => {
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { usePointStyle: true, padding: 12, boxWidth: 8, font: { size: 12 } }
+        labels: { 
+          usePointStyle: true, 
+          padding: 12, 
+          boxWidth: 8, 
+          font: { size: 10, weight: 'bold' },
+          color: 'rgba(156, 163, 175, 0.8)' // gray-400
+        }
       },
       tooltip: {
-        bodyFont: { size: 14 },
-        titleFont: { size: 13 },
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        titleFont: { size: 11, weight: 'bold' },
+        bodyFont: { size: 12, weight: 'black' },
         padding: 10,
+        cornerRadius: 12,
+        displayColors: true,
         callbacks: {
           label: function (context) {
             const value = formatCurrency(context.parsed.y || context.parsed);
@@ -271,27 +280,46 @@ const SpendingAnalytics = () => {
     },
     scales: {
       x: {
-        ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 7, font: { size: 11 } }
+        grid: { display: false },
+        ticks: { 
+          maxRotation: 0, 
+          autoSkip: true, 
+          maxTicksLimit: 7, 
+          font: { size: 9, weight: 'bold' },
+          color: 'rgba(156, 163, 175, 0.5)'
+        }
       },
       y: {
         beginAtZero: true,
+        grid: { 
+          color: 'rgba(156, 163, 175, 0.05)',
+          drawBorder: false
+        },
         ticks: {
           callback: function (value) {
             return formatCurrency(value);
           },
-          font: { size: 11 }
+          font: { size: 9, weight: 'bold' },
+          color: 'rgba(156, 163, 175, 0.5)',
+          maxTicksLimit: 5
         }
       }
     },
     elements: {
       point: {
-        radius: 4,
+        radius: 0,
         hoverRadius: 6,
+        hitRadius: 10,
+        backgroundColor: '#fff',
+        borderWidth: 2,
+      },
+      line: {
+        borderWidth: 2,
       },
       bar: {
-        borderRadius: 6,
+        borderRadius: 4,
         borderSkipped: false,
-        maxBarThickness: 36,
+        maxBarThickness: 32,
       }
     }
   });
@@ -299,13 +327,24 @@ const SpendingAnalytics = () => {
   const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    cutout: '75%',
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { boxWidth: 12, padding: 8, font: { size: 12 } }
+        labels: { 
+          boxWidth: 8, 
+          padding: 12, 
+          usePointStyle: true,
+          font: { size: 10, weight: 'bold' },
+          color: 'rgba(156, 163, 175, 0.8)'
+        }
       },
       tooltip: {
-        bodyFont: { size: 14 },
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        padding: 10,
+        cornerRadius: 12,
+        titleFont: { size: 11, weight: 'bold' },
+        bodyFont: { size: 12, weight: 'black' },
         callbacks: {
           label: function (context) {
             const total = context.dataset.data.reduce((a, b) => a + b, 0) || 0;
@@ -322,52 +361,53 @@ const SpendingAnalytics = () => {
 
   if (transactions.length === 0) {
     return (
-      <div className="p-6 text-center">
-        <BarChart3 className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-          No Data Available
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          Add some transactions to see your spending analytics and trends.
+      <div className="flex flex-col items-center justify-center py-20 text-center px-8">
+        <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
+          <BarChart3 className="w-8 h-8 text-gray-400" />
+        </div>
+        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 dark:text-gray-600 mb-2">No Insights Ready</h3>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400/60 max-w-[200px] leading-relaxed">
+          Add transactions to activate your visual intelligence suite.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-5">
       {/* Chart Header & Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2">
-          <IconBox icon={TrendingUp} size="sm" colorClass="text-teal-400" bgClass="bg-teal-400/10" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-teal-500/5 border border-teal-500/10 text-teal-600 dark:text-teal-400">
+            <TrendingUp className="w-5 h-5" />
+          </div>
           <div>
-            <h3 className="text-[12px] font-bold text-white">Insights</h3>
-            <p className="text-[10px] text-gray-500 font-semibold">Financial performance</p>
+            <h3 className="text-sm font-black text-gray-900 dark:text-white tracking-tight leading-tight">Financial Intelligence</h3>
+            <p className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-[0.2em] mt-1">Performance Data</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/5">
+        <div className="flex p-1 bg-gray-100/50 dark:bg-white/5 border border-gray-200/50 dark:border-white/5 rounded-2xl w-full sm:w-auto">
           {[
-            { id: 'spending-trend', label: 'Trend', icon: TrendingUp },
-            { id: 'category-breakdown', label: 'Summary', icon: PieChart },
-            { id: 'monthly-comparison', label: 'Monthly', icon: BarChart3 },
+            { id: 'spending-trend', label: 'Trend' },
+            { id: 'category-breakdown', label: 'Summary' },
+            { id: 'monthly-comparison', label: 'Monthly' },
           ].map((chart) => (
-            <Button
+            <button
               key={chart.id}
               onClick={() => setActiveChart(chart.id)}
-              variant={activeChart === chart.id ? 'soft' : 'ghost'}
-              size="xsm"
-              color={activeChart === chart.id ? 'teal' : 'gray'}
-              icon={chart.icon}
+              className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeChart === chart.id 
+                ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20' 
+                : 'text-gray-400 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-400'}`}
             >
               {chart.label}
-            </Button>
+            </button>
           ))}
         </div>
       </div>
 
       {/* Chart Display */}
-      <GlassCard className="border-white/5 overflow-hidden" padding="p-4">
+      <div className="rounded-2xl p-5 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 shadow-sm">
         <div className="h-64 sm:h-72 relative">
           {activeChart === 'spending-trend' && (
             <Line data={getSpendingTrendData()} options={chartOptions()} />
@@ -381,10 +421,10 @@ const SpendingAnalytics = () => {
             <Bar data={getMonthlyData()} options={chartOptions()} />
           )}
         </div>
-      </GlassCard>
+      </div>
 
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Quick Stats Grid - Executive Style */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {(() => {
           const thisMonthExpenses = transactions
             .filter(t => {
@@ -412,43 +452,45 @@ const SpendingAnalytics = () => {
             {
               label: 'Monthly Spent',
               value: formatCurrency(thisMonthExpenses),
-              color: 'teal',
+              color: 'text-teal-600 dark:text-teal-400',
+              bg: 'bg-teal-500/5',
               icon: TrendingDown
             },
             {
               label: 'Daily Average',
               value: formatCurrency(avgDailySpending),
-              color: 'blue',
+              color: 'text-sky-600 dark:text-sky-400',
+              bg: 'bg-sky-500/5',
               icon: Calendar
             },
             {
               label: 'Top Spending',
               value: topCategory ? topCategory[0] : 'N/A',
-              color: 'amber',
+              color: 'text-amber-600 dark:text-amber-400',
+              bg: 'bg-amber-500/5',
               icon: PieChart
             },
             {
               label: 'Total Logs',
               value: transactions.length.toString(),
-              color: 'gray',
+              color: 'text-gray-900 dark:text-white',
+              bg: 'bg-gray-100 dark:bg-white/10',
               icon: BarChart3
             },
           ];
 
           return stats.map((stat, index) => (
-            <GlassCard key={index} className="border-white/5 flex flex-col items-center justify-center text-center group" padding="p-3">
-              <div className="mb-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                <stat.icon className="w-4 h-4 text-gray-400" />
+            <div key={index} className="p-4 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100/50 dark:border-white/5 flex flex-col items-center text-center group hover:bg-white dark:hover:bg-white/[0.03] transition-all">
+              <div className={`w-8 h-8 flex items-center justify-center rounded-lg mb-3 ${stat.bg} ${stat.color} opacity-40 group-hover:opacity-100 transition-opacity`}>
+                <stat.icon className="w-4 h-4" />
               </div>
-              <span className="text-[10px] text-gray-500 font-semibold mb-1.5">
+              <span className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-[0.1em] mb-1.5 leading-none">
                 {stat.label}
               </span>
-              <div className="w-full">
-                <GlassBadge color={stat.color} className="w-full justify-center">
-                  {stat.value}
-                </GlassBadge>
+              <div className={`text-[11px] font-black tracking-tight ${stat.color}`}>
+                {stat.value}
               </div>
-            </GlassCard>
+            </div>
           ));
         })()}
       </div>

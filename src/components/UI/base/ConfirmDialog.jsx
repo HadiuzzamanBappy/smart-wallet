@@ -24,18 +24,18 @@ const ConfirmDialog = ({
     switch (type) {
       case 'danger':
         return {
-          icon: <AlertCircle className="w-6 h-6 text-red-500" />,
+          icon: <AlertCircle className="w-6 h-6 text-rose-600 dark:text-rose-500" />,
           color: 'red'
         };
       case 'info':
         return {
-          icon: <Info className="w-6 h-6 text-blue-500" />,
+          icon: <Info className="w-6 h-6 text-teal-600 dark:text-teal-500" />,
           color: 'teal'
         };
       default:
         return {
-          icon: <AlertTriangle className="w-6 h-6 text-orange-500" />,
-          color: 'orange'
+          icon: <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-500" />,
+          color: 'teal'
         };
     }
   };
@@ -50,25 +50,25 @@ const ConfirmDialog = ({
 
   const dialogContent = (
     <div
-      className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
+      className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300"
       onClick={handleBackdropClick}
     >
-      <GlassCard className="w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200" padding="p-6">
-        <div className="flex items-start gap-4 mb-6">
-          <div className="shrink-0 p-3 rounded-2xl bg-white/5 border border-white/10">
+      <div className="w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl border border-gray-200 dark:border-white/10 p-8 transform transition-all animate-in zoom-in-95 duration-200">
+        <div className="flex flex-col items-center text-center gap-6">
+          <div className="shrink-0 p-5 rounded-[2rem] bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-inner">
             {styles.icon}
           </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-black uppercase tracking-wider text-white">
+          <div className="space-y-3">
+            <h3 className="text-lg font-black uppercase tracking-widest text-gray-900 dark:text-white">
               {title}
             </h3>
-            <p className="text-sm text-gray-400 mt-2 leading-relaxed">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest leading-relaxed opacity-80">
               {message}
             </p>
           </div>
         </div>
 
-        <div className="flex gap-3 mt-8">
+        <div className="flex gap-3 mt-10">
           <Button
             variant="soft"
             color="gray"
@@ -79,7 +79,7 @@ const ConfirmDialog = ({
             {cancelText}
           </Button>
           <Button
-            color={styles.color === 'orange' ? 'teal' : styles.color} // Map orange to teal/emerald for our system
+            color={styles.color === 'red' ? 'red' : 'teal'}
             fullWidth
             onClick={onConfirm}
             loading={loading}
@@ -87,7 +87,7 @@ const ConfirmDialog = ({
             {confirmText}
           </Button>
         </div>
-      </GlassCard>
+      </div>
     </div>
   );
 

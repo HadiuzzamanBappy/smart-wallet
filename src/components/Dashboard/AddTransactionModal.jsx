@@ -237,31 +237,31 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
       <div className="space-y-6">
         {/* Feedback Messages */}
         {lastResponse && (lastResponse.type === 'error' || (lastResponse.type === 'success' && parsedTransactions.length === 0)) && (
-          <div className={`p-3 rounded-2xl ${lastResponse.type === 'success' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'} border border-current/20 animate-in fade-in slide-in-from-top-1`}>
-            <p className="text-xs font-black uppercase tracking-widest text-center">{lastResponse.message}</p>
+          <div className={`p-4 rounded-2xl ${lastResponse.type === 'success' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'} border animate-in fade-in slide-in-from-top-1`}>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center">{lastResponse.message}</p>
           </div>
         )}
 
         {/* Modern Glass Mode Toggle */}
-        <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10 mx-1">
+        <div className="flex bg-gray-100/50 dark:bg-white/5 p-1 rounded-2xl border border-gray-200/50 dark:border-white/10 mx-1">
           <button
             onClick={() => setMode('chat')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold transition-all duration-300 ${mode === 'chat'
-              ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30'
-              : 'text-gray-500 hover:text-gray-300'
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${mode === 'chat'
+              ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
+              : 'text-gray-400 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-400'
               }`}
           >
-            <MessageSquare className="w-4 h-4" />
+            <MessageSquare className="w-3.5 h-3.5" />
             AI Assistant
           </button>
           <button
             onClick={() => setMode('manual')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold transition-all duration-300 ${mode === 'manual'
-              ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30'
-              : 'text-gray-500 hover:text-gray-300'
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${mode === 'manual'
+              ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
+              : 'text-gray-400 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-400'
               }`}
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-3.5 h-3.5" />
             Manual Entry
           </button>
         </div>
@@ -269,7 +269,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         {mode === 'chat' ? (
           <div className="space-y-5">
             <div className="relative group">
-              <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2.5 px-1">
                 Natural Language Description
               </label>
               <textarea
@@ -277,10 +277,10 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 placeholder={`e.g., I bought groceries for ${userCurrency === 'BDT' ? '500 taka' : '50'} today`}
-                className="w-full h-32 bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-sm text-white placeholder:text-gray-600 outline-none transition-all focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/5 resize-none"
+                className="w-full h-32 bg-gray-50/50 dark:bg-white/[0.01] border border-gray-200/50 dark:border-white/5 rounded-2xl p-5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20 outline-none transition-all focus:border-teal-500/30 focus:ring-1 focus:ring-teal-500/20 resize-none font-medium"
                 rows="3"
               />
-              <div className="absolute bottom-3 right-3">
+              <div className="absolute bottom-4 right-4">
                 <Button
                   color="teal"
                   size="sm"
@@ -296,25 +296,24 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
 
             {/* Smart Templates */}
             {!isPreviewOpen && !aiLoading && (
-              <div className="space-y-3 px-1">
-                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                  Smart Templates
+              <div className="space-y-3.5 px-1">
+                <div className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">
+                  Quick Templates
                 </div>
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => setChatMessage(`Bought groceries for ${userCurrency === 'BDT' ? '500 taka' : '50'} today`)}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-teal-500/50 hover:bg-white/[0.08] transition-all group"
-                  >
-                    <span className="text-[11px] text-gray-400 group-hover:text-white transition-colors">"Bought groceries for {userCurrency === 'BDT' ? '500 taka' : '50'} today"</span>
-                    <Plus className="w-3 h-3 text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                  <button
-                    onClick={() => setChatMessage('লাঞ্চে ২৫০ টাকা খরচ করেছি')}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-teal-500/50 hover:bg-white/[0.08] transition-all group"
-                  >
-                    <span className="text-[11px] text-gray-400 group-hover:text-white transition-colors">"লাঞ্চে ২৫০ টাকা খরচ করেছি"</span>
-                    <Plus className="w-3 h-3 text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
+                <div className="flex flex-col gap-2.5">
+                  {[
+                    `Bought groceries for ${userCurrency === 'BDT' ? '500 taka' : '50'} today`,
+                    'লাঞ্চে ২৫০ টাকা খরচ করেছি'
+                  ].map((msg, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setChatMessage(msg)}
+                      className="flex items-center justify-between p-4 rounded-xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100/50 dark:border-white/5 hover:border-teal-500/30 hover:bg-white dark:hover:bg-white/[0.04] transition-all group"
+                    >
+                      <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">"{msg}"</span>
+                      <Plus className="w-3.5 h-3.5 text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -323,30 +322,26 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             {isPreviewOpen && Array.isArray(parsedTransactions) && parsedTransactions.length > 0 && (
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between px-1">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                  <div className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                     Entry Preview ({parsedTransactions.length})
                   </div>
-                  <GlassBadge
-                    label="Draft"
-                    variant="teal"
-                  />
+                  <GlassBadge label="Draft" variant="teal" />
                 </div>
 
-                <div className="space-y-2 max-h-[300px] overflow-auto px-1 custom-scrollbar">
+                <div className="space-y-2.5 max-h-[300px] overflow-auto px-1 custom-scrollbar">
                   {parsedTransactions.map((tx, idx) => (
-                    <GlassCard
+                    <div
                       key={idx}
-                      padding="p-3"
-                      className="border-white/5 hover:bg-white/[0.05]"
+                      className="p-4 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100/50 dark:border-white/10 hover:bg-white dark:hover:bg-white/[0.03] transition-all"
                     >
                       {editingIndex === idx ? (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           <GlassInput
                             value={tx.description}
                             onChange={(e) => updateParsedTransaction(idx, { description: e.target.value })}
                             placeholder="Description"
                           />
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-2 gap-3">
                             <GlassInput
                               type="number"
                               value={tx.amount}
@@ -367,35 +362,35 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                         </div>
                       ) : (
                         <div className="flex items-center justify-between group">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 flex items-center justify-center rounded-xl text-lg ${tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+                          <div className="flex items-center gap-4">
+                            <div className={`w-11 h-11 flex items-center justify-center rounded-2xl text-xl ${tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-gray-100 dark:bg-white/5 border border-gray-200/50 dark:border-white/5'}`}>
                               {getCategoryEmoji(tx.category)}
                             </div>
                             <div>
-                              <div className="text-[12px] font-bold text-white leading-tight">{tx.description}</div>
-                              <div className="text-[10px] text-gray-500 font-medium">{humanizeType(tx.type)} • {getCategoryLabel(tx.category)}</div>
+                              <div className="text-sm font-black text-gray-900 dark:text-white leading-tight tracking-tight">{tx.description}</div>
+                              <div className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1.5">{humanizeType(tx.type)} • {getCategoryLabel(tx.category)}</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <div className={`text-[12px] font-black ${tx.type === 'income' ? 'text-emerald-500' : 'text-white'}`}>
+                          <div className="flex items-center gap-4">
+                            <div className={`text-sm font-black ${tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white'} tracking-tighter`}>
                               {tx.type === 'income' ? '+' : ''}{formatCurrency(tx.amount, userCurrency)}
                             </div>
-                            <div className="flex items-center gap-1 transition-opacity">
-                              <button onClick={() => setEditingIndex(idx)} className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all">
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={() => setEditingIndex(idx)} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all border border-transparent hover:border-gray-200/50 dark:hover:border-white/10">
                                 <Edit className="w-3.5 h-3.5" />
                               </button>
-                              <button onClick={() => removeParsedTransaction(idx)} className="p-1.5 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-500 transition-all">
+                              <button onClick={() => removeParsedTransaction(idx)} className="p-2 hover:bg-rose-500/10 rounded-xl text-gray-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-500/20">
                                 <Trash className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
                         </div>
                       )}
-                    </GlassCard>
+                    </div>
                   ))}
                 </div>
 
-                <div className="pt-2 border-t border-white/5">
+                <div className="pt-4 border-t border-gray-100 dark:border-white/5">
                   <Button
                     color="teal"
                     fullWidth
@@ -410,7 +405,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                     variant="ghost"
                     color="gray"
                     fullWidth
-                    className="mt-2"
+                    className="mt-2.5"
                     onClick={() => {
                       setParsedTransactions([]);
                       setIsPreviewOpen(false);
@@ -423,10 +418,10 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             )}
           </div>
         ) : (
-          <form onSubmit={handleManualSubmit} className="space-y-5 px-1">
+          <form onSubmit={handleManualSubmit} className="space-y-6 px-1">
             {/* Manual Entry Form */}
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2.5 px-1">
                 Transaction Type
               </label>
               <Select
@@ -442,9 +437,9 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-5">
               <div>
-                <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+                <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2.5 px-1">
                   Amount ({userCurrency})
                 </label>
                 <GlassInput
@@ -458,7 +453,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+                <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2.5 px-1">
                   Date
                 </label>
                 <GlassInput
@@ -472,7 +467,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2.5 px-1">
                 Description
               </label>
               <GlassInput
@@ -486,7 +481,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2.5 px-1">
                 Category
               </label>
               <Select

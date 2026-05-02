@@ -1,7 +1,8 @@
 import React from 'react';
-import { Lock, Shield, Sparkles } from 'lucide-react';
+import { Lock, Shield, Sparkles, ArrowRight } from 'lucide-react';
+import Button from '../UI/base/Button';
 
-const HeroSection = () => {
+const HeroSection = ({ onGetStarted }) => {
   return (
     <section className="relative pt-24 pb-16 sm:pt-32 sm:pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Dynamic Background Elements */}
@@ -29,10 +30,22 @@ const HeroSection = () => {
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-medium px-4">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-medium px-4">
             The high-density financial command center that keeps your data encrypted on-device.
             No tracking. No cloud leaks. Just pure intelligence.
           </p>
+
+          <div className="flex justify-center mb-12 sm:mb-16">
+            <Button
+              onClick={onGetStarted}
+              size="lg"
+              color="teal"
+              className="!rounded-2xl sm:!rounded-3xl shadow-2xl shadow-teal-500/20 py-4 px-8 group"
+            >
+              <span className="text-[12px] sm:text-sm font-black uppercase tracking-[0.2em]">Initialize Workspace</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
 
           <div className="flex justify-center items-center px-4">
             <div className="flex items-center gap-4 sm:gap-6 px-5 sm:px-6 py-3 bg-white/50 dark:bg-white/5 backdrop-blur-xl border border-gray-100 dark:border-white/10 rounded-2xl">

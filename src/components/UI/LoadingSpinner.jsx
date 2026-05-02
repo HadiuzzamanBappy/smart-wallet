@@ -52,10 +52,10 @@ export const LoadingOverlay = ({ loading, children, text = 'Loading...' }) => {
     <div className="relative">
       {children}
       {loading && (
-        <div className="absolute inset-0 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 flex items-center justify-center backdrop-blur-sm z-10">
+        <div className="absolute inset-0 bg-white/40 dark:bg-black/60 flex items-center justify-center backdrop-blur-[4px] z-10 transition-all">
           <div className="text-center">
             <LoadingSpinner size="lg" />
-            <p className="mt-3 text-gray-600 dark:text-gray-400">{text}</p>
+            <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">{text}</p>
           </div>
         </div>
       )}

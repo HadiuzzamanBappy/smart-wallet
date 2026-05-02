@@ -131,10 +131,10 @@ const UserMenuDropdown = ({
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-3 w-64 bg-[#0f172a]/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 z-20 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-            <div className="p-5 border-b border-white/10 bg-white/5">
+          <div className="absolute right-0 mt-3 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-gray-200/60 dark:border-white/10 z-20 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="p-5 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/5">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-2xl flex items-center justify-center text-white text-lg font-black shadow-lg">
+                <div className="w-12 h-12 bg-gradient-to-tr from-teal-500 to-emerald-500 rounded-2xl flex items-center justify-center text-white text-lg font-black shadow-lg">
                   {user?.photoURL ? (
                     <img
                       src={user.photoURL}
@@ -143,14 +143,16 @@ const UserMenuDropdown = ({
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'
+                    <span className="drop-shadow-md">
+                      {userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-white truncate">
+                  <p className="text-sm font-black text-gray-900 dark:text-white truncate">
                     {userProfile?.displayName || 'User Account'}
                   </p>
-                  <p className="text-[10px] font-bold text-gray-500 truncate mt-0.5">
+                  <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 truncate mt-1 uppercase tracking-widest">
                     {userProfile?.email}
                   </p>
                 </div>
@@ -174,12 +176,12 @@ const UserMenuDropdown = ({
                       }
                     }}
                     disabled={isSignOut && logoutLoading}
-                    className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-[11px] font-bold transition-all ${isSignOut
-                      ? 'text-red-400 hover:bg-red-400/10'
-                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-[11px] font-black transition-all ${isSignOut
+                      ? 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-400/10'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
                       } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : 'active:scale-[0.98] group'}`}
                   >
-                    <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${isSignOut ? 'text-red-400' : 'text-gray-500 group-hover:text-teal-400'}`} />
+                    <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${isSignOut ? 'text-rose-600 dark:text-rose-400' : 'text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400'}`} />
                     <span className="flex-1 text-left uppercase tracking-widest">{item.label}</span>
                     {isSignOut && logoutLoading && (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -189,10 +191,10 @@ const UserMenuDropdown = ({
               })}
             </div>
 
-            <div className="bg-white/5 px-5 py-3 border-t border-white/10">
+            <div className="bg-gray-50 dark:bg-white/5 px-5 py-3 border-t border-gray-100 dark:border-white/10">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Version 1.2.0</span>
-                <span className="text-[9px] font-black text-teal-500/50 uppercase tracking-widest">Wallet Tracker</span>
+                <span className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">Version 1.2.0 Stable</span>
+                <span className="text-[9px] font-black text-teal-600 dark:text-teal-500/50 uppercase tracking-widest">Vault Secure</span>
               </div>
             </div>
           </div>

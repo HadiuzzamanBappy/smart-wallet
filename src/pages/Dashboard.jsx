@@ -121,7 +121,10 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#050b1a] transition-colors duration-500 relative overflow-hidden">
+        {/* Atmospheric Depth */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-teal-500/[0.03] dark:from-teal-500/[0.02] to-transparent pointer-events-none" />
+
         <Header
           onAddTransaction={() => setShowAddModal(true)}
           onOpenProfile={() => setShowProfileModal(true)}
@@ -132,18 +135,25 @@ const Dashboard = () => {
           onRefresh={handleProfileRefresh}
         />
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="space-y-6">
+        <main className="max-w-[1400px] mx-auto px-4 sm:px-8 py-8 sm:py-12 relative z-10">
+          <div className="space-y-8 sm:space-y-12">
             <CompactSummary onRefresh={handleRefresh} />
-            <SalaryHomeCard
-              userId={user.uid}
-              onOpen={(mode) => {
-                setSalaryManagerMode(mode);
-                setShowSalaryManager(true);
-              }}
-            />
-            <BudgetProgress />
-            <ExpandableDetailsSection onTransactionChange={handleTransactionUpdate} />
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="lg:col-span-4 space-y-8">
+                <SalaryHomeCard
+                  userId={user.uid}
+                  onOpen={(mode) => {
+                    setSalaryManagerMode(mode);
+                    setShowSalaryManager(true);
+                  }}
+                />
+                <BudgetProgress />
+              </div>
+              <div className="lg:col-span-8 space-y-8">
+                <ExpandableDetailsSection onTransactionChange={handleTransactionUpdate} />
+              </div>
+            </div>
           </div>
         </main>
 

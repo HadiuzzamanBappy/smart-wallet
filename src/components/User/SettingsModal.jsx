@@ -51,7 +51,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
   const { theme: currentTheme, setTheme } = useTheme();
 
   const [settings, setSettings] = useState({
-    theme: userProfile?.theme || currentTheme || 'system',
+    theme: currentTheme || 'system',
     language: userProfile?.language || 'en',
     budgetAlerts: userProfile?.budgetAlerts !== false,
     notifications: userProfile?.notifications !== false
@@ -64,10 +64,10 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
     if (isOpen) {
       initialThemeRef.current = currentTheme;
       setPersistStatus('idle');
-      setSettings(prev => ({ ...prev, theme: userProfile?.theme || currentTheme || 'system' }));
+      setSettings(prev => ({ ...prev, theme: currentTheme || 'system' }));
       setIsUserGoogleAuth(isGoogleUser());
     }
-  }, [isOpen, currentTheme, userProfile?.theme]);
+  }, [isOpen, currentTheme]);
 
   const themes = [
     { value: 'light', label: 'Luminous', icon: Sun },
@@ -85,11 +85,16 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
     const previousTheme = initialThemeRef.current;
     try {
       setPersistStatus('saving');
+      
+      // Update theme locally only
       if (settings.theme) {
         setTheme(settings.theme);
       }
 
-      const result = await updateUserProfile(user.uid, settings);
+      // Remove theme from settings before saving to DB
+      const { theme: _theme, ...dbSettings } = settings;
+      const result = await updateUserProfile(user.uid, dbSettings);
+      
       if (result.success) {
         if (refreshUserProfile) await refreshUserProfile();
         setPersistStatus('success');
@@ -239,7 +244,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         title="System Configuration"
         size="md"
         footer={
-          <div className="flex gap-3 w-full">
+          <div className="flex gap-4 w-full">
             <Button variant="ghost" color="gray" fullWidth onClick={onClose}>
               Cancel
             </Button>
@@ -249,19 +254,20 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
           </div>
         }
       >
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Theme & Visuals */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
-                <Sun className="w-3.5 h-3.5 text-teal-500" />
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Interface Theme</span>
+              <div className="flex items-center gap-2.5">
+                <Sun className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Appearance Suite</span>
               </div>
               {persistStatus !== 'idle' && (
-                <GlassBadge
-                  label={persistStatus === 'saving' ? 'Saving...' : persistStatus === 'success' ? 'Saved' : 'Error'}
-                  variant={persistStatus === 'success' ? 'teal' : persistStatus === 'error' ? 'red' : 'gray'}
-                />
+                <div className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${persistStatus === 'success' 
+                  ? 'bg-emerald-500/5 text-emerald-600 border-emerald-500/10' 
+                  : persistStatus === 'error' ? 'bg-rose-500/5 text-rose-600 border-rose-500/10' : 'bg-gray-500/5 text-gray-600 border-gray-500/10'}`}>
+                  {persistStatus === 'saving' ? 'Syncing...' : persistStatus === 'success' ? 'Vault Updated' : 'Sync Error'}
+                </div>
               )}
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -272,13 +278,13 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                   <button
                     key={t.value}
                     onClick={() => setSettings(prev => ({ ...prev, theme: t.value }))}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all duration-300 ${isActive
-                      ? 'bg-teal-500/10 border-teal-500/50 shadow-lg shadow-teal-500/5'
-                      : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
+                    className={`flex flex-col items-center gap-3 p-5 rounded-2xl border transition-all duration-500 ${isActive
+                      ? 'bg-teal-500/5 border-teal-500/30 shadow-lg shadow-teal-500/5'
+                      : 'bg-gray-50/50 dark:bg-white/[0.01] border-gray-100 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-white/10 hover:border-gray-200 dark:hover:border-white/10'
                       }`}
                   >
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-teal-400' : 'text-gray-500'}`} />
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-white' : 'text-gray-500'}`}>
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-teal-600 dark:text-teal-400' : 'text-gray-400 dark:text-gray-600'}`} />
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600'}`}>
                       {t.label}
                     </span>
                   </button>
@@ -289,10 +295,10 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
           {/* Regional Settings */}
           <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 px-1">
-                <Globe className="w-3.5 h-3.5 text-teal-500" />
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Language</span>
+            <div className="space-y-3">
+              <label className="flex items-center gap-2.5 px-1">
+                <Globe className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Localization</span>
               </label>
               <Select
                 value={settings.language}
@@ -300,32 +306,32 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                 options={languages.map(l => ({ value: l.value, label: `${l.flag} ${l.label}` }))}
               />
             </div>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 px-1">
-                <Smartphone className="w-3.5 h-3.5 text-teal-500" />
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Device Sync</span>
+            <div className="space-y-3">
+              <label className="flex items-center gap-2.5 px-1">
+                <Smartphone className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Build Status</span>
               </label>
-              <div className="h-10 bg-white/5 border border-white/5 rounded-2xl flex items-center px-4">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">v1.2.0</span>
+              <div className="h-11 bg-gray-50/50 dark:bg-white/[0.01] border border-gray-100 dark:border-white/5 rounded-2xl flex items-center px-4">
+                <span className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em]">v1.2.0 AUDITED</span>
               </div>
             </div>
           </div>
 
           {/* Intelligence Settings */}
-          <GlassCard padding="p-5" className="bg-white/[0.02] border-white/5">
-            <div className="flex items-center gap-2 mb-4">
-              <ShieldCheck className="w-4 h-4 text-teal-500" />
-              <span className="text-[10px] font-black text-white uppercase tracking-widest">Security & Intelligence</span>
+          <div className="p-6 rounded-2xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 shadow-sm">
+            <div className="flex items-center gap-2.5 mb-6">
+              <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              <span className="text-[10px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Privacy & Intelligence</span>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {[
-                { key: 'budgetAlerts', label: 'Predictive Budget Alerts', desc: 'Notify when approaching spending ceilings' },
-                { key: 'notifications', label: 'Financial Insights', desc: 'Weekly analytics and anomaly detection' }
+                { key: 'budgetAlerts', label: 'Predictive Ceilings', desc: 'Notify when approaching spending thresholds' },
+                { key: 'notifications', label: 'Executive Insights', desc: 'Weekly analytics and anomaly reporting' }
               ].map(item => (
                 <label key={item.key} className="flex items-center justify-between cursor-pointer group">
-                  <div className="flex-1">
-                    <p className="text-[11px] font-black text-gray-300 uppercase tracking-widest group-hover:text-white transition-colors">{item.label}</p>
-                    <p className="text-[10px] text-gray-500 font-medium mt-0.5">{item.desc}</p>
+                  <div className="flex-1 pr-4">
+                    <p className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-widest group-hover:text-teal-600 transition-colors">{item.label}</p>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest mt-1.5 opacity-60 leading-none">{item.desc}</p>
                   </div>
                   <div className="relative inline-flex items-center cursor-pointer ml-4">
                     <input
@@ -334,56 +340,60 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                       checked={settings[item.key]}
                       onChange={(e) => setSettings(prev => ({ ...prev, [item.key]: e.target.checked }))}
                     />
-                    <div className="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-500/50 peer-checked:after:bg-teal-400"></div>
+                    <div className="w-11 h-6 bg-gray-200 dark:bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500 shadow-sm border border-transparent dark:border-white/5"></div>
                   </div>
                 </label>
               ))}
             </div>
-          </GlassCard>
+          </div>
 
           {/* Data Governance */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center gap-2 px-1">
-              <Database className="w-3.5 h-3.5 text-teal-500" />
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Data Sovereignty</span>
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center gap-2.5 px-1">
+              <Database className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Sovereignty Controls</span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={handleExportData}
-                className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-teal-500/30 transition-all group"
+                className="flex items-center justify-between p-5 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.03] hover:border-teal-500/30 transition-all group shadow-sm"
               >
                 <div className="text-left">
-                  <p className="text-[11px] font-black text-white uppercase tracking-widest">Vault Export</p>
-                  <p className="text-[9px] text-gray-500 font-bold uppercase mt-0.5">JSON Snapshot</p>
+                  <p className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-widest">Vault Export</p>
+                  <p className="text-[9px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest mt-1.5 opacity-60">JSON Snapshot</p>
                 </div>
-                <Download className="w-4 h-4 text-gray-600 group-hover:text-teal-400 transition-colors" />
+                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                  <Download className="w-4 h-4" />
+                </div>
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition-all group"
+                className="flex items-center justify-between p-5 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.03] hover:border-emerald-500/30 transition-all group shadow-sm"
               >
                 <div className="text-left">
-                  <p className="text-[11px] font-black text-white uppercase tracking-widest">Restore Data</p>
-                  <p className="text-[9px] text-gray-500 font-bold uppercase mt-0.5">Import Vault</p>
+                  <p className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-widest">Import Vault</p>
+                  <p className="text-[9px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest mt-1.5 opacity-60">Restore Data</p>
                 </div>
-                <Plus className="w-4 h-4 text-gray-600 group-hover:text-emerald-400 transition-colors" />
+                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  <Plus className="w-4 h-4" />
+                </div>
               </button>
             </div>
             <input ref={fileInputRef} type="file" accept="application/json" onChange={onFileSelect} className="hidden" />
 
             {/* Import Status Feedback */}
             {importResult && (
-              <div className={`p-4 rounded-2xl border ${importResult.success ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-500' : 'bg-red-500/5 border-red-500/10 text-red-500'} animate-in fade-in zoom-in-95 duration-300`}>
-                <div className="flex items-center gap-3">
-                  {importResult.success ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              <div className={`p-5 rounded-2xl border ${importResult.success ? 'bg-emerald-500/[0.03] border-emerald-500/10 text-emerald-700 dark:text-emerald-500' : 'bg-rose-500/[0.03] border-rose-500/10 text-rose-700 dark:text-rose-500'} animate-in slide-in-from-top-2 duration-500`}>
+                <div className="flex items-center gap-4">
+                  {importResult.success ? <CheckCircle className="w-5 h-5 opacity-60" /> : <AlertCircle className="w-5 h-5 opacity-60" />}
                   <div className="flex-1">
-                    <p className="text-[11px] font-black uppercase tracking-widest">
-                      {importResult.success ? 'Vault Restored' : 'Import Aborted'}
+                    <p className="text-[10px] font-black uppercase tracking-widest">
+                      {importResult.success ? 'Vault Integrated' : 'Integration Failed'}
                     </p>
-                    <p className="text-[10px] opacity-70 font-bold mt-0.5 uppercase tracking-wider">
+                    <p className="text-[9px] font-black mt-1 uppercase tracking-[0.1em] leading-relaxed opacity-60">
                       {importResult.success 
-                        ? `Integrated ${importResult.imported} of ${importResult.total} ledger entries.`
-                        : importResult.error || 'System validation failed.'}
+                        ? `Audit complete: ${importResult.imported} of ${importResult.total} entries synchronized.`
+                        : importResult.error || 'Identity verification mismatch.'}
                     </p>
                   </div>
                 </div>
@@ -392,13 +402,15 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
             <button
               onClick={handleDeleteAccount}
-              className="w-full flex items-center justify-between p-4 rounded-2xl bg-red-500/5 border border-red-500/10 hover:bg-red-500/10 hover:border-red-500/30 transition-all group mt-2"
+              className="w-full flex items-center justify-between p-5 rounded-2xl bg-rose-500/[0.03] dark:bg-rose-500/[0.01] border border-rose-500/10 hover:bg-rose-500/10 transition-all group mt-2 shadow-sm"
             >
               <div className="text-left">
-                <p className="text-[11px] font-black text-red-400 uppercase tracking-widest">Purge Vault</p>
-                <p className="text-[9px] text-red-500/50 font-bold uppercase mt-0.5">Permanent Erasure</p>
+                <p className="text-[11px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">Purge Protocol</p>
+                <p className="text-[9px] text-rose-500/40 dark:text-rose-500/20 font-black uppercase tracking-widest mt-1.5 leading-none">Total Vault Erasure</p>
               </div>
-              <Trash2 className="w-4 h-4 text-red-500/40 group-hover:text-red-500 transition-colors" />
+              <div className="w-8 h-8 rounded-lg bg-rose-500/5 flex items-center justify-center text-rose-400 group-hover:text-rose-600 transition-colors">
+                <Trash2 className="w-4 h-4" />
+              </div>
             </button>
           </div>
         </div>
@@ -409,42 +421,48 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         <Modal
           isOpen={showImportModal}
           onClose={() => setShowImportModal(false)}
-          title="Import Wallet Data"
+          title="Vault Integration"
           size="sm"
           footer={
-            <div className="flex gap-3 w-full">
+            <div className="flex gap-4 w-full">
               <Button variant="ghost" color="gray" fullWidth onClick={() => setShowImportModal(false)}>Cancel</Button>
-              <Button color="teal" fullWidth onClick={startImport} loading={importLoading} icon={Check}>Start Import</Button>
+              <Button color="teal" fullWidth onClick={startImport} loading={importLoading} icon={Check}>Execute Import</Button>
             </div>
           }
         >
-          <div className="space-y-5">
-            <GlassCard className="bg-emerald-500/5 border-emerald-500/10" padding="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                  <Database className="w-5 h-5 text-emerald-500" />
+          <div className="space-y-6">
+            <div className="p-6 rounded-2xl bg-emerald-500/[0.03] dark:bg-emerald-500/[0.01] border border-emerald-500/10">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 rounded-2xl bg-white dark:bg-emerald-500/5 flex items-center justify-center border border-emerald-500/10 shadow-sm">
+                  <Database className="w-7 h-7 text-emerald-600 dark:text-emerald-500" />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-white">{importPreview?.totalTransactions} Records Found</p>
-                  <p className="text-[10px] text-emerald-500/70 font-bold uppercase tracking-widest">Verified Vault Snapshot</p>
+                  <p className="text-sm font-black text-gray-900 dark:text-white tracking-tight">{importPreview?.totalTransactions} Audit Entries</p>
+                  <p className="text-[10px] text-emerald-600 dark:text-emerald-500/50 font-black uppercase tracking-[0.2em] mt-1.5">Integrity Verified</p>
                 </div>
               </div>
-            </GlassCard>
+            </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <label className="flex items-center justify-between cursor-pointer group">
-                <div>
-                  <p className="text-[11px] font-black text-gray-300 uppercase tracking-widest">Overwrite Conflict</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">Preserve original system identifiers</p>
+                <div className="flex-1 pr-4">
+                  <p className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-widest group-hover:text-teal-600 transition-colors">Legacy Persistence</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest mt-1.5 opacity-60 leading-none">Preserve original identifiers</p>
                 </div>
-                <input type="checkbox" checked={preserveIds} onChange={(e) => setPreserveIds(e.target.checked)} className="w-4 h-4 rounded border-white/10 bg-white/5 text-teal-500" />
+                <div className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked={preserveIds} onChange={(e) => setPreserveIds(e.target.checked)} className="sr-only peer" />
+                  <div className="w-10 h-5 bg-gray-200 dark:bg-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-teal-500"></div>
+                </div>
               </label>
               <label className="flex items-center justify-between cursor-pointer group">
-                <div>
-                  <p className="text-[11px] font-black text-gray-300 uppercase tracking-widest">Duplicate Shield</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">Skip already existing ledger entries</p>
+                <div className="flex-1 pr-4">
+                  <p className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-widest group-hover:text-teal-600 transition-colors">Anomaly Filter</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest mt-1.5 opacity-60 leading-none">Skip duplicate ledger entries</p>
                 </div>
-                <input type="checkbox" checked={dedupe} onChange={(e) => setDedupe(e.target.checked)} className="w-4 h-4 rounded border-white/10 bg-white/5 text-teal-500" />
+                <div className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked={dedupe} onChange={(e) => setDedupe(e.target.checked)} className="sr-only peer" />
+                  <div className="w-10 h-5 bg-gray-200 dark:bg-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-teal-500"></div>
+                </div>
               </label>
             </div>
           </div>
@@ -456,8 +474,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleConfirmDelete}
-        title="Purge Vault Data"
-        message="This will permanently incinerate all financial records and configurations. Your identity account will remain active. This action is irreversible."
+        title="Protocol: Erasure"
+        message="This operation will incinerate all financial audit logs and system configurations. Identity accounts persist, but vault contents are purged permanently."
         confirmText="Confirm Purge"
         type="danger"
       />
@@ -468,33 +486,33 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         title="Identity Verification"
         size="sm"
         footer={
-          <div className="flex gap-3 w-full">
+          <div className="flex gap-4 w-full">
             <Button variant="ghost" color="gray" fullWidth onClick={() => setShowReauthDialog(false)}>Cancel</Button>
-            <Button color="red" fullWidth onClick={handleReauthAndDelete} loading={deleteLoading} icon={Trash2}>Verify & Purge</Button>
+            <Button color="red" fullWidth onClick={handleReauthAndDelete} loading={deleteLoading} icon={Trash2}>Execute Purge</Button>
           </div>
         }
       >
-        <div className="space-y-5">
-          <GlassCard className="bg-red-500/5 border-red-500/10" padding="p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+        <div className="space-y-6">
+          <div className="p-5 rounded-2xl bg-rose-500/[0.03] dark:bg-rose-500/[0.01] border border-rose-500/10">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-[11px] font-black text-red-400 uppercase tracking-widest">High-Risk Operation</p>
-                <p className="text-[10px] text-red-500/70 font-medium mt-1 leading-relaxed">
-                  To proceed with the total erasure of your vault, please provide your account password or verify your email.
+                <p className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-[0.2em] mb-2">High-Risk Operation</p>
+                <p className="text-[10px] text-rose-700/60 dark:text-rose-500/40 font-black uppercase tracking-widest leading-relaxed">
+                  Verification required to initiate total vault erasure protocol.
                 </p>
               </div>
             </div>
-          </GlassCard>
+          </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Confirmation Key</label>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest px-1">Confirmation Key</label>
             {isUserGoogleAuth ? (
               <GlassInput
                 type="email"
                 value={emailConfirmation}
                 onChange={(e) => setEmailConfirmation(e.target.value)}
-                placeholder="Account Email"
+                placeholder="Account Identity Email"
                 required
               />
             ) : (
@@ -502,7 +520,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Account Password"
+                placeholder="Vault Access Password"
                 required
               />
             )}
@@ -513,18 +531,20 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
       <Modal
         isOpen={showEraseComplete}
         onClose={() => { setShowEraseComplete(false); onClose?.(); }}
-        title="Operation Complete"
+        title="Operation: Success"
         size="sm"
       >
-        <div className="flex flex-col items-center gap-4 py-6">
-          <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 flex items-center justify-center">
-            <CheckCircle className="w-8 h-8 text-emerald-500" />
+        <div className="flex flex-col items-center gap-6 py-10 px-4">
+          <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-500/5 dark:bg-emerald-500/[0.01] border border-emerald-500/10 flex items-center justify-center shadow-inner">
+            <CheckCircle className="w-10 h-10 text-emerald-600 dark:text-emerald-500 opacity-60" />
           </div>
-          <div className="text-center space-y-1">
-            <p className="text-sm font-black text-white">Vault Purged Successfully</p>
-            <p className="text-xs text-gray-500 font-medium px-4">All local and cloud financial records have been permanently erased.</p>
+          <div className="text-center space-y-3">
+            <p className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Vault Purged</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-widest px-8 leading-relaxed opacity-60">
+              Operational logs and ledger entries have been permanently decommissioned.
+            </p>
           </div>
-          <Button color="teal" className="mt-4 min-w-[120px]" onClick={() => { setShowEraseComplete(false); onClose?.(); }}>Return to System</Button>
+          <Button color="teal" className="mt-4 min-w-[180px]" onClick={() => { setShowEraseComplete(false); onClose?.(); }}>Return to Hub</Button>
         </div>
       </Modal>
     </>

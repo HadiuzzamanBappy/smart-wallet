@@ -226,83 +226,70 @@ const CompactSummary = ({ refreshTrigger, onRefresh }) => {
   return (
     <div className="w-full">
       <SectionHeader
-        subtitle="Overview"
+        subtitle="Operational Intelligence"
         title={userProfile?.displayName || 'Command Center'}
       >
-        <div className="flex items-center gap-2">
-          <Button
-            variant="icon"
-            size="xsm"
-            color="gray"
+        <div className="flex items-center gap-2.5">
+          <button
             onClick={() => setShowMonthlyBreakdown(true)}
-            icon={BarChart3}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all border border-transparent hover:border-gray-200/50 dark:hover:border-white/10"
             title="Breakdown"
-          />
-          <Button
-            variant="icon"
-            size="xsm"
-            color="gray"
+          >
+            <BarChart3 className="w-4 h-4" />
+          </button>
+          <button
             onClick={refreshData}
-            loading={refreshing}
-            icon={RefreshCw}
-            title="Refresh"
-          />
+            disabled={refreshing}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all border border-transparent hover:border-gray-200/50 dark:hover:border-white/10 disabled:opacity-30"
+            title="Refresh Suite"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </SectionHeader>
 
       {showSkeleton ? (
         <CompactSummarySkeleton />
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {summaryCards.map((card, index) => {
             const spanClass = index >= 2 ? 'col-span-2 md:col-span-1' : '';
 
             return (
-              <GlassCard
+              <div
                 key={index}
-                className={`${spanClass} group relative overflow-hidden`}
+                className={`${spanClass} group relative overflow-hidden rounded-2xl p-4 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 transition-all duration-300 ${card.isClickable ? 'cursor-pointer hover:bg-white dark:hover:bg-white/[0.04] active:scale-[0.98]' : ''}`}
                 onClick={card.onClick}
-                hover={card.isClickable}
-                border={card.border}
-                padding="p-2.5"
               >
-                <div className="flex items-center gap-2.5">
-                  <IconBox
-                    icon={card.icon}
-                    variant="glass"
-                    colorClass={card.color}
-                    size="xs"
-                    className="group-hover:scale-110 transition-transform"
-                  />
+                <div className="flex items-center gap-3.5 relative z-10">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.bgColor} ${card.color} border ${card.border} transition-transform group-hover:scale-110`}>
+                    <card.icon className="w-4.5 h-4.5" />
+                  </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-0.5">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-1 leading-none">
                       {card.label}
                     </div>
-                    <div className="flex items-baseline gap-1.5 flex-wrap min-w-0">
-                      <span className="text-sm font-black text-gray-900 dark:text-white truncate">
+                    <div className="flex items-baseline gap-2 flex-wrap min-w-0">
+                      <span className="text-sm font-black text-gray-900 dark:text-white truncate tracking-tighter">
                         {card.value}
                       </span>
                       {card.total && (
-                        <span className="text-[9px] font-bold text-gray-500 truncate">
-                          ({card.total} TOT)
+                        <span className="text-[9px] font-black text-gray-400 dark:text-gray-600 truncate uppercase tracking-tighter opacity-60">
+                          / {card.total}
                         </span>
                       )}
                     </div>
                   </div>
 
                   {card.isClickable && (
-                    <IconBox
-                      icon={Eye}
-                      size="xs"
-                      variant="glass"
-                      colorClass="text-gray-500 group-hover:text-teal-400"
-                      className="shrink-0 transition-colors"
-                    />
+                    <div className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg bg-gray-100/50 dark:bg-white/5 text-gray-400 group-hover:text-teal-500 transition-colors">
+                      <Eye className="w-3 h-3" />
+                    </div>
                   )}
                 </div>
-                {/* Subtle decorative background glow */}
-                <div className={`absolute -bottom-4 -right-4 w-10 h-10 rounded-full blur-2xl opacity-10 ${card.bgColor.replace('/10', '/40')}`} />
-              </GlassCard>
+                {/* Refined decorative background glow */}
+                <div className={`absolute -bottom-8 -right-8 w-16 h-16 rounded-full blur-3xl opacity-[0.05] dark:opacity-[0.1] ${card.bgColor}`} />
+              </div>
             );
           })}
         </div>

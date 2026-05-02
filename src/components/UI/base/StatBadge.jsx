@@ -5,11 +5,11 @@ import React from 'react';
  */
 const StatBadge = ({ label, value, variant = 'gray', className = '' }) => {
     const variants = {
-        gray: 'bg-white/5 text-gray-500 border-white/10',
-        orange: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
-        emerald: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-        red: 'bg-red-500/10 text-red-500 border-red-500/20',
-        teal: 'bg-teal-500/10 text-teal-500 border-teal-500/20'
+        gray: 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-white/10',
+        orange: 'bg-orange-500/10 text-orange-600 dark:text-orange-500 border-orange-500/20',
+        emerald: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-emerald-500/20',
+        red: 'bg-red-500/10 text-red-600 dark:text-red-500 border-red-500/20',
+        teal: 'bg-teal-500/10 text-teal-600 dark:text-teal-500 border-teal-500/20'
     };
 
     return (

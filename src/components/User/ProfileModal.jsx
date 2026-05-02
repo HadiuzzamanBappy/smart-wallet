@@ -79,10 +79,10 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Profile Identity"
+      title="Identity Profile"
       size="md"
       footer={
-        <div className="flex gap-3 w-full">
+        <div className="flex gap-4 w-full">
           <Button
             variant="ghost"
             color="gray"
@@ -100,17 +100,17 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             loading={loading}
             icon={Check}
           >
-            Save Changes
+            Update Audit
           </Button>
         </div>
       }
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-6">
         {/* User Identity Header */}
-        <GlassCard padding="p-4" className="bg-white/5 border-white/10">
-          <div className="flex items-center gap-4">
-            <div className="relative group">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-teal-500/20 overflow-hidden">
+        <div className="p-5 rounded-2xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 shadow-sm">
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <div className="w-16 h-16 bg-gradient-to-tr from-teal-500 to-emerald-500 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-teal-500/10 overflow-hidden border-2 border-white dark:border-gray-900">
                 {user?.photoURL ? (
                   <img 
                     src={user.photoURL} 
@@ -119,63 +119,67 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'
+                  <span className="drop-shadow-md">
+                    {userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
                 )}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-teal-500 border-4 border-[#0f172a] rounded-full flex items-center justify-center">
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-teal-500 border-4 border-white dark:border-gray-900 rounded-full flex items-center justify-center shadow-lg">
                 <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
-                <Mail className="w-3 h-3" />
-                <span className="text-[10px] font-bold uppercase tracking-widest truncate">{user?.email}</span>
+              <div className="flex items-center gap-2.5 text-gray-500 dark:text-gray-400 mb-2">
+                <Mail className="w-3.5 h-3.5 opacity-50" />
+                <span className="text-[10px] font-black uppercase tracking-[0.1em] truncate">{user?.email}</span>
               </div>
-              <div className="flex items-center gap-2 text-gray-500">
-                <Calendar className="w-3 h-3" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">
-                  Active since {new Date(user?.metadata?.creationTime).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+              <div className="flex items-center gap-2.5 text-gray-400 dark:text-gray-600">
+                <Calendar className="w-3.5 h-3.5 opacity-50" />
+                <span className="text-[10px] font-black uppercase tracking-[0.1em]">
+                  Audit Initiated {new Date(user?.metadata?.creationTime).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
                 </span>
               </div>
             </div>
           </div>
-        </GlassCard>
-
-        {/* Display Name */}
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 px-1">
-            <User className="w-3.5 h-3.5 text-teal-500" />
-            <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Legal Name</span>
-          </label>
-          <GlassInput
-            name="displayName"
-            value={formData.displayName}
-            onChange={handleInputChange}
-            placeholder="Executive Name"
-            required
-          />
         </div>
 
-        {/* Currency Selection */}
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 px-1">
-            <span className="text-teal-500 font-bold text-sm">৳</span>
-            <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Base Currency</span>
-          </label>
-          <Select
-            name="currency"
-            value={formData.currency}
-            onChange={handleInputChange}
-            options={currencies.map(c => ({
-              value: c.value,
-              label: `${c.flag} ${c.label}`
-            }))}
-          />
+        <div className="grid grid-cols-1 gap-5">
+          {/* Display Name */}
+          <div className="space-y-2.5">
+            <label className="flex items-center gap-2 px-1">
+              <User className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+              <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Audit Persona</span>
+            </label>
+            <GlassInput
+              name="displayName"
+              value={formData.displayName}
+              onChange={handleInputChange}
+              placeholder="Executive Name"
+              required
+            />
+          </div>
+
+          {/* Currency Selection */}
+          <div className="space-y-2.5">
+            <label className="flex items-center gap-2 px-1">
+              <span className="text-teal-600 dark:text-teal-400 font-black text-sm">৳</span>
+              <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Master Currency</span>
+            </label>
+            <Select
+              name="currency"
+              value={formData.currency}
+              onChange={handleInputChange}
+              options={currencies.map(c => ({
+                value: c.value,
+                label: `${c.flag} ${c.label}`
+              }))}
+            />
+          </div>
         </div>
 
-        <div className="p-4 bg-teal-500/5 rounded-2xl border border-teal-500/10">
-          <p className="text-[10px] text-teal-500/70 font-bold uppercase tracking-widest leading-relaxed">
-            Your currency preference affects all analytics, historical logs, and automated insights across the platform.
+        <div className="p-4 rounded-2xl bg-teal-500/[0.03] dark:bg-teal-500/[0.01] border border-teal-500/10">
+          <p className="text-[10px] text-teal-600/60 dark:text-teal-400/40 font-black uppercase tracking-widest leading-relaxed text-center">
+            Currency modifications propagate through all visual analytics and historical audit logs.
           </p>
         </div>
       </form>

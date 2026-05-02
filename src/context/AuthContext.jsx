@@ -1,19 +1,15 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
 import { getUserProfile } from '../services/transactionService';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { encryptUserProfile } from '../utils/encryption';
 import { AuthContext } from './createAuthContext';
-import { useTheme } from '../hooks/useTheme';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const { setTheme } = useTheme();
-  const lastAppliedUidRef = useRef(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -24,25 +20,6 @@ export const AuthProvider = ({ children }) => {
           const profileResult = await getUserProfile(u.uid);
           if (profileResult.success) {
             setUserProfile(profileResult.data);
-            // Apply saved theme preference or default to system via ThemeContext.
-            // Only apply if:
-            // - we have never applied a theme for this user in this session, OR
-            // - the profile's updatedAt is newer than the last local theme change.
-            const savedTheme = profileResult.data.theme || 'system';
-            try {
-              const lastUid = lastAppliedUidRef.current;
-              const profileUpdatedAt = profileResult.data.updatedAt && profileResult.data.updatedAt.toDate ? profileResult.data.updatedAt.toDate() : (profileResult.data.updatedAt ? new Date(profileResult.data.updatedAt) : null);
-              const localUpdatedAtStr = (() => {
-                try { return localStorage.getItem('wallet-theme-updatedAt'); } catch { return null; }
-              })();
-              const localUpdatedAt = localUpdatedAtStr ? new Date(localUpdatedAtStr) : null;
-
-              const shouldApply = !lastUid || lastUid !== u.uid || (profileUpdatedAt && localUpdatedAt && profileUpdatedAt > localUpdatedAt) || (profileUpdatedAt && !localUpdatedAt);
-              if (shouldApply) {
-                setTheme(savedTheme);
-                lastAppliedUidRef.current = u.uid;
-              }
-            } catch (err) { void err; }
           } else {
             // Create a basic profile if none exists and persist it to Firestore (auto-migration)
             const defaultDisplayName = u.displayName || (u.providerData && u.providerData[0] && u.providerData[0].displayName) || (u.email ? String(u.email).split('@')[0] : 'User');
@@ -51,7 +28,6 @@ export const AuthProvider = ({ children }) => {
               email: u.email,
               displayName: defaultDisplayName,
               currency: 'BDT',
-              theme: 'system',
               createdAt: Timestamp.now(),
               updatedAt: Timestamp.now()
             };
@@ -64,16 +40,8 @@ export const AuthProvider = ({ children }) => {
             } catch (err) {
               console.error('Failed to create default user profile:', err);
               // Fall back to lightweight local profile so UI still works
-              setUserProfile({ uid: u.uid, email: u.email, displayName: defaultDisplayName, theme: 'system' });
+              setUserProfile({ uid: u.uid, email: u.email, displayName: defaultDisplayName });
             }
-
-            try {
-              const lastUid = lastAppliedUidRef.current;
-              if (!lastUid || lastUid !== u.uid) {
-                setTheme('system');
-                lastAppliedUidRef.current = u.uid;
-              }
-            } catch (err) { void err; }
           }
         } catch (err) {
           console.error('Error fetching profile during auth state change:', err);
@@ -81,15 +49,13 @@ export const AuthProvider = ({ children }) => {
       } else {
         setUser(null);
         setUserProfile(null);
-        // Apply system theme for non-authenticated users via ThemeContext
-        try { setTheme('system'); } catch (err) { void err; }
       }
 
       setLoading(false);
     });
 
     return unsubscribe;
-  }, [setTheme]);
+  }, []);
 
   // Function to refresh user profile from Firebase
   const refreshUserProfile = async () => {

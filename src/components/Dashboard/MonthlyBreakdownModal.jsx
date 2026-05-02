@@ -84,17 +84,19 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
           </div>
         ) : monthlyData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <IconBox icon={Calendar} size="lg" colorClass="text-gray-500" bgClass="bg-white/5" className="mb-4 opacity-40" />
-            <h3 className="text-sm font-bold text-white/80 mb-1">No transaction history</h3>
-            <p className="text-[11px] text-gray-500 font-medium max-w-[200px]">
-              We need at least one income or expense entry to generate your monthly report.
+            <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
+              <Calendar className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 dark:text-gray-600 mb-2">No Reports Available</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400/60 max-w-[200px] leading-relaxed">
+              Generate transactions to activate your intelligence suite.
             </p>
           </div>
         ) : (
           <>
             {/* Month Selector */}
             <div className="px-1">
-              <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">Select Reporting Month</label>
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2.5 px-1">Select Reporting Period</label>
               <Select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
@@ -106,86 +108,91 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
             </div>
 
             {!selectedData ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <IconBox icon={Calendar} size="lg" colorClass="text-gray-500" bgClass="bg-white/5" className="mb-4 opacity-40" />
-                <h3 className="text-sm font-bold text-white/80 mb-1">No monthly records</h3>
-                <p className="text-[11px] text-gray-500 font-medium">No income or expense data found for this period.</p>
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
+                  <Calendar className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 dark:text-gray-600">No Records Found</h3>
               </div>
             ) : (
-              <div className="space-y-4">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <GlassCard border="border-emerald-500/10" padding="p-3">
-                <div className="flex items-center gap-2 mb-3">
-                  <IconBox icon={TrendingUp} size="sm" colorClass="text-emerald-400" bgClass="bg-emerald-500/10" />
-                  <span className="text-[10px] font-semibold text-emerald-400/80">Monthly Income</span>
-                </div>
-                <div className="text-lg font-bold text-white tracking-tighter">
-                  {formatCurrencyWithUser(selectedData.income, userProfile)}
-                </div>
-                <div className="text-[10px] text-gray-500 font-medium mt-1">
-                  {selectedData.incomeCount} transactions
-                </div>
-              </GlassCard>
-
-              <GlassCard border="border-rose-500/10" padding="p-3">
-                <div className="flex items-center gap-2 mb-3">
-                  <IconBox icon={TrendingDown} size="sm" colorClass="text-rose-400" bgClass="bg-rose-500/10" />
-                  <span className="text-[10px] font-semibold text-rose-400/80">Monthly Expense</span>
-                </div>
-                <div className="text-lg font-bold text-white tracking-tighter">
-                  {formatCurrencyWithUser(selectedData.expense, userProfile)}
-                </div>
-                <div className="text-[10px] text-gray-500 font-medium mt-1">
-                  {selectedData.expenseCount} transactions
-                </div>
-              </GlassCard>
-            </div>
-
-            {/* Net Change */}
-            <GlassCard padding="p-3" border="border-white/5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-gray-500">Net Balance Shift</span>
-                <span className={`text-sm font-bold tracking-tighter ${selectedData.income - selectedData.expense >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {selectedData.income - selectedData.expense >= 0 ? '+' : ''}
-                  {formatCurrencyWithUser(selectedData.income - selectedData.expense, userProfile)}
-                </span>
-              </div>
-            </GlassCard>
-
-            {/* Transaction Details */}
-            <div className="space-y-3">
-              <h4 className="text-[11px] font-semibold text-gray-500 px-1">Detailed Ledger ({selectedData.transactions.length})</h4>
-              <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
-                {selectedData.transactions
-                  .filter(tx => tx.type === 'income' || tx.type === 'expense')
-                  .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
-                  .map(tx => (
-                    <GlassCard key={tx.id} padding="p-2" border="border-white/5" className="group hover:bg-white/[0.04]">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-semibold text-white/90 truncate">
-                            {tx.description}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] font-medium text-gray-500/80">
-                              {new Date(tx.date || tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </span>
-                            <div className="w-1 h-1 rounded-full bg-gray-700" />
-                            <span className="text-[10px] font-medium text-gray-500/80">
-                              {tx.category}
-                            </span>
-                          </div>
-                        </div>
-                        <div className={`text-xs font-bold tracking-tighter whitespace-nowrap ${tx.type === 'income' ? 'text-emerald-400/90' : 'text-rose-400/90'}`}>
-                          {tx.type === 'income' ? '+' : '-'}{formatCurrencyWithUser(tx.amount, userProfile)}
-                        </div>
+              <div className="space-y-5">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-2xl bg-emerald-500/5 dark:bg-emerald-500/[0.02] border border-emerald-500/10">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                    </GlassCard>
-                  ))}
+                      <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Total Inflow</span>
+                    </div>
+                    <div className="text-lg font-black text-gray-900 dark:text-white tracking-tighter">
+                      {formatCurrencyWithUser(selectedData.income, userProfile)}
+                    </div>
+                    <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 mt-2">
+                      {selectedData.incomeCount} Logs
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-rose-500/5 dark:bg-rose-500/[0.02] border border-rose-500/10">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center">
+                        <TrendingDown className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400">Total Outflow</span>
+                    </div>
+                    <div className="text-lg font-black text-gray-900 dark:text-white tracking-tighter">
+                      {formatCurrencyWithUser(selectedData.expense, userProfile)}
+                    </div>
+                    <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 mt-2">
+                      {selectedData.expenseCount} Logs
+                    </div>
+                  </div>
+                </div>
+
+                {/* Net Change */}
+                <div className="p-4 rounded-2xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">Net Surplus / Deficit</span>
+                  <div className={`px-3 py-1 rounded-lg text-sm font-black tracking-tighter border ${selectedData.income - selectedData.expense >= 0 
+                    ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20' 
+                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'}`}>
+                    {selectedData.income - selectedData.expense >= 0 ? '+' : ''}
+                    {formatCurrencyWithUser(selectedData.income - selectedData.expense, userProfile)}
+                  </div>
+                </div>
+
+                {/* Transaction Details */}
+                <div className="space-y-3.5">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 px-1">Detailed Ledger ({selectedData.transactions.length})</h4>
+                  <div className="space-y-2 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
+                    {selectedData.transactions
+                      .filter(tx => tx.type === 'income' || tx.type === 'expense')
+                      .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+                      .map(tx => (
+                        <div key={tx.id} className="p-4 rounded-xl bg-white/50 dark:bg-white/[0.01] border border-gray-100/50 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.04] transition-all group">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-black text-gray-900 dark:text-white truncate tracking-tight">
+                                {tx.description}
+                              </div>
+                              <div className="flex items-center gap-3 mt-1.5">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600">
+                                  {new Date(tx.date || tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                                <div className="w-1 h-1 rounded-full bg-gray-200 dark:bg-gray-800" />
+                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600">
+                                  {tx.category}
+                                </span>
+                              </div>
+                            </div>
+                            <div className={`text-sm font-black tracking-tighter whitespace-nowrap ${tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
+                              {tx.type === 'income' ? '+' : '-'}{formatCurrencyWithUser(tx.amount, userProfile)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
                 </div>
               </div>
-            </div>
             )}
           </>
         )}

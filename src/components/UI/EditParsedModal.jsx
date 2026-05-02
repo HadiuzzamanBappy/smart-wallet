@@ -123,10 +123,10 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
         </div>
       }
     >
-      <form id={formId} onSubmit={handleSubmit} className="space-y-4 px-1">
+      <form id={formId} onSubmit={handleSubmit} className="space-y-6 px-1">
         {/* Transaction Type */}
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
             Transaction Type
           </label>
           <Select
@@ -142,10 +142,10 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-5">
           {/* Amount */}
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
               Amount
             </label>
             <GlassInput
@@ -159,8 +159,8 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
           </div>
 
           {/* Date */}
-          <div>
-            <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
               Date
             </label>
             <GlassInput
@@ -174,8 +174,8 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
         </div>
 
         {/* Description */}
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
             Description
           </label>
           <GlassInput
@@ -189,8 +189,8 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
         </div>
 
         {/* Category */}
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 mb-2 px-1">
+        <div className="space-y-2">
+          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
             Category
           </label>
           <Select

@@ -33,14 +33,14 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000, po
   };
 
   const getStyles = () => {
-    const base = "border-l-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-2xl ring-1 ring-black/5 dark:ring-white/10";
+    const base = "border-l-4 bg-white/95 dark:bg-gray-900/90 backdrop-blur-md shadow-2xl ring-1 ring-black/5 dark:ring-white/5";
     switch (type) {
       case 'success':
-        return `${base} border-green-500`;
+        return `${base} border-teal-500`;
       case 'error':
         return `${base} border-red-500`;
       case 'warning':
-        return `${base} border-yellow-500`;
+        return `${base} border-amber-500`;
       default:
         return `${base} border-blue-500`;
     }

@@ -48,17 +48,17 @@ const Button = ({
             text: "text-red-500 hover:bg-red-500/10"
         },
         gray: {
-            filled: "bg-gray-700 hover:bg-gray-800 text-white shadow-lg shadow-gray-500/20",
-            outlined: "bg-transparent border border-white/20 text-gray-400 hover:bg-white/5 hover:text-white",
-            soft: "bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10",
-            text: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+            filled: "bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-gray-800 text-white shadow-lg shadow-gray-500/20",
+            outlined: "bg-transparent border border-gray-200 dark:border-white/20 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white",
+            soft: "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10",
+            text: "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
         }
     };
 
     // Special Variants
     const specialVariants = {
-        ghost: "bg-transparent hover:bg-white/5 text-gray-500 hover:text-white transition-colors",
-        icon: "p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-500 hover:text-white"
+        ghost: "bg-transparent hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors",
+        icon: "p-2 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
     };
 
     const sizes = {

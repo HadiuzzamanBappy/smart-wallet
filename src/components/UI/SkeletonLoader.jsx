@@ -12,7 +12,7 @@ const Skeleton = ({
 }) => (
   <div
     className={`
-      bg-gray-200 dark:bg-gray-700 
+      bg-gray-100 dark:bg-white/5
       ${width} ${height} ${rounded} 
       ${animated ? 'animate-pulse' : ''}
       ${className}
@@ -23,96 +23,65 @@ const Skeleton = ({
 /**
  * Skeleton for transaction cards
  */
-export const TransactionSkeleton = ({ count = 1, showActions = true }) => (
-  <>
+export const TransactionSkeleton = ({ count = 5 }) => (
+  <div className="divide-y divide-gray-100 dark:divide-white/5">
     {Array.from({ length: count }, (_, index) => (
-      <div key={index} className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-        {/* Mobile Layout */}
-        <div className="sm:hidden">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center space-x-2 flex-1 min-w-0">
-              <Skeleton width="w-6" height="h-6" rounded="rounded-full" />
-              <div className="flex-1 min-w-0">
-                <Skeleton width="w-32" height="h-4" className="mb-1" />
-                <Skeleton width="w-24" height="h-3" />
+      <div key={index} className="p-4 sm:p-5">
+        <div className="flex items-center gap-4">
+          {/* Avatar Icon */}
+          <div className="shrink-0">
+            <Skeleton width="w-10" height="h-10" rounded="rounded-xl" />
+          </div>
+
+          {/* Description & Metadata */}
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-center gap-2">
+              <Skeleton width="w-32 sm:w-48" height="h-4" rounded="rounded-md" />
+              <div className="hidden sm:block">
+                <Skeleton width="w-16" height="h-4" rounded="rounded-full" />
               </div>
             </div>
-            <div className="flex items-center space-x-2 ml-2">
-              <Skeleton width="w-20" height="h-4" />
+            <div className="flex items-center gap-3">
+              <Skeleton width="w-12" height="h-3" rounded="rounded-sm" />
+              <Skeleton width="w-20" height="h-3" rounded="rounded-sm" />
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 flex-wrap">
-              <Skeleton width="w-16" height="h-5" rounded="rounded-full" />
-              <Skeleton width="w-12" height="h-3" />
-            </div>
-
-            {showActions && (
-              <div className="flex items-center space-x-1">
-                <Skeleton width="w-6" height="h-6" rounded="rounded" />
-                <Skeleton width="w-6" height="h-6" rounded="rounded" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Desktop Layout */}
-        <div className="hidden sm:flex items-center space-x-4">
-          {/* Category & Type Icon */}
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <Skeleton width="w-6" height="h-6" rounded="rounded-full" />
-            <Skeleton width="w-4" height="h-4" rounded="rounded" />
-          </div>
-
-          {/* Transaction Details */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-              <Skeleton width="w-40" height="h-4" />
-              <Skeleton width="w-24" height="h-4" />
-            </div>
-            <div className="flex items-center space-x-3 flex-wrap">
-              <Skeleton width="w-20" height="h-5" rounded="rounded-full" />
-              <Skeleton width="w-16" height="h-3" />
-              <Skeleton width="w-12" height="h-3" />
+          {/* Amount & Actions */}
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <Skeleton width="w-20 sm:w-24" height="h-5" rounded="rounded-md" />
+            <div className="flex items-center gap-2">
+              <Skeleton width="w-6" height="h-6" rounded="rounded-lg" />
+              <Skeleton width="w-6" height="h-6" rounded="rounded-lg" />
             </div>
           </div>
-
-          {/* Actions */}
-          {showActions && (
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              <Skeleton width="w-8" height="h-8" rounded="rounded-lg" />
-              <Skeleton width="w-8" height="h-8" rounded="rounded-lg" />
-            </div>
-          )}
         </div>
       </div>
     ))}
-  </>
+  </div>
 );
 
 /**
  * Skeleton for summary cards (CompactSummary)
  */
 export const SummaryCardSkeleton = ({ count = 4 }) => (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
     {Array.from({ length: count }, (_, index) => (
       <div
         key={index}
-        // Make the last two skeleton cards full-width on mobile only to match CompactSummary
-        className={`${index >= 2 ? 'col-span-2 md:col-span-1' : ''} relative flex items-center gap-2 p-2 sm:p-4 rounded-lg bg-white/5 dark:bg-gray-800/40`}
+        className={`${index >= 2 ? 'col-span-2 md:col-span-1' : ''} relative overflow-hidden rounded-2xl p-4 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center gap-3.5`}
       >
-        <div className="flex-shrink-0">
-          <Skeleton width="w-8" height="h-8" rounded="rounded-md" />
+        <div className="shrink-0">
+          <Skeleton width="w-9" height="h-9" rounded="rounded-xl" />
         </div>
-        <div className="min-w-0 flex-1 pr-6">
-          <Skeleton width="w-20" height="h-3" className="mb-1" />
-          <Skeleton width="w-16" height="h-4" />
+        <div className="min-w-0 flex-1">
+          <Skeleton width="w-16" height="h-2.5" className="mb-2" rounded="rounded-sm" />
+          <Skeleton width="w-24" height="h-4" rounded="rounded-md" />
         </div>
-        {/* Optional action button skeleton for some cards */}
+        {/* Optional eye icon for clickable cards */}
         {(index === 2 || index === 3) && (
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-            <Skeleton width="w-6" height="h-6" rounded="rounded-full" />
+          <div className="shrink-0">
+            <Skeleton width="w-6" height="h-6" rounded="rounded-lg" />
           </div>
         )}
       </div>
@@ -151,31 +120,33 @@ export const FilterSkeleton = () => (
  * Complete skeleton for transaction list
  */
 export const TransactionListSkeleton = () => (
-  <div className="card">
-    <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <Skeleton width="w-40" height="h-6" />
-        <Skeleton width="w-32" height="h-4" />
+  <div className="flex flex-col h-full">
+    <div className="px-5 py-6 space-y-5 border-b border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/[0.01]">
+      {/* Header - Audit Log Count */}
+      <div className="flex items-center gap-2.5">
+        <Skeleton width="w-2" height="h-2" rounded="rounded-full" className="shadow-[0_0_8px_rgba(20,184,166,0.4)]" />
+        <Skeleton width="w-48" height="h-3" rounded="rounded-sm" />
       </div>
 
-      {/* Filters */}
-      <FilterSkeleton />
+      {/* Filters Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <Skeleton width="w-full" height="h-9" rounded="rounded-xl" />
+        <Skeleton width="w-full" height="h-9" rounded="rounded-xl" />
+        <Skeleton width="w-full" height="h-9" rounded="rounded-xl" />
+        <Skeleton width="w-full" height="h-9" rounded="rounded-xl" />
+      </div>
     </div>
 
     {/* Transaction Items */}
-    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-      <TransactionSkeleton count={8} />
-    </div>
+    <TransactionSkeleton count={8} />
 
     {/* Pagination placeholder */}
-    <div className="p-4 flex items-center justify-between">
-      <Skeleton width="w-20" height="h-4" />
-      <div className="flex items-center space-x-2">
-        <Skeleton width="w-12" height="h-8" rounded="rounded-md" />
-        <Skeleton width="w-8" height="h-8" rounded="rounded-md" />
-        <Skeleton width="w-8" height="h-8" rounded="rounded-md" />
-        <Skeleton width="w-12" height="h-8" rounded="rounded-md" />
+    <div className="p-5 flex items-center justify-between bg-gray-50/30 dark:bg-white/[0.01] border-t border-gray-100 dark:border-white/5">
+      <Skeleton width="w-24" height="h-3" />
+      <div className="flex items-center gap-2">
+        <Skeleton width="w-16" height="h-9" rounded="rounded-xl" />
+        <Skeleton width="w-24" height="h-9" rounded="rounded-xl" />
+        <Skeleton width="w-16" height="h-9" rounded="rounded-xl" />
       </div>
     </div>
   </div>
@@ -186,12 +157,7 @@ export const TransactionListSkeleton = () => (
  */
 export const CompactSummarySkeleton = () => (
   <div className="w-full">
-    <HeaderSkeleton />
-    <div className="flex gap-3">
-      <div className="w-full">
-        <SummaryCardSkeleton />
-      </div>
-    </div>
+    <SummaryCardSkeleton />
   </div>
 );
 
@@ -199,31 +165,29 @@ export const CompactSummarySkeleton = () => (
  * Skeleton specifically for the BudgetProgress card to match full-width layout
  */
 export const BudgetSkeleton = () => (
-  <div className="rounded-md p-3 bg-white/5 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 w-full">
-    <div className="flex items-start justify-between gap-3 mb-3">
+  <div className="rounded-2xl p-4 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 w-full">
+    <div className="flex items-start justify-between gap-3 mb-4">
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="p-2 rounded-lg bg-white/10 dark:bg-gray-700">
-          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-600 rounded-md animate-pulse" />
-        </div>
+        <Skeleton width="w-10" height="h-10" rounded="rounded-xl" />
         <div className="flex-1 min-w-0">
-          <div className="w-28 h-3 bg-gray-200 dark:bg-gray-700 rounded mb-1 animate-pulse" />
-          <div className="w-40 h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <Skeleton width="w-28" height="h-3" className="mb-2" />
+          <Skeleton width="w-40" height="h-3" />
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="w-10 h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-        <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+        <Skeleton width="w-10" height="h-5" rounded="rounded-lg" />
+        <Skeleton width="w-8" height="h-8" rounded="rounded-full" />
       </div>
     </div>
 
-    <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
-      <div className="h-3 rounded-full bg-gray-300 dark:bg-gray-600 w-1/4 animate-pulse" />
+    <div className="w-full mb-4">
+      <Skeleton width="w-full" height="h-3" rounded="rounded-full" />
     </div>
 
-    <div className="flex items-center justify-between text-xs">
-      <div className="w-32 h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-      <div className="w-36 h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+    <div className="flex items-center justify-between">
+      <Skeleton width="w-32" height="h-2.5" />
+      <Skeleton width="w-36" height="h-2.5" />
     </div>
   </div>
 );
@@ -249,23 +213,30 @@ export const ChatMessageSkeleton = ({ count = 3 }) => (
  * Skeleton for analytics charts
  */
 export const AnalyticsSkeleton = () => (
-  <div className="space-y-6">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Chart placeholder */}
-      <div className="aspect-square">
-        <Skeleton width="w-full" height="h-full" rounded="rounded-lg" />
+  <div className="p-4 space-y-6">
+    {/* Header */}
+    <div className="flex items-center gap-4 mb-2">
+      <Skeleton width="w-10" height="h-10" rounded="rounded-xl" />
+      <div className="space-y-2">
+        <Skeleton width="w-32" height="h-4" />
+        <Skeleton width="w-24" height="h-3" />
       </div>
+    </div>
 
-      {/* Legend placeholder */}
-      <div className="space-y-3">
-        {Array.from({ length: 5 }, (_, index) => (
-          <div key={index} className="flex items-center space-x-3">
-            <Skeleton width="w-4" height="h-4" rounded="rounded-full" />
-            <Skeleton width="w-24" height="h-4" />
-            <Skeleton width="w-16" height="h-4" className="ml-auto" />
-          </div>
-        ))}
-      </div>
+    {/* Chart Placeholder */}
+    <div className="rounded-2xl p-5 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 h-64 sm:h-72">
+      <Skeleton width="w-full" height="h-full" rounded="rounded-xl" />
+    </div>
+
+    {/* Quick Stats Grid */}
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {Array.from({ length: 4 }, (_, i) => (
+        <div key={i} className="p-4 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100/50 dark:border-white/5 flex flex-col items-center">
+          <Skeleton width="w-8" height="h-8" rounded="rounded-lg" className="mb-3" />
+          <Skeleton width="w-16" height="h-2.5" className="mb-2" />
+          <Skeleton width="w-20" height="h-3" />
+        </div>
+      ))}
     </div>
   </div>
 );

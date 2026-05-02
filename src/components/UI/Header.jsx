@@ -133,29 +133,29 @@ const Header = ({
 
     return (
         <>
-            <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
+            <header className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm border-b border-gray-100 dark:border-white/5 sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center space-x-3">
                             <img
                                 src="/favicon/favicon.svg"
                                 alt="Smart Wallet Logo"
-                                className="w-8 h-8"
+                                className="w-8 h-8 drop-shadow-sm"
                                 onError={(e) => {
                                     e.target.style.display = 'none';
                                     e.target.nextSibling.style.display = 'block';
                                 }}
                             />
-                            <Wallet className="w-6 h-6 text-white" style={{ display: 'none' }} />
+                            <Wallet className="w-6 h-6 text-gray-900 dark:text-white" style={{ display: 'none' }} />
                             <div>
-                                <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                                <h1 className="text-base font-black text-gray-900 dark:text-white tracking-tight">
                                     Smart Wallet
                                 </h1>
-                                <div className="flex items-center gap-2 text-[10px] uppercase font-black tracking-widest text-gray-500">
-                                    <Wallet className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                                <div className="flex items-center gap-2 text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
+                                    <Wallet className="w-3 h-3 text-teal-600 dark:text-teal-400" />
                                     {isRefreshing || isLocalRefreshing ? (
                                         <div className="flex items-center gap-2">
-                                            <Skeleton width="w-20" height="h-3" />
+                                            <Skeleton width="w-16" height="h-3" />
                                             <RefreshCw className="w-3 h-3 animate-spin text-teal-500" />
                                         </div>
                                     ) : (
@@ -164,7 +164,7 @@ const Header = ({
                                             className="font-black text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors flex items-center gap-2 group"
                                         >
                                             {formatCurrency(balance, userProfile?.currency || 'BDT')}
-                                            <RefreshCw className="w-3 h-3 opacity-40 sm:opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <RefreshCw className="w-2.5 h-2.5 opacity-40 sm:opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </button>
                                     )}
                                 </div>
@@ -209,56 +209,56 @@ const Header = ({
             {showFloatingBalance && (
                 <div className="fixed top-16 left-0 right-0 flex justify-center z-50 pointer-events-none">
                     <div className="pointer-events-auto w-11/12 max-w-lg px-4">
-                        <div className={`relative bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-2xl shadow-2xl border border-white/10 p-4 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-2' : 'opacity-0 translate-y-0'}`}>
+                        <div className={`relative bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl text-gray-900 dark:text-white rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 p-5 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-3' : 'opacity-0 translate-y-0'}`}>
                             <Button
                                 variant="icon"
                                 size="sm"
                                 onClick={handleFloatingClose}
-                                className="absolute -top-2 -right-2 bg-white dark:bg-gray-800 shadow-lg !rounded-lg"
+                                className="absolute -top-2 -right-2 bg-white dark:bg-gray-800 shadow-xl !rounded-xl border border-gray-100 dark:border-white/10"
                             >
                                 <X className="w-3 h-3" />
                             </Button>
 
-                            <div className="flex flex-col gap-4 select-none">
+                            <div className="flex flex-col gap-5 select-none">
                                 <div className="flex items-center justify-between px-1">
                                     <div>
-                                        <div className="text-[9px] uppercase font-black tracking-widest text-amber-200 opacity-80 mb-0.5">Total Wealth</div>
-                                        <div className="text-xl font-black">{formatCurrency(totalWealth, userProfile?.currency || 'BDT')}</div>
+                                        <div className="text-[9px] uppercase font-black tracking-widest text-amber-600 dark:text-amber-200 opacity-80 mb-1">Total Wealth</div>
+                                        <div className="text-xl font-black tracking-tighter text-gray-900 dark:text-white">{formatCurrency(totalWealth, userProfile?.currency || 'BDT')}</div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-[9px] uppercase font-black tracking-widest text-teal-300 opacity-80 mb-0.5">Spendable</div>
-                                        <div className="text-sm font-black text-teal-400">{formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')}</div>
+                                        <div className="text-[9px] uppercase font-black tracking-widest text-teal-600 dark:text-teal-400 opacity-80 mb-1">Monthly Surplus</div>
+                                        <div className="text-sm font-black text-teal-700 dark:text-teal-400 tracking-tighter">{formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')}</div>
                                     </div>
                                 </div>
 
-                                <div className="pt-3 border-t border-white/10 space-y-2">
-                                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                <div className="pt-4 border-t border-gray-100 dark:border-white/10 space-y-3">
+                                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                                         <div className="flex justify-between items-center text-[10px]">
-                                            <span className="opacity-50 uppercase font-bold tracking-tight">Month Margin</span>
-                                            <span className="font-bold text-gray-200">+{formatCurrency(salaryPlan?.plan?.disposable || 0, userProfile?.currency || 'BDT')}</span>
+                                            <span className="text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">Month Margin</span>
+                                            <span className="font-black text-gray-700 dark:text-gray-200">+{formatCurrency(salaryPlan?.plan?.disposable || 0, userProfile?.currency || 'BDT')}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-[10px]">
-                                            <span className="opacity-50 uppercase font-bold tracking-tight">Cash In Hand</span>
-                                            <span className="font-bold text-gray-200">+{formatCurrency(cashInHand, userProfile?.currency || 'BDT')}</span>
+                                            <span className="text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">Cash In Hand</span>
+                                            <span className="font-black text-gray-700 dark:text-gray-200">+{formatCurrency(cashInHand, userProfile?.currency || 'BDT')}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-[10px]">
-                                            <span className="opacity-50 uppercase font-bold tracking-tight">Net Flow</span>
-                                            <span className={`font-bold ${monthlyNetFlowTransactions >= 0 ? 'text-emerald-400' : 'text-orange-400'}`}>
+                                            <span className="text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">Net Flow</span>
+                                            <span className={`font-black ${monthlyNetFlowTransactions >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                                 {monthlyNetFlowTransactions >= 0 ? '+' : ''}{formatCurrency(monthlyNetFlowTransactions, userProfile?.currency || 'BDT')}
                                             </span>
                                         </div>
-                                        <div className="flex justify-between items-center text-[10px] pt-0.5">
-                                            <span className="opacity-50 uppercase font-bold tracking-tight">Total Assets</span>
-                                            <span className="font-black text-white">{formatCurrency(totalWealth, userProfile?.currency || 'BDT')}</span>
+                                        <div className="flex justify-between items-center text-[10px]">
+                                            <span className="text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">Total Assets</span>
+                                            <span className="font-black text-gray-900 dark:text-white">{formatCurrency(totalWealth, userProfile?.currency || 'BDT')}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className={`flex items-center gap-3 px-3 py-2 rounded-xl text-center justify-center border ${creditDue >= loanDue ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-                                    <div className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
-                                        {creditDue >= loanDue ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                                        {creditDue >= loanDue ? 'Net Receivable: ' : 'Net Due: '}
-                                        <span className="text-sm">{formatCurrency(Math.abs(creditDue - loanDue), userProfile?.currency || 'BDT')}</span>
+                                <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-center justify-center border transition-colors ${creditDue >= loanDue ? 'bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-500/20 text-teal-700 dark:text-teal-400' : 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400'}`}>
+                                    <div className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                                        {creditDue >= loanDue ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                                        {creditDue >= loanDue ? 'Net Receivable' : 'Net Due'}
+                                        <span className="text-sm font-black tracking-tighter ml-1">{formatCurrency(Math.abs(creditDue - loanDue), userProfile?.currency || 'BDT')}</span>
                                     </div>
                                 </div>
                             </div>

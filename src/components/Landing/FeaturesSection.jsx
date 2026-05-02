@@ -66,42 +66,41 @@ const FeaturesSection = () => {
   return (
     <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative">
-        <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-full mb-4 sm:mb-6">
-            <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" />
-            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">Capabilities Suite v2.0</span>
+        <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-12 sm:mb-20">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-full mb-6 sm:mb-8">
+            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest">Capabilities Suite v2.0</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-white tracking-tight leading-tight mb-6">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 dark:text-white tracking-tight leading-none mb-8">
             Sovereign Finance.<br className="hidden sm:block" />
-            <span className="opacity-40">Zero Compromise.</span>
+            <span className="opacity-30 dark:opacity-40 italic">Zero Compromise.</span>
           </h2>
-          <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 font-medium">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-500 dark:text-gray-400 font-medium leading-relaxed max-w-2xl">
             Powerful features designed with absolute privacy and operative efficiency in mind.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {features.map((feature, index) => (
             <div
               key={index}
-              className={`${feature.span ? feature.span.replace('lg:', 'lg:') : ''} group relative p-6 sm:p-8 bg-white/50 dark:bg-white/[0.02] backdrop-blur-xl rounded-[1.5rem] sm:rounded-[2rem] border border-gray-200 dark:border-white/5 transition-all duration-300 hover:border-teal-500/30 hover:bg-white dark:hover:bg-white/[0.05] hover:shadow-2xl hover:shadow-teal-500/5 flex flex-col items-center text-center`}
+              className={`${feature.span ? feature.span : ''} group relative p-8 sm:p-10 bg-gray-50/50 dark:bg-white/[0.02] backdrop-blur-xl rounded-[2rem] sm:rounded-[2.5rem] border border-gray-200/50 dark:border-white/5 transition-all duration-500 hover:border-teal-500/30 hover:bg-white dark:hover:bg-white/[0.05] hover:shadow-2xl hover:shadow-teal-500/5 flex flex-col items-center text-center`}
             >
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${feature.gradient} rounded-xl sm:rounded-2xl flex items-center justify-center mb-5 sm:mb-6 shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}>
-                <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${feature.gradient} rounded-2xl sm:rounded-3xl flex items-center justify-center mb-6 sm:mb-8 shadow-lg shadow-teal-500/10 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+                <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
 
-              <div className="text-[9px] sm:text-[10px] font-black text-teal-500 uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-2 sm:mb-3">
+              <div className="text-[10px] sm:text-[11px] font-black text-teal-600 dark:text-teal-500 uppercase tracking-[0.2em] mb-3 sm:mb-4">
                 {feature.category}
               </div>
 
-              <h3 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-3 sm:mb-4 tracking-tight">
+              <h3 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-4 sm:mb-5 tracking-tighter leading-none">
                 {feature.title}
               </h3>
 
-              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+              <p className="text-sm sm:text-base lg:text-lg text-gray-500 dark:text-gray-400 leading-relaxed font-black uppercase tracking-widest opacity-70">
                 {feature.description}
               </p>
-
             </div>
           ))}
         </div>

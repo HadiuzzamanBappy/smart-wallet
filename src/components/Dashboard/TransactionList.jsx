@@ -172,24 +172,6 @@ const TransactionList = ({ onTransactionChange }) => {
     return transaction.category || 'other';
   };
 
-  const getCategoryBadgeColor = (category) => {
-    const map = {
-      food: 'orange',
-      transport: 'blue',
-      shopping: 'rose',
-      entertainment: 'purple',
-      health: 'rose',
-      utilities: 'amber',
-      salary: 'emerald',
-      freelance: 'teal',
-      investment: 'cyan',
-      gift: 'orange',
-      loan: 'rose',
-      credit: 'emerald',
-      other: 'gray'
-    };
-    return map[category?.toLowerCase()] || 'gray';
-  };
 
   if (transactionLoading) {
     return <TransactionListSkeleton />;
@@ -197,29 +179,34 @@ const TransactionList = ({ onTransactionChange }) => {
 
   return (
     <>
-      <div>
-        <div className="px-4 py-4 space-y-4 border-b border-white/10 pb-6 mb-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="text-[11px] font-semibold text-gray-500 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
-              {filteredTransactions.length} of {transactions.length} transactions
+      <div className="flex flex-col h-full">
+        <div className="px-5 py-6 space-y-5 border-b border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/[0.01]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+            <div className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em] flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.4)] animate-pulse"></span>
+              {filteredTransactions.length} of {transactions.length} audit logs
             </div>
           </div>
 
-          {/* Filters Bar */}
-          <div className="flex flex-col md:flex-row gap-2">
-            <GlassInput
-              placeholder="Search..."
-              value={filters.search}
-              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-              icon={Search}
-              className="flex-1"
-            />
+          {/* Filters Bar - Executive Style */}
+          <div className="flex flex-col sm:flex-row gap-2.5">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Audit search..."
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                className="w-full pl-9 pr-4 h-9 rounded-xl bg-white dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 text-[12px] font-bold tracking-tight text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
+              />
+            </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2.5">
               <Select
                 value={filters.type}
                 onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
+                size="sm"
+                className="!rounded-xl"
                 options={[
                   { label: 'All Types', value: 'all' },
                   { label: 'Income', value: 'income' },
@@ -234,8 +221,10 @@ const TransactionList = ({ onTransactionChange }) => {
               <Select
                 value={filters.category}
                 onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+                size="sm"
+                className="!rounded-xl"
                 options={[
-                  { label: 'All Categories', value: 'all' },
+                  { label: 'All Cats', value: 'all' },
                   ...getUniqueCategories().map(c => ({ label: c, value: c }))
                 ]}
               />
@@ -243,27 +232,27 @@ const TransactionList = ({ onTransactionChange }) => {
               <Select
                 value={filters.dateRange}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                size="sm"
+                className="!rounded-xl"
                 options={[
                   { label: 'All Time', value: 'all' },
                   { label: '7 days', value: '7' },
                   { label: '30 days', value: '30' },
-                  { label: '3 months', value: '90' },
-                  { label: '1 year', value: '365' }
+                  { label: '90 days', value: '90' }
                 ]}
               />
             </div>
           </div>
         </div>
 
-        <div className="space-y-0 px-0">
+        <div className="divide-y divide-gray-100 dark:divide-white/5">
           {filteredTransactions.length === 0 ? (
-            <div className="py-12 text-center opacity-60">
-              <Filter className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-              <p className="text-[11px] font-semibold text-gray-500">
-                {transactions.length === 0
-                  ? "No transactions yet"
-                  : "No matches found"
-                }
+            <div className="flex flex-col items-center justify-center py-20 text-center px-8">
+              <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
+                <Filter className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 dark:text-gray-600">
+                {transactions.length === 0 ? "No Transactions Yet" : "No Matches Found"}
               </p>
             </div>
           ) : (
@@ -272,69 +261,66 @@ const TransactionList = ({ onTransactionChange }) => {
               const isPositive = ['income', 'loan', 'collection'].includes(transaction.type);
 
               return (
-                <div key={transaction.id} className="px-4 py-3 hover:bg-white/[0.02] transition-all border-b border-white/5 last:border-0 group">
-                  <div className="grid grid-cols-[auto_1fr_auto] gap-4 items-center">
-                    {/* Left: avatar with trend overlay */}
+                <div key={transaction.id} className="px-5 py-4 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-all group border-b border-gray-100 dark:border-white/5 last:border-0">
+                  <div className="grid grid-cols-[auto_1fr_auto] gap-5 items-center">
+                    {/* Left: Premium Avatar */}
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-xl">
-                        <span className="opacity-80">{getCategoryEmoji(dc)}</span>
+                      <div className="w-11 h-11 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-center text-xl shadow-sm">
+                        <span className="opacity-80 drop-shadow-sm">{getCategoryEmoji(dc)}</span>
                       </div>
-                      <div className={`absolute -right-1 -bottom-1 w-5 h-5 rounded-lg flex items-center justify-center border-2 border-[#0f172a] ${isPositive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                      <div className={`absolute -right-1.5 -bottom-1.5 w-6 h-6 rounded-xl flex items-center justify-center border-4 border-white dark:border-gray-900 shadow-sm ${isPositive ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
                         {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                       </div>
                     </div>
 
-                    {/* Middle: Content */}
+                    {/* Middle: Executive Typography */}
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white/90 truncate mb-1.5">{transaction.description}</p>
-                      <div className="flex items-center gap-3">
-                        <GlassBadge color={getCategoryBadgeColor(dc)}>
-                          <span>{getCategoryEmoji(dc)}</span>
-                          <span>{dc}</span>
-                        </GlassBadge>
-                        <span className="text-[11px] font-medium text-gray-500/80">
+                      <p className="text-[13px] font-black text-gray-900 dark:text-white truncate mb-2 tracking-tight">{transaction.description}</p>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200/50 dark:border-white/10">
+                          <span className="text-[10px]">{getCategoryEmoji(dc)}</span>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">{dc}</span>
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600">
                           {formatDate(transaction.createdAt)}
                         </span>
                         {transaction.source === 'chat' && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500/60 shadow-[0_0_8px_rgba(59,130,246,0.2)]" title="AI Parsed" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-sky-500/60 shadow-[0_0_8px_rgba(14,165,233,0.3)] animate-pulse" title="AI Audited" />
                         )}
                       </div>
                     </div>
 
-                    {/* Right: Amount & Actions */}
-                    <div className="flex flex-col items-end gap-2">
-                      <div className={`text-sm font-semibold whitespace-nowrap tracking-tighter ${isPositive ? 'text-emerald-400/80' : 'text-rose-400/80'}`}>
+                    {/* Right: Premium Currency & Quick Actions */}
+                    <div className="flex flex-col items-end gap-2.5">
+                      <div className={`text-sm font-black whitespace-nowrap tracking-tighter ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
                         {isPositive ? '+' : '-'}{formatCurrency(transaction.amount, currency)}
                       </div>
-                      <div className="flex gap-1 transition-opacity">
+                      <div className="flex gap-1 sm:gap-1.5 transition-all">
                         {(transaction.type === 'repayment' || transaction.type === 'collection') && (
-                          <Button
-                            variant="icon"
-                            size="xsm"
-                            color="gray"
+                          <button
                             onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }}
-                            icon={Eye}
+                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all border border-transparent hover:border-gray-200/50 dark:hover:border-white/10"
                             title="View details"
-                          />
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
                         )}
                         {transaction.type !== 'repayment' && transaction.type !== 'collection' && (
-                          <Button
-                            variant="icon"
-                            size="xsm"
-                            color="teal"
+                          <button
                             onClick={() => setEditingTransaction(transaction)}
-                            icon={Edit3}
+                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-all border border-transparent hover:border-gray-200/50 dark:hover:border-white/10"
                             title="Edit"
-                          />
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
                         )}
-                        <Button
-                          variant="icon"
-                          size="xsm"
-                          color="red"
+                        <button
                           onClick={() => handlePrepareDelete(transaction)}
-                          icon={Trash2}
+                          className="p-1.5 hover:bg-rose-500/10 rounded-lg text-gray-400 hover:text-rose-600 transition-all border border-transparent hover:border-rose-500/20"
                           title="Delete"
-                        />
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -344,33 +330,32 @@ const TransactionList = ({ onTransactionChange }) => {
           )}
         </div>
 
-        {/* Pagination Controls */}
+        {/* Pagination Controls - Executive Density */}
         {filteredTransactions.length > PAGE_SIZE && (
-          <div className="py-4 px-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-700/50">
-            <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-              Page {page} <span className="hidden sm:inline">of {totalPages}</span>
+          <div className="py-6 px-5 flex items-center justify-between border-t border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/[0.01]">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-600">
+              Audit Page <span className="text-gray-900 dark:text-white">{page}</span> of {totalPages}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-xs font-bold uppercase tracking-widest disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className="px-4 py-2 rounded-xl border border-gray-200/50 dark:border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 disabled:opacity-20 hover:bg-white dark:hover:bg-white/10 transition-all"
               >
-                Prev
+                Back
               </button>
 
-              {/* Desktop Page Numbers */}
-              <div className="hidden sm:flex items-center gap-1">
+              <div className="hidden sm:flex items-center gap-1.5">
                 {[...Array(totalPages)].map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setPage(i + 1)}
-                    className={`w-8 h-8 flex items-center justify-center rounded-md text-xs font-bold transition-all ${page === i + 1
-                      ? 'bg-teal-500 text-white shadow-md shadow-teal-500/20'
-                      : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    className={`w-9 h-9 flex items-center justify-center rounded-xl text-[10px] font-black transition-all ${page === i + 1
+                      ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
+                      : 'text-gray-400 dark:text-gray-600 hover:bg-white dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
                       }`}
                   >
-                    {i + 1}
+                    {String(i + 1).padStart(2, '0')}
                   </button>
                 ))}
               </div>
@@ -378,7 +363,7 @@ const TransactionList = ({ onTransactionChange }) => {
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700 text-xs font-bold uppercase tracking-widest disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className="px-4 py-2 rounded-xl border border-gray-200/50 dark:border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 disabled:opacity-20 hover:bg-white dark:hover:bg-white/10 transition-all"
               >
                 Next
               </button>
@@ -387,65 +372,62 @@ const TransactionList = ({ onTransactionChange }) => {
         )}
       </div>
 
-      {/* Edit Modal */}
+      {/* Adjustment Modal - Executive Details */}
       <Modal
         isOpen={!!adjustmentModalOpen}
         onClose={() => { setAdjustmentModalOpen(false); setAdjustmentDetail(null); }}
-        title="Adjustment Details"
+        title="Audit Adjustment"
         size="md"
       >
         {adjustmentDetail ? (
-          <div className="text-gray-800 dark:text-gray-100">
-            <div className="flex items-center justify-between">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between gap-4 p-5 rounded-2xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
               <div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Adjustment</div>
-                <div className="mt-1 text-2xl font-semibold flex items-center">
-                  <span className={`${adjustmentDetail.type === 'collection' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {adjustmentDetail.type === 'collection' ? '+' : '-'}{formatCurrency(adjustmentDetail.amount, currency)}
-                  </span>
+                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-600 mb-2">Net Adjustment</div>
+                <div className={`text-3xl font-black tracking-tighter ${adjustmentDetail.type === 'collection' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                  {adjustmentDetail.type === 'collection' ? '+' : '-'}{formatCurrency(adjustmentDetail.amount, currency)}
                 </div>
               </div>
               <div className="text-right">
-                <div className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-medium capitalize">
-                  {adjustmentDetail.type === 'repayment' ? 'Loan Repayment' : 'Credit Collection'}
+                <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] border ${adjustmentDetail.type === 'repayment' 
+                  ? 'bg-rose-500/5 text-rose-600 border-rose-500/10' 
+                  : 'bg-emerald-500/5 text-emerald-600 border-emerald-500/10'}`}>
+                  {adjustmentDetail.type === 'repayment' ? 'Loan Repay' : 'Credit Collect'}
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-2 gap-4">
               {adjustmentDetail.originalAmount !== undefined && (
-                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
-                  <div className="text-xs text-gray-500">Original Amount</div>
-                  <div className="mt-1 font-medium">{formatCurrency(adjustmentDetail.originalAmount, currency)}</div>
+                <div className="p-4 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100/50 dark:border-white/5">
+                  <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-2">Original Principal</div>
+                  <div className="text-sm font-black text-gray-900 dark:text-white tracking-tight">{formatCurrency(adjustmentDetail.originalAmount, currency)}</div>
                 </div>
               )}
-              {adjustmentDetail.linkedTransactionId && (
-                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded">
-                  <div className="text-xs text-gray-500">Linked To</div>
-                  <div className="mt-1 font-medium">{adjustmentDetail.type === 'repayment' ? 'Loan' : 'Credit'} ({adjustmentDetail.linkedTransactionId})</div>
-                </div>
-              )}
-              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded col-span-1 sm:col-span-2">
-                <div className="text-xs text-gray-500">Original Description</div>
-                <div className="mt-1 text-sm text-gray-700 dark:text-gray-200">{adjustmentDetail.originalDescription || '—'}</div>
+              <div className="p-4 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100/50 dark:border-white/5">
+                <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-2">Audit Timestamp</div>
+                <div className="text-sm font-black text-gray-900 dark:text-white tracking-tight">{formatDate(adjustmentDetail.createdAt)}</div>
               </div>
-              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded col-span-1 sm:col-span-2">
-                <div className="text-xs text-gray-500">Recorded At</div>
-                <div className="mt-1 font-medium">{formatDate(adjustmentDetail.createdAt)}</div>
+              <div className="p-4 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100/50 dark:border-white/5 col-span-2">
+                <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-600 mb-2">Reference Entity</div>
+                <div className="text-sm font-black text-gray-900 dark:text-white tracking-tight truncate">{adjustmentDetail.originalDescription || 'No Reference Found'}</div>
               </div>
             </div>
 
-            <div className="mt-4">
-              <div className="text-xs text-gray-500">Notes</div>
-              <div className="mt-2 p-3 bg-white dark:bg-gray-900 rounded border border-gray-100 dark:border-gray-800 text-sm text-gray-700 dark:text-gray-200">{adjustmentDetail.description || '—'}</div>
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-600 mb-2.5 px-1">Internal Audit Notes</div>
+              <div className="p-5 rounded-2xl bg-gray-100/50 dark:bg-black/20 border border-gray-100 dark:border-white/5 text-[13px] font-bold text-gray-900 dark:text-white leading-relaxed">
+                {adjustmentDetail.description || 'No manual notes recorded for this operation.'}
+              </div>
             </div>
-
-            {/* Footer intentionally removed for adjustment details modal — read-only view */}
+            
+            <Button fullWidth onClick={() => setAdjustmentModalOpen(false)} color="gray" variant="soft">Close Audit</Button>
           </div>
         ) : (
-          <div className="text-sm text-gray-500">No details available.</div>
+          <div className="py-12 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Audit Data Unavailable</div>
         )}
       </Modal>
+
       <EditParsedModal
         isOpen={!!editingTransaction}
         onClose={() => setEditingTransaction(null)}
@@ -453,7 +435,6 @@ const TransactionList = ({ onTransactionChange }) => {
         onSuccess={handleEditSuccess}
       />
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={!!deletingTransaction}
         onClose={() => setDeletingTransaction(null)}
@@ -461,12 +442,12 @@ const TransactionList = ({ onTransactionChange }) => {
         title="Delete Transaction"
         message={
           preparingDelete
-            ? 'Checking for linked repayments...'
+            ? 'Accessing audit logs...'
             : linkedCount > 0
-              ? `Deleting "${deletingTransaction?.description}" will also delete ${linkedCount} linked repayment${linkedCount > 1 ? 's' : ''}. This cannot be undone. Continue?`
-              : `Are you sure you want to delete "${deletingTransaction?.description}"? This action cannot be undone.`
+              ? `Purging "${deletingTransaction?.description}" will also cascade to ${linkedCount} linked operation${linkedCount > 1 ? 's' : ''}. This operation is final. Proceed?`
+              : `Are you sure you want to purge "${deletingTransaction?.description}"? This operation cannot be reversed.`
         }
-        confirmText="Delete"
+        confirmText="Confirm Purge"
         type="danger"
         loading={preparingDelete}
       />

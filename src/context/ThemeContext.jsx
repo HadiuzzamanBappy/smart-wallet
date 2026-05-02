@@ -7,14 +7,14 @@ export { ThemeContext };
 // theme: 'dark' | 'light' | 'system'
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    // Read saved preference; allowed values: 'dark','light','system'
+    // Read saved preference from local storage only
     try {
       const saved = localStorage.getItem('wallet-theme');
       if (saved === 'dark' || saved === 'light' || saved === 'system') return saved;
     } catch (err) {
       void err;
     }
-    // Default to system
+    // Default to system if nothing is saved locally
     return 'system';
   });
 
@@ -28,7 +28,6 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     const apply = () => {
-      // Compute effective dark inline to satisfy hook dependencies
       let isDark;
       if (theme === 'dark') isDark = true;
       else if (theme === 'light') isDark = false;
@@ -36,7 +35,12 @@ export const ThemeProvider = ({ children }) => {
 
       if (isDark) document.documentElement.classList.add('dark');
       else document.documentElement.classList.remove('dark');
-      try { localStorage.setItem('wallet-theme', theme); } catch (err) { void err; }
+      
+      try { 
+        localStorage.setItem('wallet-theme', theme); 
+      } catch (err) { 
+        void err; 
+      }
     };
 
     apply();
@@ -73,7 +77,6 @@ export const ThemeProvider = ({ children }) => {
 
   const setThemeMode = (mode) => {
     if (mode === 'dark' || mode === 'light' || mode === 'system') {
-      try { localStorage.setItem('wallet-theme-updatedAt', new Date().toISOString()); } catch (err) { void err; }
       setTheme(mode);
     }
   };
@@ -90,4 +93,4 @@ export const ThemeProvider = ({ children }) => {
       {children}
     </ThemeContext.Provider>
   );
-};
+};
