@@ -33,7 +33,7 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000, po
   };
 
   const getStyles = () => {
-    const base = "bg-surface-light/95 dark:bg-surface-dark/90 backdrop-blur-md shadow-2xl border border-paper-200 dark:border-paper-900/10";
+    const base = "bg-surface-card dark:bg-surface-card-dark backdrop-blur-md shadow-2xl border border-paper-200 dark:border-paper-900/10";
     switch (type) {
       case 'success':
         return `${base} border-l-2 border-l-success-500`;
@@ -58,13 +58,13 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000, po
     <div
       className={`${positionClasses} transform transition-all duration-300 ease-out ${animationClasses}`}
     >
-      <div className={`${getStyles()} rounded-2xl p-3 overflow-hidden`}>
+      <div className={`${getStyles()} rounded-3xl p-3 overflow-hidden`}>
         <div className="flex items-center gap-2.5">
           <div className="flex-shrink-0">
             {getIcon()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-ink-900 dark:text-paper-50 leading-snug">
+            <p className="text-body font-medium text-ink-900 dark:text-paper-50 leading-snug">
               {message}
             </p>
           </div>

@@ -73,7 +73,7 @@ const IconBox = ({
     };
 
     const variants = {
-        glass: `bg-surface-light/50 dark:bg-surface-dark/40 backdrop-blur-md border ${config.border} shadow-sm`,
+        glass: `bg-surface-card dark:bg-surface-card-dark backdrop-blur-md border ${config.border} shadow-sm`,
         soft: bgClass || `${config.bg} border ${config.border}`,
         solid: bgClass || `${config.bg.replace('/10', '')} border ${config.border}`,
         ghost: `bg-transparent border ${config.border}`

@@ -56,20 +56,20 @@ const ConfirmDialog = ({
       className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-ink-950/40 backdrop-blur-md animate-in fade-in duration-300"
       onClick={handleBackdropClick}
     >
-      <div className="w-full max-w-[360px] bg-surface-light dark:bg-surface-dark backdrop-blur-3xl rounded-[2rem] shadow-2xl border border-paper-200 dark:border-paper-900/10 p-6 transform transition-all animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-[360px] bg-surface-card dark:bg-surface-card-dark backdrop-blur-3xl rounded-3xl shadow-2xl border border-paper-200 dark:border-paper-900/10 p-6 transform transition-all animate-in zoom-in-95 duration-200">
         <div className="flex flex-col items-center text-center gap-5">
-          <IconBox 
-            icon={styles.icon} 
-            size="lg" 
-            variant="glass" 
+          <IconBox
+            icon={styles.icon}
+            size="lg"
+            variant="glass"
             color={styles.color}
           />
-          
+
           <div className="space-y-2">
             <h3 className="text-h5 font-bold text-ink-900 dark:text-paper-50 tracking-tight">
               {title}
             </h3>
-            <p className="text-label text-ink-500 dark:text-paper-400 leading-relaxed px-1">
+            <p className="text-body text-ink-500 dark:text-paper-400 leading-relaxed px-1">
               {message}
             </p>
           </div>

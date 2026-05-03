@@ -8,6 +8,7 @@ import AddTransactionModal from './AddTransactionModal';
 import LoanCreditModal from './LoanCreditModal';
 import MonthlyBreakdownModal from './MonthlyBreakdownModal';
 import { CompactSummarySkeleton } from '../UI/SkeletonLoader';
+import IconBox from '../UI/base/IconBox';
 
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
@@ -32,39 +33,31 @@ const CompactSummary = () => {
       label: 'Earned',
       value: formatCurrencyWithUser(stats.thisMonthIncome, userProfile),
       icon: TrendingUp,
-      color: 'text-emerald-500',
-      bgColor: 'bg-emerald-500/10',
-      border: 'border-emerald-500/20'
+      color: 'primary'
     },
     {
       label: 'Expended',
       value: formatCurrencyWithUser(stats.thisMonthExpense, userProfile),
       icon: TrendingDown,
-      color: 'text-red-500',
-      bgColor: 'bg-red-500/10',
-      border: 'border-red-500/20'
+      color: 'error'
     },
     {
       label: 'Credit',
       value: formatCurrencyWithUser(stats.creditDue || 0, userProfile),
       total: formatCurrencyWithUser(stats.allTimeCreditGiven || 0, userProfile),
       icon: Wallet,
-      color: 'text-brand-teal',
-      bgColor: 'bg-brand-teal/10',
-      border: 'border-brand-teal/20',
+      color: 'info',
       onClick: () => setShowCreditModal(true),
-      isClickable: (stats.creditDue || 0) > 0
+      isClickable: true
     },
     {
       label: 'Loans',
       value: formatCurrencyWithUser(stats.loanDue || 0, userProfile),
       total: formatCurrencyWithUser(stats.allTimeLoanTaken || 0, userProfile),
       icon: DollarSign,
-      color: 'text-brand-blue',
-      bgColor: 'bg-brand-blue/10',
-      border: 'border-brand-blue/20',
+      color: 'warning',
       onClick: () => setShowLoanModal(true),
-      isClickable: (stats.loanDue || 0) > 0
+      isClickable: true
     }
   ];
 
@@ -77,7 +70,7 @@ const CompactSummary = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowMonthlyBreakdown(true)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all border border-transparent hover:border-gray-200/50 dark:hover:border-white/10"
+            className="p-2 hover:bg-paper-100 dark:hover:bg-white/10 rounded-2xl text-ink-400 hover:text-ink-900 dark:hover:text-white transition-all border border-transparent hover:border-paper-200/50 dark:hover:border-white/10"
             title="Breakdown"
           >
             <BarChart3 className="w-4 h-4" />
@@ -85,7 +78,7 @@ const CompactSummary = () => {
           <button
             onClick={refreshData}
             disabled={refreshing}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all border border-transparent hover:border-gray-200/50 dark:hover:border-white/10 disabled:opacity-30"
+            className="p-2 hover:bg-paper-100 dark:hover:bg-white/10 rounded-2xl text-ink-400 hover:text-ink-900 dark:hover:text-white transition-all border border-transparent hover:border-paper-200/50 dark:hover:border-white/10 disabled:opacity-30"
             title="Refresh Suite"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -109,27 +102,31 @@ const CompactSummary = () => {
                 padding="p-4"
               >
                 <div className="flex items-center gap-3.5 relative z-10">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.bgColor} ${card.color} border ${card.border} transition-transform group-hover:scale-110`}>
-                    <card.icon className="w-5 h-5" />
-                  </div>
+                  <IconBox 
+                    icon={card.icon} 
+                    size="sm" 
+                    color={card.color} 
+                    variant="soft"
+                    className="group-hover:scale-110 transition-transform" 
+                  />
                   <div className="min-w-0 flex-1">
-                    <div className={`${THEME.typography.label} mb-1`}>
+                    <div className="text-overline text-ink-400 dark:text-paper-700 tracking-widest mb-1 leading-none">
                       {card.label}
                     </div>
                     <div className="flex items-baseline gap-2 flex-wrap min-w-0">
-                      <span className={`${THEME.typography.value} truncate`}>
+                      <span className="text-h5 font-black text-ink-900 dark:text-paper-50 tracking-tighter truncate leading-none">
                         {card.value}
                       </span>
                       {card.total && (
-                        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-600 truncate tracking-tight opacity-60">
+                        <span className="text-overline text-ink-400 dark:text-paper-700 opacity-60 truncate tracking-tight">
                           / {card.total}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {card.isClickable && (
-                    <div className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg bg-gray-100/50 dark:bg-white/5 text-gray-400 group-hover:text-primary-500 transition-colors">
+                  {card.onClick && (
+                    <div className="shrink-0 w-6 h-6 flex items-center justify-center rounded-2xl bg-primary-500/10 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 border border-primary-500/20 transition-all">
                       <Eye className="w-3 h-3" />
                     </div>
                   )}

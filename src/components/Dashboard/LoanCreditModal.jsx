@@ -22,8 +22,8 @@ import {
 import { APP_EVENTS } from '../../config/constants';
 
 // Base UI Components
-import { THEME } from '../../config/theme';
 import Button from '../UI/base/Button';
+import IconBox from '../UI/base/IconBox';
 
 // Atomic Debt Components
 import DebtItem from './Debt/DebtItem';
@@ -69,10 +69,10 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         try {
             const result = isLoans ? await getAllLoans(user.uid) : await getAllCredits(user.uid);
             if (result.success) setItems(result.data || []);
-            else showToast(result.error || 'Failed to load data', 'error');
+            else showToast(result.error || 'Audit failure', 'error');
         } catch (error) {
             console.error('Error loading data:', error);
-            showToast('Failed to load data', 'error');
+            showToast('Audit failure', 'error');
         } finally {
             if (!silent) setLoading(false);
         }
@@ -98,7 +98,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         if (!showPaymentModal || !paymentAmount) return;
         const amount = parseFloat(paymentAmount);
         if (isNaN(amount) || amount <= 0 || amount > showPaymentModal.remainingAmount) {
-            showToast('Please enter a valid amount', 'error');
+            showToast('Invalid repayment volume', 'error');
             return;
         }
 
@@ -119,11 +119,11 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 loadData(true);
                 refreshTransactions(true);
             } else {
-                showToast(result.error || 'Failed to record', 'error');
+                showToast(result.error || 'Record failure', 'error');
                 loadData(true);
             }
         } catch {
-            showToast('Failed to record', 'error');
+            showToast('Record failure', 'error');
             loadData(true);
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
@@ -134,14 +134,14 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
         if (!showAdjustmentModal || !adjustmentAmount) return;
         const adjustment = parseFloat(adjustmentAmount);
         if (isNaN(adjustment) || adjustment === 0) {
-            showToast('Please enter a valid amount', 'error');
+            showToast('Invalid adjustment delta', 'error');
             return;
         }
 
         const itemId = showAdjustmentModal.id;
         const newAmount = (Number(showAdjustmentModal.amount) || 0) + adjustment;
         if (newAmount <= 0) {
-            showToast('Adjusted amount must be > 0', 'error');
+            showToast('Adjusted floor must be > 0', 'error');
             return;
         }
 
@@ -158,11 +158,11 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 loadData(true);
                 refreshTransactions(true);
             } else {
-                showToast(result.error || 'Failed to adjust', 'error');
+                showToast(result.error || 'Adjustment failure', 'error');
                 loadData(true);
             }
         } catch {
-            showToast('Failed to adjust', 'error');
+            showToast('Adjustment failure', 'error');
             loadData(true);
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
@@ -189,11 +189,11 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 loadData(true);
                 refreshTransactions(true);
             } else {
-                showToast(result.error || 'Failed to record', 'error');
+                showToast(result.error || 'Record failure', 'error');
                 loadData(true);
             }
         } catch {
-            showToast('Failed to record', 'error');
+            showToast('Record failure', 'error');
             loadData(true);
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
@@ -220,11 +220,11 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 loadData(true);
                 refreshTransactions(true);
             } else {
-                showToast(result.error || 'Failed to reset', 'error');
+                showToast(result.error || 'Reset failure', 'error');
                 loadData(true);
             }
         } catch {
-            showToast('Failed to reset', 'error');
+            showToast('Reset failure', 'error');
             loadData(true);
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
@@ -240,39 +240,39 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
             <Modal isOpen={open} onClose={onClose} title={title} size="lg" disableScroll={true}>
                 <div className="flex flex-col h-full">
                     {/* Summary Header - Executive Metrics */}
-                    <div className="px-5 pt-5 pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 border-b border-gray-100 dark:border-white/5">
+                    <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-paper-100 dark:border-white/5">
                         <div className="flex items-center gap-3">
-                            <div className="px-4 py-3 rounded-2xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
-                                <div className={`${THEME.typography.label} mb-1.5`}>Capital Principal</div>
-                                <div className={THEME.typography.value}>{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</div>
+                            <div className="px-4 py-3 rounded-2xl bg-surface-card dark:bg-surface-card-dark border border-paper-100 dark:border-white/5 shadow-sm">
+                                <div className="text-overline text-ink-400 dark:text-paper-700 font-black mb-1 opacity-60 leading-none">Capital Principal</div>
+                                <div className="text-label font-bold text-ink-900 dark:text-paper-50 leading-none tracking-tight">{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</div>
                             </div>
-                            <div className="px-4 py-3 rounded-2xl bg-orange-500/5 dark:bg-orange-500/[0.02] border border-orange-500/10">
-                                <div className={`${THEME.typography.label} text-orange-500 mb-1.5`}>Outstanding Due</div>
-                                <div className="text-sm font-bold text-orange-600 dark:text-orange-400 tracking-tight">{formatCurrencyWithUser(totalRemaining, userProfile)}</div>
+                            <div className="px-4 py-3 rounded-2xl bg-warning-500/5 border border-warning-500/20 shadow-sm">
+                                <div className="text-overline text-warning-500 font-black mb-1 leading-none">Outstanding Due</div>
+                                <div className="text-h5 font-black text-warning-600 dark:text-warning-400 tracking-tighter leading-none">{formatCurrencyWithUser(totalRemaining, userProfile)}</div>
                             </div>
                         </div>
 
                         {/* Modern Toggle System */}
-                        <div className="flex p-1 bg-gray-100/50 dark:bg-white/5 border border-gray-200/50 dark:border-white/5 rounded-2xl w-full sm:w-auto">
+                        <div className="flex p-1 bg-paper-100/30 dark:bg-white/5 border border-paper-100 dark:border-white/5 rounded-2xl w-full sm:w-auto">
                             <button
                                 onClick={() => setShowAllItems(false)}
-                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl ${THEME.typography.label} transition-all duration-300 ${!showAllItems
+                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-overline transition-all duration-300 ${!showAllItems
                                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
-                                    : 'text-gray-400 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-400'}`}
+                                    : 'text-ink-400 dark:text-paper-700 hover:text-ink-900 dark:hover:text-paper-50'}`}
                             >
-                                <User className="w-3.5 h-3.5" />
-                                <span>Unpaid</span>
-                                <span className={`px-1.5 py-0.5 rounded-md text-[9px] ml-1 ${!showAllItems ? 'bg-white/20 text-white' : 'bg-gray-200 dark:bg-white/10 text-gray-500'}`}>{unpaidCount}</span>
+                                <User className={`w-3 h-3 ${!showAllItems ? 'text-white' : ''}`} />
+                                <span className={!showAllItems ? 'text-white' : ''}>Unpaid</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-[9px] ml-1 font-black ${!showAllItems ? 'bg-white/20 text-white' : 'bg-paper-100 dark:bg-white/10 text-ink-400'}`}>{unpaidCount}</span>
                             </button>
                             <button
                                 onClick={() => setShowAllItems(true)}
-                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl ${THEME.typography.label} transition-all duration-300 ${showAllItems
+                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-overline transition-all duration-300 ${showAllItems
                                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
-                                    : 'text-gray-400 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-400'}`}
+                                    : 'text-ink-400 dark:text-paper-700 hover:text-ink-900 dark:hover:text-paper-50'}`}
                             >
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                <span>Paid</span>
-                                <span className={`px-1.5 py-0.5 rounded-md text-[9px] ml-1 ${showAllItems ? 'bg-white/20 text-white' : 'bg-gray-200 dark:bg-white/10 text-gray-500'}`}>{paidCount}</span>
+                                <CheckCircle className={`w-3 h-3 ${showAllItems ? 'text-white' : ''}`} />
+                                <span className={showAllItems ? 'text-white' : ''}>Paid</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-[9px] ml-1 font-black ${showAllItems ? 'bg-white/20 text-white' : 'bg-paper-100 dark:bg-white/10 text-ink-400'}`}>{paidCount}</span>
                             </button>
                         </div>
                     </div>
@@ -281,13 +281,13 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                         <div className="flex-1 flex items-center justify-center p-10"><LoadingSpinner /></div>
                     ) : displayedItems.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-                            <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-center mb-5 opacity-40">
-                                <AlertCircle className="w-8 h-8 text-gray-400" />
+                            <div className="w-16 h-16 rounded-3xl bg-paper-100 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-center mb-5 opacity-40">
+                                <AlertCircle className="w-8 h-8 text-ink-400" />
                             </div>
-                            <p className={THEME.typography.label}>{showAllItems ? emptyMessage : `No active ${isLoans ? 'loans' : 'credits'}`}</p>
+                            <p className="text-overline text-ink-400 dark:text-paper-700 font-black tracking-widest">{showAllItems ? emptyMessage : `No active ${isLoans ? 'loans' : 'credits'}`}</p>
                         </div>
                     ) : (
-                        <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-5 space-y-3 custom-scrollbar">
                             {displayedItems.map((item) => (
                                 <DebtItem
                                     key={item.id}
@@ -347,9 +347,9 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 isOpen={!!resetConfirmItem}
                 onClose={() => setResetConfirmItem(null)}
                 onConfirm={confirmReset}
-                title={`Reset ${isLoans ? 'Loan' : 'Credit'}`}
-                message={`Are you sure you want to reset all payments for "${resetConfirmItem?.description}"? This will delete all repayment history and restore the full balance.`}
-                confirmText="Reset All"
+                title={`Reset ${isLoans ? 'Liability' : 'Credit'}`}
+                message={`Are you sure you want to purge all settlement logs for "${resetConfirmItem?.description}"? This operation will restore the full principal balance.`}
+                confirmText="Confirm Purge"
                 type="danger"
             />
         </>

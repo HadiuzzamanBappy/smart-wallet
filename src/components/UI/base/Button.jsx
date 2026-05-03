@@ -60,7 +60,7 @@ const Button = ({
             bg: "bg-info-500",
             text: "text-info-600 dark:text-info-400",
             contrast: "text-white",
-            border: "border-info-500",
+            border: "border-info-500/40",
             glow: "shadow-info-500/20"
         },
         ink: {

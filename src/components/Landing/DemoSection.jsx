@@ -1,81 +1,85 @@
 import React from 'react';
 import { Sparkles, Terminal, CheckCircle2 } from 'lucide-react';
-import { THEME } from '../../config/theme';
+import IconBox from '../UI/base/IconBox';
 
 const DemoSection = () => {
   return (
-    <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <section className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16 sm:mb-24">
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full mb-8 sm:mb-10">
-            <Terminal className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            <span className={THEME.typography.label}>Interface Preview</span>
+        <div className="text-center mb-20 sm:mb-24">
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-full mb-10 shadow-xl shadow-primary-500/5">
+            <Terminal className="w-4 h-4" />
+            <span className="text-overline font-black tracking-widest uppercase">Intelligence Interface Preview</span>
           </div>
-          <h2 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-8 sm:mb-10 tracking-tight leading-none">
+          <h2 className="text-h2 sm:text-h1 font-black text-ink-900 dark:text-paper-50 mb-10 tracking-tighter leading-[1.1]">
             Effortless Intelligence.<br className="hidden sm:block" />
-            <span className="opacity-30 dark:opacity-40 italic font-medium px-2">Zero Friction.</span>
+            <span className="opacity-30 dark:opacity-40 italic px-2">Zero Friction.</span>
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-500 dark:text-gray-400 font-medium leading-relaxed max-w-2xl mx-auto">
+          <p className="text-body sm:text-lg lg:text-xl text-ink-400 dark:text-paper-700 font-medium leading-relaxed max-w-2xl mx-auto">
             Our natural language engine decodes your financial intent in real-time.
           </p>
         </div>
 
         <div className="relative max-w-5xl mx-auto group">
           {/* Decorative background glow */}
-          <div className="absolute -inset-4 bg-gradient-to-r from-primary-500/20 to-blue-600/20 rounded-[2.5rem] sm:rounded-[4rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+          <div className="absolute -inset-8 bg-gradient-to-r from-primary-500/20 to-secondary-500/10 rounded-[4rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
 
-          <div className="relative bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] border border-gray-200/50 dark:border-white/10 overflow-hidden transition-all duration-700">
+          <div className="relative bg-paper-50 dark:bg-ink-950 rounded-[2.5rem] sm:rounded-[3.5rem] shadow-2xl border border-paper-200/50 dark:border-white/10 overflow-hidden transition-all duration-1000">
             {/* Terminal Header */}
-            <div className="bg-gray-50/50 dark:bg-white/[0.03] px-6 sm:px-8 py-4 sm:py-5 border-b border-gray-200/50 dark:border-white/5 flex items-center justify-between">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="w-3 h-3 bg-rose-500/40 rounded-full"></div>
-                <div className="w-3 h-3 bg-amber-500/40 rounded-full"></div>
-                <div className="w-3 h-3 bg-emerald-500/40 rounded-full"></div>
-                <span className={`${THEME.typography.label} ml-4 text-gray-400 dark:text-gray-600 truncate`}>Neural Workspace v1.0</span>
+            <div className="bg-paper-100/50 dark:bg-white/[0.03] px-8 py-5 border-b border-paper-200/50 dark:border-white/5 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-3.5 h-3.5 bg-error-500/40 rounded-full"></div>
+                <div className="w-3.5 h-3.5 bg-warning-500/40 rounded-full"></div>
+                <div className="w-3.5 h-3.5 bg-success-500/40 rounded-full"></div>
+                <span className="text-overline text-ink-400 dark:text-paper-600 ml-4 font-black tracking-widest uppercase">Neural Workspace v2.0</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></div>
-                <span className={`${THEME.typography.label} text-primary-600 dark:text-primary-400 hidden xs:block`}>System Active</span>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse shadow-[0_0_8px_rgba(20,184,166,0.6)]"></div>
+                <span className="text-overline text-primary-600 dark:text-primary-400 hidden xs:block font-black tracking-widest uppercase">System Active</span>
               </div>
             </div>
 
-            <div className="p-8 sm:p-16 space-y-8 sm:space-y-12">
+            <div className="p-10 sm:p-20 space-y-12 sm:space-y-16">
               {/* User Input Bubble */}
-              <div className="flex justify-end animate-in slide-in-from-right-8 duration-700">
+              <div className="flex justify-end animate-in slide-in-from-right-12 duration-1000">
                 <div className="relative">
-                  <div className="absolute -inset-1.5 bg-gradient-to-r from-primary-500 to-blue-500 rounded-2xl blur opacity-30"></div>
-                  <div className="relative bg-gray-900 text-white px-6 sm:px-10 py-4 sm:py-6 rounded-3xl rounded-tr-sm text-base sm:text-xl font-medium shadow-2xl">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl blur-lg opacity-30"></div>
+                  <div className="relative bg-ink-900 text-paper-50 px-8 sm:px-12 py-5 sm:py-7 rounded-[2rem] rounded-tr-sm text-lg sm:text-2xl font-black tracking-tight shadow-2xl">
                     "I bought groceries for $75 today"
                   </div>
                 </div>
               </div>
 
               {/* AI Response Bubble */}
-              <div className="flex justify-start animate-in slide-in-from-left-8 duration-700 delay-500">
-                <div className="w-full max-w-md sm:max-w-lg bg-gray-50 dark:bg-white/[0.04] border border-gray-200/50 dark:border-white/10 p-6 sm:p-10 rounded-3xl rounded-tl-sm shadow-xl relative overflow-hidden group/card">
-                  <div className="flex items-start gap-5 sm:gap-6">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center shrink-0 border border-primary-500/20">
-                      <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600 dark:text-primary-400" />
-                    </div>
-                    <div className="space-y-5 sm:space-y-6">
+              <div className="flex justify-start animate-in slide-in-from-left-12 duration-1000 delay-500">
+                <div className="w-full max-w-md sm:max-w-xl bg-paper-100/50 dark:bg-white/[0.03] border border-paper-200/50 dark:border-white/10 p-8 sm:p-12 rounded-[2.5rem] rounded-tl-sm shadow-2xl relative overflow-hidden group/card">
+                  <div className="flex items-start gap-6 sm:gap-8">
+                    <IconBox 
+                      icon={Sparkles} 
+                      variant="glass" 
+                      color="primary" 
+                      size="xl" 
+                      className="shrink-0 shadow-lg shadow-primary-500/10"
+                    />
+                    <div className="space-y-6 sm:space-y-8 flex-1">
                       <div>
-                        <div className={`${THEME.typography.label} text-primary-600 dark:text-primary-500 mb-2`}>Entity Extraction</div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl sm:text-3xl">🍔</span>
-                          <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight leading-none">Food & Dining</span>
+                        <div className="text-overline text-primary-500 font-black tracking-widest uppercase mb-3">Entity Extraction</div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-3xl sm:text-4xl">🍔</span>
+                          <span className="text-h4 sm:text-h3 font-black text-ink-900 dark:text-paper-50 tracking-tighter leading-none">Food & Dining</span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                        <div className="bg-white/80 dark:bg-white/5 p-3 sm:p-4 rounded-2xl border border-gray-100 dark:border-white/5">
-                          <div className={`${THEME.typography.label} text-gray-400 dark:text-gray-500 mb-1.5`}>Amount</div>
-                          <div className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">$75.00</div>
+                      <div className="grid grid-cols-2 gap-6 sm:gap-8">
+                        <div className="bg-paper-50/80 dark:bg-white/[0.02] p-4 sm:p-6 rounded-2xl border border-paper-100 dark:border-white/5 shadow-sm">
+                          <div className="text-overline text-ink-300 dark:text-paper-800 font-black tracking-widest uppercase mb-2">Amount</div>
+                          <div className="text-xl sm:text-2xl font-black text-ink-900 dark:text-paper-50 tracking-tight">$75.00</div>
                         </div>
-                        <div className="bg-white/80 dark:bg-white/5 p-3 sm:p-4 rounded-2xl border border-gray-100 dark:border-white/5">
-                          <div className={`${THEME.typography.label} text-gray-400 dark:text-gray-500 mb-1.5`}>Status</div>
-                          <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-500">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span className="text-base sm:text-lg font-bold italic">Verified</span>
+                        <div className="bg-paper-50/80 dark:bg-white/[0.02] p-4 sm:p-6 rounded-2xl border border-paper-100 dark:border-white/5 shadow-sm">
+                          <div className="text-overline text-ink-300 dark:text-paper-800 font-black tracking-widest uppercase mb-2">Status</div>
+                          <div className="flex items-center gap-2 text-success-600 dark:text-success-400">
+                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="text-xl sm:text-2xl font-black italic tracking-tight">Verified</span>
                           </div>
                         </div>
                       </div>
@@ -83,15 +87,15 @@ const DemoSection = () => {
                   </div>
 
                   {/* Subtle decorative mesh background */}
-                  <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-primary-500/5 rounded-full blur-[80px] -z-10 group-hover/card:bg-primary-500/10 transition-colors"></div>
+                  <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-primary-500/[0.05] rounded-full blur-[100px] -z-10 group-hover/card:bg-primary-500/[0.08] transition-all duration-1000"></div>
                 </div>
               </div>
             </div>
 
             {/* Terminal Footer */}
-            <div className="bg-gray-50/50 dark:bg-white/[0.02] px-6 sm:px-10 py-4 sm:py-5 border-t border-gray-200/50 dark:border-white/5">
-              <div className={`flex items-center justify-between ${THEME.typography.label} text-gray-400 dark:text-gray-600`}>
-                <div className="flex gap-4 sm:gap-6">
+            <div className="bg-paper-100/50 dark:bg-white/[0.02] px-10 py-5 border-t border-paper-200/50 dark:border-white/5">
+              <div className="flex items-center justify-between text-overline text-ink-300 dark:text-paper-800 font-black tracking-[0.2em] uppercase">
+                <div className="flex gap-6 sm:gap-10">
                   <span>Lat: 12ms</span>
                   <span className="hidden xs:block">Confidence: 99.4%</span>
                 </div>

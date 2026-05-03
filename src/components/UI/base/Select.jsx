@@ -33,11 +33,11 @@ const Select = ({
                     onChange={onChange}
                     className={`
                         appearance-none w-full pr-10
-                        bg-paper-100/50 dark:bg-ink-800/40 backdrop-blur-sm
+                        bg-paper-100/30 dark:bg-white/[0.02] backdrop-blur-sm
                         border border-paper-200 dark:border-paper-900/10
                         ${size === 'sm' ? 'rounded-xl' : 'rounded-2xl'} text-ink-900 dark:text-paper-50
                         outline-none transition-all cursor-pointer
-                        hover:bg-paper-200/50 dark:hover:bg-ink-800/60
+                        hover:bg-paper-200/50 dark:hover:bg-white/[0.04]
                         focus:ring-4 focus:ring-primary-500/10
                         focus:border-primary-500/50
                         shadow-sm
@@ -49,7 +49,7 @@ const Select = ({
                         <option 
                             key={opt.value} 
                             value={opt.value}
-                            className="bg-surface-light dark:bg-surface-dark text-ink-900 dark:text-paper-50"
+                            className="bg-surface-card dark:bg-surface-card-dark text-ink-900 dark:text-paper-50"
                         >
                             {opt.label}
                         </option>

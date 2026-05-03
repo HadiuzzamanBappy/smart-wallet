@@ -127,7 +127,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
         {/* Type & Category Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-overline opacity-40 px-1">Type</label>
+            <label className="text-overline px-1 opacity-50 block">Type</label>
             <Select
               name="type"
               value={editData.type}
@@ -141,7 +141,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-overline opacity-40 px-1">Category</label>
+            <label className="text-overline px-1 opacity-50 block">Category</label>
             <Select
               name="category"
               value={editData.category}
@@ -157,7 +157,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
         {/* Amount & Date Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-overline opacity-40 px-1">Amount</label>
+            <label className="text-overline px-1 opacity-50 block">Amount</label>
             <GlassInput
               type="number"
               name="amount"
@@ -168,7 +168,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-overline opacity-40 px-1">Date</label>
+            <label className="text-overline px-1 opacity-50 block">Date</label>
             <GlassInput
               type="date"
               name="date"
@@ -181,7 +181,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
 
         {/* Description */}
         <div className="space-y-1">
-          <label className="text-overline opacity-40 px-1">Description</label>
+          <label className="text-overline px-1 opacity-50 block">Description</label>
           <GlassInput
             type="text"
             name="description"

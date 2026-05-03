@@ -1,6 +1,10 @@
 import React from 'react';
 import { HelpCircle, MessageCircle, Zap, BarChart3, Shield, Target, Calendar, CreditCard } from 'lucide-react';
 import Modal from '../UI/base/Modal';
+import GlassCard from '../UI/base/GlassCard';
+import Badge from '../UI/base/Badge';
+import SectionHeader from '../UI/base/SectionHeader';
+import IconBox from '../UI/base/IconBox';
 
 const AboutModal = ({ isOpen, onClose }) => {
   const features = [
@@ -35,85 +39,116 @@ const AboutModal = ({ isOpen, onClose }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Operational Intelligence" size="lg">
-      <div className="space-y-8">
+      <div className="space-y-6">
 
         {/* Core Systems */}
-        <div>
-          <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-5 flex items-center gap-2 px-1">
-            <Zap className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" /> Core Systems
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="p-5 bg-gray-50/50 dark:bg-white/[0.02] rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm transition-all hover:bg-gray-100/50 dark:hover:bg-white/5 group">
-                  <div className="flex items-start gap-5">
-                    <div className="w-12 h-12 rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center shadow-md flex-shrink-0 border border-gray-100 dark:border-white/10 group-hover:scale-105 transition-transform duration-300">
-                      <Icon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">
-                        {feature.title}
-                      </h4>
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed font-bold uppercase tracking-widest opacity-70">
-                        {feature.description}
-                      </p>
-                    </div>
+        <section>
+          <SectionHeader 
+            icon={Zap} 
+            title="Core Systems" 
+            titleSize="text-h6"
+            className="mb-4"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {features.map((feature, index) => (
+              <GlassCard 
+                key={index} 
+                padding="p-3"
+                className="group/feature"
+                hover
+              >
+                <div className="flex items-start gap-3">
+                  <IconBox 
+                    icon={feature.icon} 
+                    variant="glass" 
+                    size="md" 
+                    color="primary"
+                    className="group-hover/feature:scale-110 transition-transform duration-500"
+                  />
+                  <div>
+                    <h4 className="text-label font-bold tracking-wide text-ink-900 dark:text-paper-50">
+                      {feature.title}
+                    </h4>
+                    <p className="text-body text-ink-500 dark:text-paper-400 mt-1 leading-relaxed font-light">
+                      {feature.description}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
+              </GlassCard>
+            ))}
           </div>
-        </div>
+        </section>
 
         {/* Transaction Matrix */}
-        <div>
-          <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-5 flex items-center gap-2 px-1">
-            <CreditCard className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" /> Transaction Matrix
-          </h3>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <section>
+          <SectionHeader 
+            icon={CreditCard} 
+            title="Transaction Matrix" 
+            titleSize="text-h6"
+            className="mb-4"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {types.map((type, index) => (
-              <div key={index} className="p-4 bg-gray-50/50 dark:bg-white/[0.02] rounded-2xl border border-gray-100 dark:border-white/10 transition-all hover:border-teal-500/30">
-                <div className={`text-[10px] font-black uppercase tracking-widest ${type.color} mb-2`}>
-                  {type.label}
+              <GlassCard 
+                key={index} 
+                variant="flat" 
+                padding="p-3" 
+                className="bg-paper-100/50 dark:bg-ink-950/20 border-paper-200/50 dark:border-paper-900/10"
+              >
+                <div className="flex flex-col gap-2">
+                  <Badge 
+                    variant="glass" 
+                    color={type.color.includes('emerald') ? 'success' : type.color.includes('red') ? 'error' : type.color.includes('blue') ? 'info' : 'secondary'}
+                    size="sm"
+                    className="self-start"
+                  >
+                    {type.label}
+                  </Badge>
+                  <p className="text-overline text-ink-500 dark:text-paper-500 leading-snug font-light">
+                    {type.desc}
+                  </p>
                 </div>
-                <div className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed font-bold uppercase tracking-widest opacity-70">
-                  {type.desc}
-                </div>
-              </div>
+              </GlassCard>
             ))}
           </div>
-        </div>
+        </section>
 
         {/* Quick Protocols */}
-        <div className="p-5 bg-teal-50 dark:bg-teal-500/10 rounded-2xl border border-teal-100 dark:border-teal-500/10 shadow-inner">
-          <h3 className="text-[10px] font-black text-teal-700 dark:text-teal-400 uppercase tracking-widest mb-4">
-            Quick Protocols
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-            {[
-              'Use "Paid 500 for lunch" for instant AI logging',
-              'Set a master ceiling in Profile for global monitoring',
-              'Click any ledger entry to modify historical data',
-              'Export full JSON archives from Data Governance',
-              'Planner module handles pre-month allocations',
-              'Toggle Multi-Currency in regional settings'
-            ].map((tip, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-teal-500/40" />
-                <p className="text-[11px] text-teal-900/70 dark:text-gray-400 font-bold uppercase tracking-widest leading-relaxed">{tip}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <section>
+          <SectionHeader 
+            icon={Zap} 
+            title="Quick Protocols" 
+            titleSize="text-h6"
+            className="mb-4"
+          />
+          <GlassCard variant="flat" padding="p-4" className="bg-primary-500/[0.03] dark:bg-primary-500/10 border-primary-500/20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+              {[
+                'Use "Paid 500 for lunch" for instant AI logging',
+                'Set a master ceiling in Profile for global monitoring',
+                'Click any ledger entry to modify historical data',
+                'Export full JSON archives from Data Governance',
+                'Planner module handles pre-month allocations',
+                'Toggle Multi-Currency in regional settings'
+              ].map((tip, index) => (
+                <div key={index} className="flex items-start gap-2.5">
+                  <IconBox icon={Zap} variant="glass" size="xs" color="primary" className="shrink-0 mt-0.5 opacity-40" />
+                  <p className="text-label text-ink-600 dark:text-paper-400 font-medium tracking-tight leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        </section>
 
-        <div className="text-center pt-4 border-t border-gray-100 dark:border-white/5">
-          <p className="text-[9px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-[0.4em]">
-            Smart Wallet v1.2.0 · Financial Intelligence Guide
-          </p>
+        <div className="flex items-center justify-center pt-4 border-t border-paper-200 dark:border-paper-900/10 gap-3">
+          <Badge color="ink" variant="soft" size="sm">v1.2.0</Badge>
+          <span className="text-overline text-ink-300 dark:text-paper-700 font-bold tracking-[0.2em]">
+            Financial Intelligence Guide
+          </span>
         </div>
       </div>
     </Modal>
+
   );
 };
 

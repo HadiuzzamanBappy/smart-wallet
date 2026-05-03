@@ -27,9 +27,9 @@ const Badge = ({
     };
 
     const sizes = {
-        sm: 'px-2 py-0.5 text-[8px] tracking-[0.05em]',
-        md: 'px-2.5 py-1 text-[10px] tracking-tight',
-        lg: 'px-3.5 py-1.5 text-label'
+        sm: 'px-2 py-0.5 text-overline tracking-wide',
+        md: 'px-2.5 py-1 text-label tracking-tight',
+        lg: 'px-3.5 py-1.5 text-body'
     };
 
     const config = colorConfigs[color] || colorConfigs.ink;
@@ -47,7 +47,7 @@ const Badge = ({
         <div className={`
             inline-flex items-center gap-1.5
             border backdrop-blur-sm transition-all duration-300
-            ${pill ? 'rounded-full' : 'rounded-lg'}
+            ${pill ? 'rounded-full' : 'rounded-xl'}
             ${sizes[size] || sizes.md}
             ${!isCustom ? `${config.text} ${activeVariant}` : ''}
             ${className}
@@ -57,12 +57,12 @@ const Badge = ({
             {/* Stat Mode: Label + Value */}
             {(label || value) ? (
                 <>
-                    {label && <span className="opacity-60 font-medium uppercase">{label}</span>}
+                    {label && <span className="opacity-60 font-medium">{label}</span>}
                     {value && <span className="font-bold tracking-normal">{value}</span>}
                 </>
             ) : (
                 /* Simple Mode: Children */
-                <span className="uppercase font-semibold tracking-widest">{children}</span>
+                <span className="font-semibold tracking-wide">{children}</span>
             )}
         </div>
     );

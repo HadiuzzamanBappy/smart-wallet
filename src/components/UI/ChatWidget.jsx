@@ -231,7 +231,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
       {/* Chat Interface */}
       {isOpen && (
         <div className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 w-[calc(100vw-2rem)] sm:w-80 animate-in slide-in-from-bottom duration-300">
-          <div className="bg-surface-card dark:bg-surface-card-dark backdrop-blur-3xl rounded-[2rem] shadow-2xl border border-paper-200 dark:border-paper-900/10 overflow-hidden flex flex-col max-h-[80vh]">
+          <div className="bg-surface-card dark:bg-surface-card-dark backdrop-blur-3xl rounded-3xl shadow-2xl border border-paper-200 dark:border-paper-900/10 overflow-hidden flex flex-col max-h-[80vh]">
             {/* Header */}
             <div className="p-3 sm:p-4 border-b border-paper-100 dark:border-white/5 bg-paper-50/50 dark:bg-white/[0.02]">
               <SectionHeader
@@ -251,7 +251,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                   ? 'bg-success-500/[0.03] dark:bg-success-500/10 border-success-500/20 text-success-700 dark:text-success-400'
                   : 'bg-error-500/[0.03] dark:bg-error-500/10 border-error-500/20 text-error-700 dark:text-error-400'
                   }`}>
-                  <p className="text-overline uppercase tracking-widest">{lastResponse.message}</p>
+                  <p className="text-overline tracking-wide">{lastResponse.message}</p>
                   {/* Show parsed transactions only when non-empty */}
                   {Array.isArray(lastResponse.transactions) && lastResponse.transactions.length > 0 && (
                     <div className="mt-3 space-y-2">
@@ -261,7 +261,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                             <span className="text-base">{getCategoryEmoji(transaction.category)}</span>
                             <div className="min-w-0">
                               <div className="text-body truncate text-ink-900 dark:text-white font-medium">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
-                              <div className="text-[9px] uppercase tracking-widest text-ink-400 mt-0.5">{humanizeType(transaction.type)}</div>
+                              <div className="text-overline text-ink-400 mt-0.5">{humanizeType(transaction.type)}</div>
                             </div>
                           </div>
                           <Badge 
@@ -317,8 +317,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
               {isPreviewOpen && Array.isArray(parsedTransactions) && parsedTransactions.length > 0 && (
                 <div className="pt-3 border-t border-paper-100 dark:border-white/5 space-y-3">
                   <div className="p-2.5 rounded-2xl bg-amber-500/[0.03] dark:bg-amber-500/10 border border-amber-500/20 flex items-start gap-2.5">
-                    <span className="text-sm mt-0.5">⚠️</span>
-                    <p className="text-[10px] leading-relaxed text-amber-700 dark:text-amber-400 font-medium">Verify parsed entries before saving to vault</p>
+                    <span className="text-body mt-0.5">⚠️</span>
+                    <p className="text-overline leading-relaxed text-amber-700 dark:text-amber-400 font-medium">Verify parsed entries before saving to vault</p>
                   </div>
 
                   <div className="space-y-1.5 max-h-48 overflow-auto custom-scrollbar">
@@ -431,7 +431,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
               {/* Examples with quick-insert templates */}
               {!lastResponse && !isPreviewOpen && (
                 <div className="space-y-2">
-                  <p className="text-overline text-ink-400 px-1 uppercase tracking-widest">Suggestions</p>
+                  <p className="text-overline text-ink-400 px-1 tracking-wide">Suggestions</p>
                   <div className="space-y-2">
                     {[
                       { 

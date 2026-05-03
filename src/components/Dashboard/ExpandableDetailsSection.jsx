@@ -121,7 +121,7 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   return (
     <div className="w-full">
       {/* Tab Selectors - Executive Command Style */}
-      <div className="flex flex-col sm:flex-row gap-4 items-stretch">
+      <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:justify-center">
         {sections.map((section) => {
           const IconComponent = section.icon;
           const isActive = activeSection === section.id;
@@ -130,34 +130,35 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
             <button
               key={section.id}
               onClick={() => toggleSection(section.id)}
-              className={`group relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 border w-full sm:flex-1 ${isActive
-                  ? `bg-white dark:bg-white/[0.05] border-primary-500/50 shadow-xl shadow-primary-500/10 scale-[1.02] z-10`
-                  : `bg-gray-50/50 dark:bg-white/[0.02] border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10 shadow-sm opacity-70 hover:opacity-100`
+              className={`group relative flex items-center gap-4 px-6 py-5 rounded-3xl transition-all duration-500 border w-full sm:w-auto sm:min-w-[280px] ${isActive
+                  ? `bg-surface-card dark:bg-surface-card-dark border-primary-500 shadow-xl shadow-primary-500/10 scale-[1.02] z-10`
+                  : `bg-paper-100/30 dark:bg-white/[0.02] border-paper-100 dark:border-white/5 hover:border-paper-200 dark:hover:border-white/10 shadow-sm opacity-70 hover:opacity-100`
                 }`}
             >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 ${isActive
-                  ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
-                  : 'bg-gray-100 dark:bg-white/5 text-gray-400 group-hover:text-primary-500'
-                }`}>
-                <IconComponent className="w-5 h-5" />
-              </div>
+              <IconBox 
+                icon={section.icon} 
+                size="sm" 
+                color={isActive ? 'primary' : 'ink'} 
+                variant={isActive ? 'filled' : 'soft'}
+                className="transition-all duration-500 group-hover:scale-110" 
+              />
               <div className="text-left flex-1 min-w-0">
-                <h3 className={`${THEME.typography.label} mb-1.5 leading-none ${
+                <h3 className={`text-label mb-1.5 leading-none font-bold ${
                   isActive 
-                    ? 'text-gray-900 dark:text-white' 
-                    : 'text-gray-500 dark:text-gray-400'
+                    ? 'text-ink-900 dark:text-paper-50' 
+                    : 'text-ink-400 dark:text-paper-700'
                 }`}>
                   {section.title}
                 </h3>
-                <p className={`text-[10px] font-bold leading-none opacity-40 truncate ${isActive
+                <p className={`text-overline leading-none opacity-40 truncate ${isActive
                     ? 'text-primary-600 dark:text-primary-400'
-                    : 'text-gray-400 dark:text-gray-600'
+                    : 'text-ink-400 dark:text-paper-700'
                   }`}>
                   {section.description}
                 </p>
               </div>
 
-              <div className={`transition-all duration-500 ${isActive ? 'rotate-180 text-primary-500' : 'text-gray-300 group-hover:text-gray-500'}`}>
+              <div className={`transition-all duration-500 ${isActive ? 'rotate-180 text-primary-500' : 'text-ink-400 group-hover:text-ink-900'}`}>
                 <ChevronDown className="w-4 h-4" />
               </div>
               
@@ -173,41 +174,12 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
       <div>
         {activeSection && (
           <div className="mt-6 animate-in slide-in-from-top-4 duration-500 fade-in fill-mode-both">
-            <div className="rounded-[2rem] bg-white dark:bg-gray-900/40 border border-gray-100 dark:border-white/5 shadow-2xl overflow-hidden backdrop-blur-sm">
-              {/* Header - High Density Audit Bar */}
-              <div className="bg-gray-50/50 dark:bg-white/[0.02] px-6 py-4 border-b border-gray-100 dark:border-white/5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-primary-600 dark:text-primary-400 border border-gray-200/50 dark:border-white/5">
-                      {activeSection === 'transactions' ? <List className="w-5 h-5" /> : <BarChart3 className="w-5 h-5" />}
-                    </div>
-                    <div>
-                      <h2 className={`${THEME.typography.label} text-[11px] leading-none mb-2`}>
-                        {sections.find(s => s.id === activeSection)?.title}
-                      </h2>
-                      <div className="flex items-center gap-3">
-                        <span className={`${THEME.typography.label} text-[10px] opacity-60`}>
-                          {sections.find(s => s.id === activeSection)?.description}
-                        </span>
-                        <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
-                        <span className={`${THEME.typography.label} text-[10px] text-primary-600/60 dark:text-primary-400/60`}>Active Audit</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => toggleSection(activeSection)}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all border border-transparent hover:border-gray-200/50 dark:hover:border-white/10"
-                  >
-                    <ChevronUp className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
+            <GlassCard padding="p-0" className="!rounded-[2rem] shadow-2xl overflow-hidden">
               {/* Content Integration */}
               <div className="relative">
                 {renderSectionContent(activeSection)}
               </div>
-            </div>
+            </GlassCard>
           </div>
         )}
       </div>

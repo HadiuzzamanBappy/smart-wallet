@@ -8,7 +8,8 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableS
     sm: 'max-w-md',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
-    xl: 'max-w-4xl'
+    xl: 'max-w-4xl',
+    full: 'max-w-none w-full h-full sm:h-[95vh] sm:w-[95vw]'
   };
 
   const handleBackdropClick = (e) => {
@@ -23,8 +24,8 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableS
       onClick={handleBackdropClick}
     >
       <div
-        className={`w-full ${sizes[size]} mx-4 bg-surface-light dark:bg-surface-dark backdrop-blur-2xl shadow-2xl animate-in zoom-in-95 duration-200
-          rounded-3xl max-h-[90vh] flex flex-col border border-paper-200 dark:border-paper-900/10 overflow-hidden`}
+        className={`w-full ${sizes[size]} mx-4 bg-surface-card dark:bg-surface-card-dark backdrop-blur-2xl shadow-2xl animate-in zoom-in-95 duration-200
+          ${size === 'full' ? 'rounded-none sm:rounded-3xl' : 'rounded-3xl'} max-h-[100vh] sm:max-h-[90vh] flex flex-col border border-paper-200 dark:border-paper-900/10 overflow-hidden`}
       >
         {title && (
           <div className="flex items-center justify-between px-5 py-4 border-b border-paper-200 dark:border-paper-900/10 flex-shrink-0">
@@ -47,7 +48,7 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableS
 
         {/* Fixed Footer Area */}
         {footer && (
-          <div className="px-5 py-4 border-t border-paper-200 dark:border-paper-900/10 flex-shrink-0 bg-surface-light/50 dark:bg-ink-950/40">
+          <div className="px-5 py-4 border-t border-paper-200 dark:border-paper-900/10 flex-shrink-0 bg-paper-100/30 dark:bg-ink-900/10">
             {footer}
           </div>
         )}

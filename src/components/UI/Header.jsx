@@ -14,6 +14,7 @@ import { THEME } from '../../config/theme';
 import Button from './base/Button';
 import Badge from './base/Badge';
 import IconBox from './base/IconBox';
+import GlassCard from './base/GlassCard';
 
 const Header = ({
     onAddTransaction,
@@ -135,7 +136,7 @@ const Header = ({
 
     return (
         <>
-            <header className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm border-b border-gray-100 dark:border-white/5 fixed top-0 left-0 right-0 w-full z-50">
+            <header className="bg-surface-card dark:bg-surface-card-dark backdrop-blur-xl shadow-sm border-b border-paper-100 dark:border-white/5 fixed top-0 left-0 right-0 w-full z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center space-x-3">
@@ -150,7 +151,7 @@ const Header = ({
                             />
                             <Wallet className="w-6 h-6 text-gray-900 dark:text-white" style={{ display: 'none' }} />
                             <div>
-                                <h1 className="text-base font-bold text-gray-900 dark:text-white tracking-tight">
+                                <h1 className="text-body font-bold text-ink-900 dark:text-paper-50 tracking-tight">
                                     Smart Wallet
                                 </h1>
                                 <div className={`flex items-center gap-2 ${THEME.typography.label} text-gray-400 dark:text-gray-500`}>
@@ -208,21 +209,25 @@ const Header = ({
             {showFloatingBalance && (
                 <div className="fixed top-16 left-0 right-0 flex justify-center z-50 pointer-events-none">
                     <div className="pointer-events-auto w-11/12 max-w-lg px-4">
-                        <div className={`relative bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl text-gray-900 dark:text-white rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 p-5 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-3' : 'opacity-0 translate-y-0'}`}>
+                        <GlassCard 
+                            variant="flat" 
+                            padding="p-5" 
+                            className={`relative !bg-surface-card dark:!bg-surface-card-dark backdrop-blur-2xl text-ink-900 dark:text-paper-50 shadow-2xl border-paper-200 dark:border-white/10 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-3' : 'opacity-0 translate-y-0'}`}
+                        >
                             <Button
                                 variant="icon"
                                 size="sm"
                                 onClick={handleFloatingClose}
-                                className="absolute -top-2 -right-2 bg-white dark:bg-gray-800 shadow-xl !rounded-xl border border-gray-100 dark:border-white/10"
+                                className="absolute -top-2 -right-2 bg-paper-50 dark:bg-ink-900 shadow-xl !rounded-xl border border-paper-100 dark:border-white/10"
                             >
                                 <X className="w-3 h-3" />
                             </Button>
-
+    
                             <div className="flex flex-col gap-6 select-none">
                                 <div className="flex items-center justify-between px-1">
                                     <div className="space-y-0.5">
-                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-30">Vault Total</p>
-                                        <h2 className="text-h3 font-black tracking-tighter text-gray-900 dark:text-white">
+                                        <p className="text-overline font-black tracking-widest opacity-30">Vault Total</p>
+                                        <h2 className="text-h4 font-black tracking-tighter text-ink-900 dark:text-paper-50">
                                             {formatCurrency(totalWealth, userProfile?.currency || 'BDT')}
                                         </h2>
                                     </div>
@@ -231,7 +236,7 @@ const Header = ({
                                         <Badge label="Monthly Surplus" value={formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')} color="success" variant="glass" size="sm" />
                                     </div>
                                 </div>
-
+    
                                 <div className="grid grid-cols-2 gap-2">
                                     {[
                                         { label: 'Month Margin', val: formatCurrency(salaryPlan?.plan?.disposable || 0, userProfile?.currency || 'BDT'), color: 'text-primary-500' },
@@ -239,17 +244,17 @@ const Header = ({
                                         { label: 'Monthly Savings', val: formatCurrency(salaryPlan?.plan?.actualSavings || 0, userProfile?.currency || 'BDT'), color: 'text-teal-600' },
                                         { label: 'Goal Saving', val: formatCurrency(salaryPlan?.plan?.monthlyForGoal || 0, userProfile?.currency || 'BDT'), color: 'text-secondary-500' },
                                         { label: 'Net Flow', val: `${monthlyNetFlowTransactions >= 0 ? '+' : ''}${formatCurrency(monthlyNetFlowTransactions, userProfile?.currency || 'BDT')}`, color: monthlyNetFlowTransactions >= 0 ? 'text-teal-500' : 'text-rose-500' },
-                                        { label: 'Total Assets', val: formatCurrency(totalWealth, userProfile?.currency || 'BDT'), color: 'text-gray-900 dark:text-white' }
+                                        { label: 'Total Assets', val: formatCurrency(totalWealth, userProfile?.currency || 'BDT'), color: 'text-ink-900 dark:text-paper-50' }
                                     ].map(item => (
-                                        <div key={item.label} className="p-2 rounded-xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
-                                            <p className="text-[7px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">{item.label}</p>
-                                            <p className={`text-[10px] font-black tracking-tight ${item.color}`}>{item.val}</p>
+                                        <div key={item.label} className="p-2 rounded-xl bg-paper-100/50 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5">
+                                            <p className="text-overline font-black tracking-widest text-ink-400 dark:text-paper-700 mb-0.5" style={{ fontSize: '7px' }}>{item.label}</p>
+                                            <p className={`text-label font-black tracking-tight ${item.color}`}>{item.val}</p>
                                         </div>
                                     ))}
                                 </div>
-
+    
                                 <div className="pt-1">
-                                    <div className={`p-3 rounded-[1.25rem] flex items-center justify-between border transition-all duration-500 ${creditDue >= loanDue ? 'bg-teal-500/[0.03] dark:bg-teal-500/10 border-teal-500/20' : 'bg-rose-500/[0.03] dark:bg-rose-500/10 border-rose-500/20'}`}>
+                                    <div className={`p-3 rounded-3xl flex items-center justify-between border transition-all duration-500 ${creditDue >= loanDue ? 'bg-success-500/[0.03] dark:bg-success-500/10 border-success-500/20' : 'bg-error-500/[0.03] dark:bg-error-500/10 border-error-500/20'}`}>
                                         <div className="flex items-center gap-2">
                                             <IconBox
                                                 icon={creditDue >= loanDue ? TrendingUp : TrendingDown}
@@ -257,17 +262,17 @@ const Header = ({
                                                 variant="glass"
                                                 size="xs"
                                             />
-                                            <span className="text-[9px] font-black uppercase tracking-[0.1em] opacity-80">
+                                            <span className="text-overline font-black tracking-[0.1em] opacity-80">
                                                 {creditDue >= loanDue ? 'Net Receivable' : 'Net Due'}
                                             </span>
                                         </div>
-                                        <span className={`text-[11px] font-black tracking-tighter ${creditDue >= loanDue ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                        <span className={`text-label font-black tracking-tighter ${creditDue >= loanDue ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
                                             {formatCurrency(Math.abs(creditDue - loanDue), userProfile?.currency || 'BDT')}
                                         </span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </GlassCard>
                     </div>
                 </div>
             )}

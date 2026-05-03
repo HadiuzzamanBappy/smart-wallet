@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
   ArcElement,
+  Filler,
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useTransactions } from '../../hooks/useTransactions';
@@ -25,6 +26,7 @@ import {
 import { AnalyticsSkeleton } from '../UI/SkeletonLoader';
 
 // Base UI Components
+import GlassCard from '../UI/base/GlassCard';
 import IconBox from '../UI/base/IconBox';
 
 ChartJS.register(
@@ -36,7 +38,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement
+  ArcElement,
+  Filler
 );
 
 const SpendingAnalytics = () => {
@@ -97,24 +100,24 @@ const SpendingAnalytics = () => {
         {
           label: 'Income',
           data: dailyIncome,
-          borderColor: 'rgb(34, 197, 94)',
-          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          borderColor: 'rgb(20, 184, 166)',
+          backgroundColor: 'rgba(20, 184, 166, 0.1)',
           tension: 0.4,
           fill: true,
         },
         {
           label: 'Credit Given',
           data: dailyCredit,
-          borderColor: 'rgb(20, 184, 166)',
-          backgroundColor: 'rgba(20, 184, 166, 0.08)',
+          borderColor: 'rgb(14, 165, 233)',
+          backgroundColor: 'rgba(14, 165, 233, 0.08)',
           tension: 0.4,
           fill: true,
         },
         {
           label: 'Loan Taken',
           data: dailyLoan,
-          borderColor: 'rgb(99, 102, 241)',
-          backgroundColor: 'rgba(99, 102, 241, 0.08)',
+          borderColor: 'rgb(139, 92, 246)',
+          backgroundColor: 'rgba(139, 92, 246, 0.08)',
           tension: 0.4,
           fill: true,
         },
@@ -141,7 +144,7 @@ const SpendingAnalytics = () => {
 
     const labels = Object.keys(totals);
     const data = labels.map(l => totals[l]);
-    const colors = ['#22c55e', '#ef4444', '#14b8a6', '#6366f1'];
+    const colors = ['#14b8a6', '#ef4444', '#0ea5e9', '#8b5cf6'];
 
     // Handle empty totals: if all zero, show a single placeholder
     const allZero = data.every(v => v === 0);
@@ -224,22 +227,22 @@ const SpendingAnalytics = () => {
         {
           label: 'Income',
           data: monthlyIncome,
-          backgroundColor: 'rgba(34, 197, 94, 0.8)',
-          borderColor: 'rgb(34, 197, 94)',
-          borderWidth: 2,
-        },
-        {
-          label: 'Credit Given',
-          data: monthlyCredit,
           backgroundColor: 'rgba(20, 184, 166, 0.8)',
           borderColor: 'rgb(20, 184, 166)',
           borderWidth: 2,
         },
         {
+          label: 'Credit Given',
+          data: monthlyCredit,
+          backgroundColor: 'rgba(14, 165, 233, 0.8)',
+          borderColor: 'rgb(14, 165, 233)',
+          borderWidth: 2,
+        },
+        {
           label: 'Loan Taken',
           data: monthlyLoan,
-          backgroundColor: 'rgba(99, 102, 241, 0.8)',
-          borderColor: 'rgb(99, 102, 241)',
+          backgroundColor: 'rgba(139, 92, 246, 0.8)',
+          borderColor: 'rgb(139, 92, 246)',
           borderWidth: 2,
         },
       ],
@@ -257,7 +260,7 @@ const SpendingAnalytics = () => {
           padding: 12,
           boxWidth: 8,
           font: { size: 10, weight: 'bold' },
-          color: 'rgba(156, 163, 175, 0.8)' // gray-400
+          color: 'rgba(115, 126, 154, 0.8)'
         }
       },
       tooltip: {
@@ -283,7 +286,7 @@ const SpendingAnalytics = () => {
           autoSkip: true,
           maxTicksLimit: 7,
           font: { size: 9, weight: 'bold' },
-          color: 'rgba(156, 163, 175, 0.5)'
+          color: 'rgba(115, 126, 154, 0.5)'
         }
       },
       y: {
@@ -297,7 +300,7 @@ const SpendingAnalytics = () => {
             return formatCurrency(value);
           },
           font: { size: 9, weight: 'bold' },
-          color: 'rgba(156, 163, 175, 0.5)',
+          color: 'rgba(115, 126, 154, 0.5)',
           maxTicksLimit: 5
         }
       }
@@ -333,7 +336,7 @@ const SpendingAnalytics = () => {
           padding: 12,
           usePointStyle: true,
           font: { size: 10, weight: 'bold' },
-          color: 'rgba(156, 163, 175, 0.8)'
+          color: 'rgba(115, 126, 154, 0.8)'
         }
       },
       tooltip: {
@@ -359,11 +362,11 @@ const SpendingAnalytics = () => {
   if (transactions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center px-8">
-        <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
-          <BarChart3 className="w-8 h-8 text-gray-400" />
+        <div className="w-16 h-16 rounded-3xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
+          <BarChart3 className="w-8 h-8 text-ink-400" />
         </div>
-        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 dark:text-gray-600 mb-2">No Insights Ready</h3>
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400/60 max-w-[200px] leading-relaxed">
+        <h3 className="text-overline text-ink-400 dark:text-paper-700 tracking-[0.3em] mb-2">No Insights Ready</h3>
+        <p className="text-overline text-ink-400/60 dark:text-paper-700/60 max-w-[200px] leading-relaxed">
           Add transactions to activate your visual intelligence suite.
         </p>
       </div>
@@ -371,41 +374,29 @@ const SpendingAnalytics = () => {
   }
 
   return (
-    <div className="p-4 space-y-5">
-      {/* Chart Header & Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-teal-500/5 border border-teal-500/10 text-teal-600 dark:text-teal-400">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-black text-gray-900 dark:text-white tracking-tight leading-tight">Financial Intelligence</h3>
-            <p className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-[0.2em] mt-1">Performance Data</p>
-          </div>
-        </div>
-
-        <div className="flex p-1 bg-gray-100/50 dark:bg-white/5 border border-gray-200/50 dark:border-white/5 rounded-2xl w-full sm:w-auto">
-          {[
-            { id: 'spending-trend', label: 'Trend' },
-            { id: 'category-breakdown', label: 'Summary' },
-            { id: 'monthly-comparison', label: 'Monthly' },
-          ].map((chart) => (
-            <button
-              key={chart.id}
-              onClick={() => setActiveChart(chart.id)}
-              className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeChart === chart.id
-                ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
-                : 'text-gray-400 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-400'}`}
-            >
-              {chart.label}
-            </button>
-          ))}
-        </div>
+    <div className="p-3 space-y-4">
+      {/* Chart Selector Compact */}
+      <div className="flex p-0.5 bg-paper-100/30 dark:bg-white/5 border border-paper-100 dark:border-white/5 rounded-2xl w-full sm:w-auto">
+        {[
+          { id: 'spending-trend', label: 'Trend' },
+          { id: 'category-breakdown', label: 'Summary' },
+          { id: 'monthly-comparison', label: 'Monthly' },
+        ].map((chart) => (
+          <button
+            key={chart.id}
+            onClick={() => setActiveChart(chart.id)}
+            className={`flex-1 sm:flex-none px-3 py-1.5 rounded-[14px] text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${activeChart === chart.id
+              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
+              : 'text-ink-400 dark:text-paper-700 hover:text-ink-900 dark:hover:text-paper-50'}`}
+          >
+            {chart.label}
+          </button>
+        ))}
       </div>
 
-      {/* Chart Display */}
-      <div className="rounded-2xl p-5 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 shadow-sm">
-        <div className="h-64 sm:h-72 relative">
+      {/* Chart Display Compact */}
+      <GlassCard padding="p-4" className="shadow-sm">
+        <div className="h-56 sm:h-64 relative">
           {activeChart === 'spending-trend' && (
             <Line data={getSpendingTrendData()} options={chartOptions()} />
           )}
@@ -418,83 +409,83 @@ const SpendingAnalytics = () => {
             <Bar data={getMonthlyData()} options={chartOptions()} />
           )}
         </div>
-      </div>
+      </GlassCard>
 
       {/* Quick Stats Grid - Executive Style */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {(() => {
-          const thisMonthExpenses = transactions
-            .filter(t => {
-              const tDate = t.date;
-              const now = new Date();
-              return tDate.getMonth() === now.getMonth() &&
-                tDate.getFullYear() === now.getFullYear() &&
-                t.type === 'expense';
-            })
-            .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {(() => {
+        const thisMonthExpenses = transactions
+          .filter(t => {
+            const tDate = t.date;
+            const now = new Date();
+            return tDate.getMonth() === now.getMonth() &&
+              tDate.getFullYear() === now.getFullYear() &&
+              t.type === 'expense';
+          })
+          .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
-          const avgDailySpending = thisMonthExpenses / new Date().getDate();
-          const activityData = getActivityBreakdown();
-          let topCategory = null;
-          if (activityData.labels && activityData.labels.length > 0) {
-            const totals = activityData.labels.reduce((acc, label, i) => {
-              acc[label] = activityData.datasets[0].data[i] || 0;
-              return acc;
-            }, {});
-            const sorted = Object.entries(totals).sort(([, a], [, b]) => b - a);
-            topCategory = sorted.length > 0 ? sorted[0] : null;
-          }
+        const avgDailySpending = thisMonthExpenses / new Date().getDate();
+        const activityData = getActivityBreakdown();
+        let topCategory = null;
+        if (activityData.labels && activityData.labels.length > 0) {
+          const totals = activityData.labels.reduce((acc, label, i) => {
+            acc[label] = activityData.datasets[0].data[i] || 0;
+            return acc;
+          }, {});
+          const sorted = Object.entries(totals).sort(([, a], [, b]) => b - a);
+          topCategory = sorted.length > 0 ? sorted[0] : null;
+        }
 
-          const stats = [
-            {
-              label: 'Monthly Spent',
-              value: formatCurrency(thisMonthExpenses),
-              color: 'text-teal-600 dark:text-teal-400',
-              bg: 'bg-teal-500/5',
-              icon: TrendingDown
-            },
-            {
-              label: 'Daily Average',
-              value: formatCurrency(avgDailySpending),
-              color: 'text-sky-600 dark:text-sky-400',
-              bg: 'bg-sky-500/5',
-              icon: Calendar
-            },
-            {
-              label: 'Top Spending',
-              value: topCategory ? topCategory[0] : 'N/A',
-              color: 'text-amber-600 dark:text-amber-400',
-              bg: 'bg-amber-500/5',
-              icon: PieChart
-            },
-            {
-              label: 'Total Logs',
-              value: transactions.length.toString(),
-              color: 'text-gray-900 dark:text-white',
-              bg: 'bg-gray-100 dark:bg-white/10',
-              icon: BarChart3
-            },
-          ];
+        const stats = [
+          {
+            label: 'Spent',
+            value: formatCurrency(thisMonthExpenses),
+            color: 'text-primary-600 dark:text-primary-400',
+            bg: 'bg-primary-500/5',
+            icon: TrendingDown
+          },
+          {
+            label: 'Avg/Day',
+            value: formatCurrency(avgDailySpending),
+            color: 'text-info-600 dark:text-info-400',
+            bg: 'bg-info-500/5',
+            icon: Calendar
+          },
+          {
+            label: 'Top Area',
+            value: topCategory ? topCategory[0] : 'N/A',
+            color: 'text-warning-600 dark:text-warning-400',
+            bg: 'bg-warning-500/5',
+            icon: PieChart
+          },
+          {
+            label: 'Entries',
+            value: transactions.length.toString(),
+            color: 'text-ink-900 dark:text-paper-50',
+            bg: 'bg-paper-100 dark:bg-white/10',
+            icon: BarChart3
+          },
+        ];
 
-          return stats.map((stat, index) => (
-            <div key={index} className="p-4 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100/50 dark:border-white/5 flex flex-col items-center text-center group hover:bg-white dark:hover:bg-white/[0.03] transition-all">
-              <IconBox
-                icon={stat.icon}
-                size="sm"
-                color={stat.color.includes('teal') ? 'success' : stat.color.includes('sky') ? 'info' : stat.color.includes('amber') ? 'warning' : 'ink'}
-                variant="soft"
-                className="mb-3 opacity-40 group-hover:opacity-100"
-              />
-              <span className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-[0.1em] mb-1.5 leading-none">
-                {stat.label}
-              </span>
-              <div className={`text-[11px] font-black tracking-tight ${stat.color}`}>
-                {stat.value}
-              </div>
+        return stats.map((stat, index) => (
+          <GlassCard key={index} padding="p-3" className="flex flex-col items-center text-center group hover:bg-paper-50 dark:hover:bg-white/[0.03] transition-all">
+            <IconBox
+              icon={stat.icon}
+              size="xs"
+              color={stat.color.includes('primary') ? 'primary' : stat.color.includes('info') ? 'info' : stat.color.includes('warning') ? 'warning' : 'ink'}
+              variant="soft"
+              className="mb-2 opacity-40 group-hover:opacity-100"
+            />
+            <span className="text-[8px] text-ink-400 dark:text-paper-700 font-black uppercase tracking-[0.1em] mb-1 leading-none">
+              {stat.label}
+            </span>
+            <div className={`text-overline font-black tracking-tight ${stat.color} leading-none`}>
+              {stat.value}
             </div>
-          ));
-        })()}
-      </div>
+          </GlassCard>
+        ));
+      })()}
+    </div>
     </div>
   );
 };

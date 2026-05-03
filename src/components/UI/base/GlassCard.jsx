@@ -13,10 +13,10 @@ const GlassCard = ({
     const isClickable = !!onClick;
     
     const glassStyles = {
-        card: "bg-surface-light/80 dark:bg-surface-dark/40 backdrop-blur-xl border border-paper-200 dark:border-paper-900/10 shadow-glass dark:shadow-glass-dark",
-        thick: "bg-surface-light dark:bg-surface-dark/95 backdrop-blur-2xl border border-paper-200 dark:border-paper-900/20 shadow-xl",
+        card: "bg-surface-card dark:bg-surface-card-dark backdrop-blur-xl border border-paper-200 dark:border-paper-900/10 shadow-glass dark:shadow-glass-dark",
+        thick: "bg-surface-card dark:bg-surface-card-dark backdrop-blur-2xl border border-paper-200 dark:border-paper-900/20 shadow-xl",
         flat: "bg-paper-100/50 dark:bg-ink-900/10 border border-paper-200/30 dark:border-paper-900/10",
-        elevated: "bg-surface-light dark:bg-surface-dark border border-paper-200 dark:border-paper-900/20 shadow-lg shadow-ink-950/5"
+        elevated: "bg-surface-card dark:bg-surface-card-dark border border-paper-200 dark:border-paper-900/20 shadow-lg shadow-ink-950/5"
     };
     
     return (

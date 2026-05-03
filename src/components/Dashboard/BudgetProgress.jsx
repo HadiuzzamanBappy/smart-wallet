@@ -97,12 +97,6 @@ const BudgetProgress = () => {
     const percentage = Math.max(0, Math.min(100, Math.round(budgetStatus.percentage)));
     const remaining = Math.max(0, (budgetStatus.budget || 0) - currentSpending);
 
-    const progressFills = {
-        error: 'bg-rose-500',
-        warning: 'bg-amber-500',
-        info: 'bg-sky-500',
-        success: 'bg-emerald-500'
-    };
 
     return (
         <GlassCard padding="p-4" className="shadow-sm transition-colors duration-500">
@@ -110,41 +104,45 @@ const BudgetProgress = () => {
                 <div className="flex items-center gap-4">
                     <IconBox 
                         icon={colors.icon}
-                        variant="glass"
+                        variant="soft"
                         color={colors.color}
-                        size="md"
-                        className={`!rounded-xl border ${colors.color === 'error' ? 'border-rose-500/30' : 'border-gray-200/50 dark:border-white/10'}`}
+                        size="sm"
+                        className="transition-all duration-500 group-hover:scale-110"
                     />
                     <div>
-                        <div className={`${THEME.typography.label} mb-1.5 opacity-80 uppercase tracking-widest`}>
+                        <div className="text-overline text-ink-400 dark:text-paper-700 mb-1 leading-none font-black uppercase tracking-widest">
                             {budgetStatus.status}
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={THEME.typography.label}>Limit:</span>
-                            <span className="text-xs font-bold text-gray-900 dark:text-white tracking-tight">{formatCurrency(budgetLimit, currency)}</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-ink-400 dark:text-paper-700 opacity-40">Limit:</span>
+                            <span className="text-label font-bold text-ink-900 dark:text-paper-50 tracking-tight leading-none">{formatCurrency(budgetLimit, currency)}</span>
                         </div>
                     </div>
                 </div>
 
-                <div className={`text-sm font-bold tracking-tight opacity-80`}>{percentage}%</div>
+                <div className="text-overline font-black text-ink-900 dark:text-paper-50 tracking-widest">{percentage}%</div>
             </div>
 
-            <div className="w-full h-2 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden mb-4">
+            <div className="w-full h-1.5 bg-paper-100/50 dark:bg-white/5 rounded-full overflow-hidden mb-4">
                 <div
-                    className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.1)] ${progressFills[colors.color] || 'bg-emerald-500'}`}
+                    className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.05)] ${
+                        colors.color === 'error' ? 'bg-error-500' : 
+                        colors.color === 'warning' ? 'bg-warning-500' : 
+                        colors.color === 'info' ? 'bg-info-500' : 'bg-primary-500'
+                    }`}
                     style={{ width: `${percentage}%` }}
                 />
             </div>
 
             <div className="flex items-end justify-between">
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight">{formatCurrency(currentSpending, currency)}</span>
-                        <span className={THEME.typography.label}>Spent</span>
+                        <span className="text-h5 font-black text-ink-900 dark:text-paper-50 tracking-tighter leading-none">{formatCurrency(currentSpending, currency)}</span>
+                        <span className="text-overline text-ink-400 dark:text-paper-700 opacity-40 leading-none">Spent</span>
                     </div>
                     {fixedSpending > 0 && (
-                        <div className={`${THEME.typography.label} opacity-70`}>
-                            Incl. <span className="text-gray-600 dark:text-gray-400">{formatCurrency(fixedSpending, currency)}</span> fixed ops
+                        <div className="text-[9px] font-bold text-ink-400 dark:text-paper-700 tracking-tight leading-none">
+                            Incl. <span className="text-primary-600 dark:text-primary-400 font-black">{formatCurrency(fixedSpending, currency)}</span> fixed ops
                         </div>
                     )}
                 </div>
@@ -154,6 +152,7 @@ const BudgetProgress = () => {
                         color={budgetStatus.exceeded ? 'error' : 'success'}
                         variant="soft"
                         size="md"
+                        className="font-black"
                     >
                         {budgetStatus.exceeded 
                             ? `${formatCurrency(currentSpending - budgetLimit, currency)} Over` 

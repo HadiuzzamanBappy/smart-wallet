@@ -29,7 +29,7 @@ const GlassInput = ({
                     type={type}
                     rows={multiline ? rows : undefined}
                     className={`
-                        w-full bg-surface-light dark:bg-ink-800/40 backdrop-blur-sm
+                        w-full bg-paper-100/30 dark:bg-white/[0.02] backdrop-blur-sm
                         border ${error ? 'border-error-500' : 'border-paper-200 dark:border-paper-900/10'} 
                         ${size === 'sm' ? 'rounded-xl py-2 px-3 text-label' : 'rounded-2xl py-3 px-4 text-body'}
                         ${Icon ? (size === 'sm' ? 'pl-9' : 'pl-12') : ''}
