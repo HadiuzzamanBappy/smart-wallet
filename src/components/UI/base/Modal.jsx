@@ -1,4 +1,3 @@
-import React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -20,35 +19,35 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableS
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[150] flex items-center justify-center sm:p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md animate-in fade-in"
+      className="fixed inset-0 z-[150] flex items-center justify-center sm:p-4 bg-ink-950/60 backdrop-blur-xl animate-in fade-in duration-300"
       onClick={handleBackdropClick}
     >
       <div
-        className={`w-full ${sizes[size]} mx-4 bg-white/95 dark:bg-gray-900/90 backdrop-blur-2xl shadow-2xl animate-in zoom-in-95 duration-200
-          rounded-2xl max-h-[90vh] flex flex-col border border-gray-200 dark:border-white/10 overflow-hidden`}
+        className={`w-full ${sizes[size]} mx-4 bg-surface-card dark:bg-surface-card-dark backdrop-blur-2xl shadow-2xl animate-in zoom-in-95 duration-200
+          rounded-3xl max-h-[90vh] flex flex-col border border-paper-200 dark:border-paper-900/20 overflow-hidden`}
       >
         {title && (
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/5 flex-shrink-0">
-            <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-paper-200 dark:border-paper-900/10 flex-shrink-0">
+            <h3 className="text-base font-bold text-ink-900 dark:text-paper-50 tracking-tight">
               {title}
             </h3>
             <button
               onClick={onClose}
-              className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+              className="p-1.5 text-ink-400 hover:text-ink-900 dark:text-paper-600 dark:hover:text-paper-50 hover:bg-paper-100 dark:hover:bg-ink-800 rounded-xl transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         )}
 
         {/* Scrollable content area */}
-        <div className={`flex-1 ${disableScroll ? 'overflow-hidden' : 'p-4 sm:p-6 overflow-auto'}`}>
+        <div className={`flex-1 ${disableScroll ? 'overflow-hidden' : 'p-6 overflow-auto custom-scrollbar'}`}>
           {children}
         </div>
 
         {/* Fixed Footer Area */}
         {footer && (
-          <div className="px-5 py-4 border-t border-gray-100 dark:border-white/5 flex-shrink-0 bg-gray-50/50 dark:bg-white/[0.02]">
+          <div className="px-6 py-4 border-t border-paper-200 dark:border-paper-900/10 flex-shrink-0 bg-paper-50/50 dark:bg-ink-950/20">
             {footer}
           </div>
         )}

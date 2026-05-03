@@ -1,8 +1,6 @@
-import React from 'react';
-import { THEME } from '../../../config/theme';
-
 /**
  * GlassInput - Centralized input component with glassmorphic styling.
+ * Supports both standard inputs and textareas (via multiline prop).
  */
 const GlassInput = ({
     label,
@@ -11,42 +9,47 @@ const GlassInput = ({
     helperText,
     className = '',
     type = 'text',
+    multiline = false,
+    rows = 3,
     ...props
 }) => {
+    const Component = multiline ? 'textarea' : 'input';
+
     return (
         <div className={`w-full ${className}`}>
             {label && (
-                <label className={THEME.typography.label}>
+                <label className="text-xs font-semibold text-ink-500 dark:text-paper-400 mb-1.5 block px-1">
                     {label}
                 </label>
             )}
-            
+
             <div className="relative group">
                 {Icon && (
-                    <div className={`absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-teal transition-colors pointer-events-none`}>
-                        <Icon className="w-4 h-4" />
+                    <div className={`absolute left-4 ${multiline ? 'top-4' : 'top-1/2 -translate-y-1/2'} text-ink-400 group-focus-within:text-primary-500 transition-colors pointer-events-none`}>
+                        <Icon className="w-4.5 h-4.5" />
                     </div>
                 )}
-                
-                <input
+
+                <Component
                     type={type}
+                    rows={multiline ? rows : undefined}
                     className={`
-                        w-full py-3.5 ${THEME.glass.input}
-                        border ${error ? 'border-brand-rose' : 'border-gray-200/50 dark:border-white/5'} 
-                        rounded-2xl ${Icon ? 'pl-11' : 'px-4'} pr-4 
-                        text-[13px] font-bold text-gray-900 dark:text-white
+                        w-full ${multiline ? 'py-3' : 'py-3'} bg-paper-100/50 dark:bg-ink-800/40 backdrop-blur-sm
+                        border ${error ? 'border-error-500' : 'border-paper-200 dark:border-paper-900/10'} 
+                        rounded-2xl ${Icon ? 'pl-12' : 'px-4'} pr-4 
+                        text-[14px] font-medium text-ink-900 dark:text-paper-50
                         outline-none transition-all 
-                        focus:ring-4 ${error ? 'focus:ring-brand-rose/10' : 'focus:ring-primary-500/10'}
-                        placeholder:text-gray-400 dark:placeholder:text-white/20
+                        focus:ring-4 ${error ? 'focus:ring-error-500/10' : 'focus:ring-primary-500/10'}
+                        placeholder:text-ink-300 dark:placeholder:text-paper-700
                         focus:border-primary-500/50
-                        shadow-glass dark:shadow-glass-dark
+                        shadow-sm resize-none
                     `}
                     {...props}
                 />
             </div>
-            
+
             {(error || helperText) && (
-                <p className={`mt-2 px-2 text-[10px] font-black uppercase tracking-widest ${error ? 'text-brand-rose' : 'text-gray-400 dark:text-gray-600'}`}>
+                <p className={`mt-1.5 px-1 text-[11px] font-medium ${error ? 'text-error-600' : 'text-ink-400 dark:text-paper-500'}`}>
                     {error || helperText}
                 </p>
             )}

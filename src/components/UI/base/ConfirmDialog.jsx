@@ -1,7 +1,5 @@
-import React from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
-import GlassCard from './GlassCard';
 import Button from './Button';
 
 /**
@@ -15,27 +13,28 @@ const ConfirmDialog = ({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  type = 'warning', // warning, danger, info
+  type = 'warning', // warning, error, info
   loading = false
 }) => {
   if (!isOpen) return null;
 
   const getTypeStyles = () => {
     switch (type) {
+      case 'error':
       case 'danger':
         return {
-          icon: <AlertCircle className="w-6 h-6 text-rose-600 dark:text-rose-500" />,
-          color: 'red'
+          icon: <AlertCircle className="w-7 h-7 text-error-500" />,
+          color: 'error'
         };
       case 'info':
         return {
-          icon: <Info className="w-6 h-6 text-teal-600 dark:text-teal-500" />,
-          color: 'teal'
+          icon: <Info className="w-7 h-7 text-info-500" />,
+          color: 'info'
         };
       default:
         return {
-          icon: <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-500" />,
-          color: 'teal'
+          icon: <AlertTriangle className="w-7 h-7 text-warning-500" />,
+          color: 'primary'
         };
     }
   };
@@ -50,19 +49,19 @@ const ConfirmDialog = ({
 
   const dialogContent = (
     <div
-      className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300"
+      className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-md animate-in fade-in duration-300"
       onClick={handleBackdropClick}
     >
-      <div className="w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl border border-gray-200 dark:border-white/10 p-8 transform transition-all animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-sm bg-surface-card dark:bg-surface-card-dark backdrop-blur-2xl rounded-3xl shadow-2xl border border-paper-200 dark:border-paper-900/10 p-8 transform transition-all animate-in zoom-in-95 duration-200">
         <div className="flex flex-col items-center text-center gap-6">
-          <div className="shrink-0 p-5 rounded-[2rem] bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-inner">
-            {styles.icon}
-          </div>
-          <div className="space-y-3">
-            <h3 className="text-lg font-black uppercase tracking-widest text-gray-900 dark:text-white">
+            <div className="shrink-0 p-5 rounded-2xl bg-paper-100 dark:bg-ink-800 border border-paper-200 dark:border-paper-900/10">
+                {styles.icon}
+            </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-ink-900 dark:text-paper-50">
               {title}
             </h3>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest leading-relaxed opacity-80">
+            <p className="text-sm text-ink-500 dark:text-paper-400 leading-relaxed font-medium">
               {message}
             </p>
           </div>
@@ -71,7 +70,7 @@ const ConfirmDialog = ({
         <div className="flex gap-3 mt-10">
           <Button
             variant="soft"
-            color="gray"
+            color="ink"
             fullWidth
             onClick={onClose}
             disabled={loading}
@@ -79,7 +78,7 @@ const ConfirmDialog = ({
             {cancelText}
           </Button>
           <Button
-            color={styles.color === 'red' ? 'red' : 'teal'}
+            color={styles.color}
             fullWidth
             onClick={onConfirm}
             loading={loading}

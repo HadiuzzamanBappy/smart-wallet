@@ -1,21 +1,16 @@
-import React from 'react';
-
 /**
  * GlassBadge - A simple, single-value glassmorphic badge.
  */
-const GlassBadge = ({ children, color = 'gray', className = '' }) => {
+const GlassBadge = ({ children, color = 'ink', className = '' }) => {
     const colors = {
-        gray: 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-300 border-gray-200 dark:border-white/10',
-        teal: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
-        emerald: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-        rose: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-        amber: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-        blue: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-        purple: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
-        indigo: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
-        orange: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
-        cyan: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
-        lime: 'bg-lime-500/10 text-lime-600 dark:text-lime-400 border-lime-500/20'
+        primary: 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-500/20',
+        secondary: 'bg-secondary-500/10 text-secondary-600 dark:text-secondary-400 border-secondary-500/20',
+        success: 'bg-success-500/10 text-success-600 dark:text-success-400 border-success-500/20',
+        error: 'bg-error-500/10 text-error-600 dark:text-error-400 border-error-500/20',
+        warning: 'bg-warning-500/10 text-warning-600 dark:text-warning-400 border-warning-500/20',
+        info: 'bg-info-500/10 text-info-600 dark:text-info-400 border-info-500/20',
+        ink: 'bg-ink-100 dark:bg-ink-800 text-ink-600 dark:text-paper-400 border-ink-200 dark:border-ink-700',
+        paper: 'bg-paper-50 dark:bg-ink-700 text-ink-500 dark:text-paper-100 border-paper-200 dark:border-ink-600'
     };
 
     const isCustom = className.includes('text-') || className.includes('bg-');
@@ -24,8 +19,8 @@ const GlassBadge = ({ children, color = 'gray', className = '' }) => {
         <span className={`
             inline-flex items-center px-2 py-0.5 
             rounded-full border backdrop-blur-sm
-            text-[9px] font-black uppercase tracking-[0.15em] gap-1.5
-            ${!isCustom ? (colors[color] || colors.gray) : 'border-white/10'}
+            text-[10px] font-bold uppercase tracking-wider gap-1.5
+            ${!isCustom ? (colors[color] || colors.ink) : 'border-paper-200/20'}
             ${className}
         `}>
             {children}

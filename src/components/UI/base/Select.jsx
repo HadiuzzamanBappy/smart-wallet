@@ -1,6 +1,4 @@
-import React from 'react';
 import { ChevronDown } from 'lucide-react';
-import { THEME } from '../../../config/theme';
 
 /**
  * Select - Standardized themed select/dropdown component.
@@ -16,15 +14,15 @@ const Select = ({
     ...props
 }) => {
     const sizeClasses = {
-        sm: 'py-2 px-3 text-[12px] h-10',
-        md: 'py-3 px-4 text-[13px] h-12',
-        lg: 'py-4 px-5 text-[15px] h-14'
+        sm: 'py-2 px-3 text-[12px] h-9',
+        md: 'py-2.5 px-4 text-[13px] h-11',
+        lg: 'py-3.5 px-5 text-[15px] h-13'
     };
 
     return (
-        <div className={`${fullWidth ? 'w-full' : ''}`}>
+        <div className={`${fullWidth ? 'w-full' : ''} ${className}`}>
             {label && (
-                <label className={THEME.typography.label}>
+                <label className="text-xs font-semibold text-ink-500 dark:text-paper-400 mb-1.5 block px-1">
                     {label}
                 </label>
             )}
@@ -35,16 +33,15 @@ const Select = ({
                     onChange={onChange}
                     className={`
                         appearance-none w-full pr-10
-                        ${THEME.glass.input}
-                        border border-gray-200/50 dark:border-white/5
-                        rounded-2xl font-bold text-gray-900 dark:text-white
+                        bg-paper-100/50 dark:bg-ink-800/40 backdrop-blur-sm
+                        border border-paper-200 dark:border-paper-900/10
+                        rounded-2xl font-medium text-ink-900 dark:text-paper-50
                         outline-none transition-all cursor-pointer
-                        hover:brightness-105
+                        hover:bg-paper-200/50 dark:hover:bg-ink-800/60
                         focus:ring-4 focus:ring-primary-500/10
                         focus:border-primary-500/50
-                        shadow-glass dark:shadow-glass-dark
+                        shadow-sm
                         ${sizeClasses[size] || sizeClasses.md}
-                        ${className}
                     `}
                     {...props}
                 >
@@ -52,13 +49,13 @@ const Select = ({
                         <option 
                             key={opt.value} 
                             value={opt.value}
-                            className="bg-white dark:bg-slate-900 text-gray-900 dark:text-white font-black uppercase tracking-widest text-[10px]"
+                            className="bg-surface-card dark:bg-surface-card-dark text-ink-900 dark:text-paper-50"
                         >
                             {opt.label}
                         </option>
                     ))}
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-600 group-hover:text-brand-teal transition-colors">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-ink-400 dark:text-paper-700 group-focus-within:text-primary-500 transition-colors">
                     <ChevronDown className="w-4 h-4" />
                 </div>
             </div>

@@ -1,11 +1,9 @@
-import React from 'react';
-
 /**
  * IconBox - Standardized icon container with themed backgrounds.
  */
 const IconBox = ({ 
     icon: Icon, 
-    colorClass = 'text-teal-500', 
+    colorClass = 'text-primary-500', 
     bgClass = '', 
     size = 'md', 
     variant = 'soft', 
@@ -16,9 +14,9 @@ const IconBox = ({
     const sizes = {
         xs: 'p-1.5 rounded-lg',
         sm: 'p-2 rounded-xl',
-        md: 'p-2.5 rounded-xl',
-        lg: 'p-3 rounded-2xl',
-        xl: 'p-4 rounded-[2rem]'
+        md: 'p-2.5 rounded-2xl',
+        lg: 'p-3.5 rounded-2xl',
+        xl: 'p-5 rounded-3xl'
     };
     
     const iconSizes = {
@@ -30,10 +28,10 @@ const IconBox = ({
     };
 
     const variants = {
-        glass: 'bg-gray-100/50 dark:bg-white/5 backdrop-blur-md border border-gray-200/50 dark:border-white/10 shadow-sm',
-        soft: bgClass || 'bg-current/[0.08]',
+        glass: 'bg-surface-card/50 dark:bg-surface-card-dark/40 backdrop-blur-md border border-paper-200 dark:border-paper-900/10 shadow-sm',
+        soft: bgClass || 'bg-current/[0.12] border border-current/[0.1]',
         solid: bgClass || 'bg-current',
-        ghost: 'bg-transparent border border-gray-100 dark:border-white/5'
+        ghost: 'bg-transparent border border-paper-200/50 dark:border-paper-900/10'
     };
 
     const variantStyle = variants[variant] || variants.soft;
