@@ -1,23 +1,37 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
-const LoadingSpinner = ({ size = 'md', color = 'teal' }) => {
+/**
+ * LoadingSpinner - Unified high-fidelity loader with dual-ring animation.
+ */
+const LoadingSpinner = ({ size = 'md', color = 'primary', className = '' }) => {
   const sizes = {
+    xs: 'h-3.5 w-3.5',
     sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
-    xl: 'h-16 w-16'
+    md: 'h-6 w-6',
+    lg: 'h-10 w-10',
+    xl: 'h-14 w-14'
   };
 
   const colors = {
-    teal: 'border-teal-500',
-    blue: 'border-blue-500',
-    green: 'border-green-500',
-    red: 'border-red-500',
-    gray: 'border-gray-500'
+    primary: 'text-primary-500',
+    secondary: 'text-secondary-500',
+    success: 'text-success-500',
+    error: 'text-error-500',
+    warning: 'text-warning-500',
+    ink: 'text-ink-600 dark:text-paper-400',
+    white: 'text-white'
   };
 
   return (
-    <div className={`${sizes[size]} border-2 ${colors[color]} border-t-transparent rounded-full animate-spin`} />
+    <Loader2 
+      className={`
+        ${sizes[size] || sizes.md} 
+        ${colors[color] || colors.primary} 
+        animate-spin opacity-80
+        ${className}
+      `} 
+    />
   );
 };
 
@@ -47,15 +61,15 @@ export const LoadingButton = ({
   );
 };
 
-export const LoadingOverlay = ({ loading, children, text = 'Loading...' }) => {
+export const LoadingOverlay = ({ loading, children, text = 'Processing...' }) => {
   return (
     <div className="relative">
       {children}
       {loading && (
-        <div className="absolute inset-0 bg-white/40 dark:bg-black/60 flex items-center justify-center backdrop-blur-[4px] z-10 transition-all">
-          <div className="text-center">
+        <div className="absolute inset-0 bg-white/40 dark:bg-black/60 flex items-center justify-center backdrop-blur-[4px] z-10 animate-in fade-in duration-300">
+          <div className="flex flex-col items-center">
             <LoadingSpinner size="lg" />
-            <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">{text}</p>
+            {text && <p className="mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-ink-500 dark:text-paper-500 animate-pulse">{text}</p>}
           </div>
         </div>
       )}

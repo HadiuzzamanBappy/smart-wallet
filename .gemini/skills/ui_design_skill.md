@@ -1,32 +1,54 @@
 # Studio Executive v2: UI Design Skill
 
-This document defines the mandatory design patterns for the Wallet Tracker application. The Agent MUST follow these rules for all UI-related tasks.
+This document defines the architectural approach for the Wallet Tracker application. The Agent MUST follow these rules to maintain design system integrity while allowing for specialized component complexity.
 
 ## 1. Typography & Casing
 
-- **NO Force-Capitalization**: Avoid using `uppercase` for headings or body text.
+- **Semantic Tokens**: Use the centralized tokens in `tailwind.config.cjs` (e.g., `text-h1`, `text-body`, `text-overline`) instead of arbitrary sizes.
+- **Ultra-Thin Standards**: Maintain a premium executive aesthetic by strictly using **Font Weight 300** for `text-body` and `text-value`. Labels use Weight 400.
 - **Natural Casing**: Use Sentence case for almost everything.
-- **Exceptions**: Only use `uppercase` for very small "Overline" labels (e.g., category badges) with `tracking-widest`.
+- **Overlines**: Use `text-overline` (Weight 600) for small labels. Note that `text-overline` already includes `uppercase` and `tracking-widest`.
+- **Consistency**: Maintain existing font-weight and tracking patterns found in the theme config.
 
 ## 2. The Semantic Palette (Mandatory)
 
-- **Primary**: Teal (#14b8a6) - Action/Identity.
-- **Secondary**: Purple (#8b5cf6) - Alternative Action.
-- **Success/Error/Warning/info**: Emerald/Rose/Amber - Semantic state.
-- **Neutrals**:
-  - `paper`: Expensive off-whites for light mode.
-  - `ink`: Deep midnight navy for dark mode.
-- **Transparency**: Use Tailwind opacity modifiers (`/20`, `/50`) for all glass effects.
+- **Thematic Consistency**: Every UI element MUST use the centralized color palette defined in `tailwind.config.cjs`.
+- **Tokens**: Use semantic tokens like `primary`, `secondary`, `success`, `error`, `paper`, and `ink`.
+- **Contrast Hierarchy**: Ensure clear separation by dimming secondary info. For example, subtitles in headers should default to **`opacity-60`**.
+- **Transparency**: Leverage Tailwind's opacity modifiers (e.g., `primary-500/20`) for glass effects to ensure easy global theme switching.
 
-## 3. Base Component Sovereignty (Strict)
+## 3. Base Component Architecture
 
-- **Mandatory Usage**: You MUST use base components from `src/components/UI/base` for every UI element. Raw HTML tags are forbidden for buttons, cards, inputs, etc unless neccessary.
-- **Missing Components**: If a required UI pattern does not have a base component, you MUST create it in the `base` directory with full variants before using it.
-- **No Overwriting**: Do not use `className` props to override the core design of a base component. The component's internal design is the single source of truth.
-- **Variant Logic**: If a component needs a new look, add a new `variant` to the base component itself rather than styling it in-line.
+- **Sovereignty**: If a base component exists in `src/components/UI/base`, use it as the primary choice.
+- **Header Flexibility**: Use `SectionHeader` for all headers, utilizing the `titleSize` prop (`text-h3` for sections, `text-h6` for widgets) to maintain hierarchy.
+- **Named Groups (Hover Isolation)**: When nesting interactive cards (like list items inside a widget), use **Named Groups** (e.g., `group/widget` or `group/item`) in `GlassCard` to prevent hover bleed.
+- **Discovery Patterns**: Interactive suggestions or templates should sitting at **`opacity-40`** by default and transition to **`opacity-100`** on hover.
+- **Evolutionary Design**: 
+  - If you are writing raw Tailwind code for a pattern that feels reusable, search for an existing base component.
+  - If no suitable base component exists, **you MUST create a new base component** in the `base` directory to house that pattern.
 
-## 4. Layout & Spacing
+## 4. Visual Philosophy (The "Executive" Standard)
 
-- **Radius**: Use `rounded-2xl` for inputs/buttons and `rounded-3xl` for cards.
-- **Spacing**: Use minimal,compact and high-density gaps (e.g., `gap-2`, `p-3`, `p-2`).
-- **Glassmorphism**: Always pair `backdrop-blur-xl` with a thin border (`border-white/20` or `border-ink-500/10`).
+- **Density**: Prioritize extreme density for a "Financial Command Center" aesthetic.
+  - **Baseline Padding**: Use **`p-3`** or **`p-4`** for containers. **`p-5`** is reserved for large, hero-style sections.
+  - **Compact Grid**: Use **`gap-2`** or **`gap-3`** for internal layouts.
+  - **High-Density Scaling**: Many components (Inputs, Selects, Buttons) now support a **`size="sm"`** variant using **`text-label`** (text-[11px]) and **`rounded-xl`**.
+- **Radius (Adaptive)**:
+  - **Compact (sm)**: Standardize on **`rounded-xl`**.
+  - **Standard (md)**: Standardize on **`rounded-2xl`**.
+  - **Containers (lg/xl)**: Standardize on **`rounded-3xl`** or **`rounded-[2rem]`**.
+- **Typography & Hierarchy**:
+  - **Modal Titles**: Use **`text-h5 font-bold`** or **`text-h4`** for modal/dialog headers to prevent visual overwhelming.
+  - **Metric Labels**: Use **`text-[7px]`** or **`text-[8px]` font-black uppercase** for ultra-compact data labels.
+- **Glassmorphism**: Combine `backdrop-blur-3xl` with surgical, translucent borders (`border-paper-200/30` or `border-paper-900/10`).
+- **Loading States**: Standardize on **`Loader2`** from `lucide-react` for spinners. Use **`animate-spin opacity-80`**.
+- **Refined Accents**: Use thin accent borders (e.g., **`border-l-2`** in Toasts) instead of thick ones to maintain a minimal feel.
+- **Micro-Animations**: Use subtle `translate-x-1`, `scale-[0.98]`, or `hover:bg-primary-500/10` for tactile, premium feedback.
+- **Responsive Design**: All components MUST adapt fluidly across mobile and desktop breakpoints using Tailwind prefixes.
+
+## 5. Development Workflow
+
+- **Check First**: Before building any UI, audit the `base` directory.
+- **Standardize**: If you find yourself repeating raw styles across multiple files, extract them into a new base component.
+- **Theme Resilience**: Avoid hardcoded hex codes. Always use the Tailwind utility classes that reference the theme config.
+- **Minimalism Overload**: When in doubt, reduce padding, shrink typography, and thin the borders.

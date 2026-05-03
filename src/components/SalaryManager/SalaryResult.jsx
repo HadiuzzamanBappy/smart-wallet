@@ -22,7 +22,7 @@ import {
 import { useAIAdvice } from '../../hooks/useAIAdvice';
 import Modal from '../UI/base/Modal';
 import GlassCard from '../UI/base/GlassCard';
-import GlassBadge from '../UI/base/GlassBadge';
+import Badge from '../UI/base/Badge';
 import IconBox from '../UI/base/IconBox';
 import Button from '../UI/base/Button';
 

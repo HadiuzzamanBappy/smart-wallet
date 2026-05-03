@@ -103,7 +103,7 @@ const UserMenuDropdown = ({
   ];
 
   return (
-    <div className="relative">
+    <div className="relative flex items-center">
       <Button
         onClick={() => setIsOpen(!isOpen)}
         variant={isOpen ? 'soft' : 'gray'}

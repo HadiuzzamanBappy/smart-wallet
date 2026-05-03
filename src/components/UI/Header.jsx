@@ -12,7 +12,8 @@ import { THEME } from '../../config/theme';
 
 // Base UI Components
 import Button from './base/Button';
-import StatBadge from './base/StatBadge';
+import Badge from './base/Badge';
+import IconBox from './base/IconBox';
 
 const Header = ({
     onAddTransaction,
@@ -153,48 +154,45 @@ const Header = ({
                                     Smart Wallet
                                 </h1>
                                 <div className={`flex items-center gap-2 ${THEME.typography.label} text-gray-400 dark:text-gray-500`}>
-                                    <Wallet className="w-3 h-3 text-primary-600 dark:text-primary-400" />
                                     {isRefreshing || isLocalRefreshing ? (
                                         <div className="flex items-center gap-2">
                                             <Skeleton width="w-16" height="h-3" />
                                             <RefreshCw className="w-3 h-3 animate-spin text-teal-500" />
                                         </div>
                                     ) : (
-                                        <button
-                                            onClick={handleBalanceClick}
-                                            className="font-black text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors flex items-center gap-2 group"
-                                        >
-                                            {formatCurrency(balance, userProfile?.currency || 'BDT')}
-                                            <RefreshCw className="w-2.5 h-2.5 opacity-40 sm:opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </button>
+                                        <div className="flex items-center gap-1.5 group/balance">
+                                            <Badge
+                                                variant="glass"
+                                                color="primary"
+                                                size="sm"
+                                                onClick={handleBalanceClick}
+                                            >
+                                                {formatCurrency(balance, userProfile?.currency || 'BDT')}
+                                            </Badge>
+                                            <button
+                                                onClick={handleBalanceClick}
+                                                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-400 hover:text-teal-500 transition-all active:scale-90 opacity-40 group-hover/balance:opacity-100"
+                                            >
+                                                <RefreshCw className={`w-3 h-3 ${isLocalRefreshing ? 'animate-spin' : ''}`} />
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
                             {/* Add Transaction Button */}
-                            <div className="flex sm:hidden">
-                                <Button
-                                    onClick={onAddTransaction}
-                                    color="emerald"
-                                    icon={Plus}
-                                    size="icon"
-                                    variant="soft"
-                                    className="!w-10 !h-10 !rounded-xl shadow-lg shadow-emerald-500/10"
-                                />
-                            </div>
-                            <div className="hidden sm:flex">
-                                <Button
-                                    onClick={onAddTransaction}
-                                    color="emerald"
-                                    icon={Plus}
-                                    size="md"
-                                    variant="soft"
-                                >
-                                    Add
-                                </Button>
-                            </div>
+                            <Button
+                                onClick={onAddTransaction}
+                                color="primary"
+                                icon={Plus}
+                                size="md"
+                                variant="soft"
+                                className="!h-10 !px-3 sm:!px-4 !rounded-xl"
+                            >
+                                <span className="hidden sm:inline">Add</span>
+                            </Button>
 
                             <UserMenuDropdown
                                 onOpenProfile={onOpenProfile}
@@ -220,46 +218,52 @@ const Header = ({
                                 <X className="w-3 h-3" />
                             </Button>
 
-                            <div className="flex flex-col gap-5 select-none">
+                            <div className="flex flex-col gap-6 select-none">
                                 <div className="flex items-center justify-between px-1">
-                                    <div>
-                                        <div className="text-[9px] uppercase font-black tracking-widest text-amber-600 dark:text-amber-200 opacity-80 mb-1">Total Wealth</div>
-                                        <div className="text-xl font-black tracking-tighter text-gray-900 dark:text-white">{formatCurrency(totalWealth, userProfile?.currency || 'BDT')}</div>
+                                    <div className="space-y-0.5">
+                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-30">Vault Total</p>
+                                        <h2 className="text-h3 font-black tracking-tighter text-gray-900 dark:text-white">
+                                            {formatCurrency(totalWealth, userProfile?.currency || 'BDT')}
+                                        </h2>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-[9px] uppercase font-black tracking-widest text-teal-600 dark:text-teal-400 opacity-80 mb-1">Monthly Surplus</div>
-                                        <div className="text-sm font-black text-teal-700 dark:text-teal-400 tracking-tighter">{formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')}</div>
+                                    <div className="text-right flex flex-col items-end gap-1.5">
+                                        <Badge label="Goal Target" value={formatCurrency(salaryPlan?.plan?.goal || 0, userProfile?.currency || 'BDT')} color="primary" variant="glass" size="sm" />
+                                        <Badge label="Monthly Surplus" value={formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')} color="success" variant="glass" size="sm" />
                                     </div>
                                 </div>
 
-                                <div className="pt-4 border-t border-gray-100 dark:border-white/10 space-y-3">
-                                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                                        <div className="flex justify-between items-center text-[10px]">
-                                            <span className="text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">Month Margin</span>
-                                            <span className="font-black text-gray-700 dark:text-gray-200">+{formatCurrency(salaryPlan?.plan?.disposable || 0, userProfile?.currency || 'BDT')}</span>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                        { label: 'Month Margin', val: formatCurrency(salaryPlan?.plan?.disposable || 0, userProfile?.currency || 'BDT'), color: 'text-primary-500' },
+                                        { label: 'Cash In Hand', val: formatCurrency(cashInHand, userProfile?.currency || 'BDT'), color: 'text-amber-500' },
+                                        { label: 'Monthly Savings', val: formatCurrency(salaryPlan?.plan?.actualSavings || 0, userProfile?.currency || 'BDT'), color: 'text-teal-600' },
+                                        { label: 'Goal Saving', val: formatCurrency(salaryPlan?.plan?.monthlyForGoal || 0, userProfile?.currency || 'BDT'), color: 'text-secondary-500' },
+                                        { label: 'Net Flow', val: `${monthlyNetFlowTransactions >= 0 ? '+' : ''}${formatCurrency(monthlyNetFlowTransactions, userProfile?.currency || 'BDT')}`, color: monthlyNetFlowTransactions >= 0 ? 'text-teal-500' : 'text-rose-500' },
+                                        { label: 'Total Assets', val: formatCurrency(totalWealth, userProfile?.currency || 'BDT'), color: 'text-gray-900 dark:text-white' }
+                                    ].map(item => (
+                                        <div key={item.label} className="p-2 rounded-xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5">
+                                            <p className="text-[7px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">{item.label}</p>
+                                            <p className={`text-[10px] font-black tracking-tight ${item.color}`}>{item.val}</p>
                                         </div>
-                                        <div className="flex justify-between items-center text-[10px]">
-                                            <span className="text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">Cash In Hand</span>
-                                            <span className="font-black text-gray-700 dark:text-gray-200">+{formatCurrency(cashInHand, userProfile?.currency || 'BDT')}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-[10px]">
-                                            <span className="text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">Net Flow</span>
-                                            <span className={`font-black ${monthlyNetFlowTransactions >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                                                {monthlyNetFlowTransactions >= 0 ? '+' : ''}{formatCurrency(monthlyNetFlowTransactions, userProfile?.currency || 'BDT')}
+                                    ))}
+                                </div>
+
+                                <div className="pt-1">
+                                    <div className={`p-3 rounded-[1.25rem] flex items-center justify-between border transition-all duration-500 ${creditDue >= loanDue ? 'bg-teal-500/[0.03] dark:bg-teal-500/10 border-teal-500/20' : 'bg-rose-500/[0.03] dark:bg-rose-500/10 border-rose-500/20'}`}>
+                                        <div className="flex items-center gap-2">
+                                            <IconBox
+                                                icon={creditDue >= loanDue ? TrendingUp : TrendingDown}
+                                                color={creditDue >= loanDue ? 'success' : 'error'}
+                                                variant="glass"
+                                                size="xs"
+                                            />
+                                            <span className="text-[9px] font-black uppercase tracking-[0.1em] opacity-80">
+                                                {creditDue >= loanDue ? 'Net Receivable' : 'Net Due'}
                                             </span>
                                         </div>
-                                        <div className="flex justify-between items-center text-[10px]">
-                                            <span className="text-gray-400 dark:text-gray-500 uppercase font-black tracking-widest">Total Assets</span>
-                                            <span className="font-black text-gray-900 dark:text-white">{formatCurrency(totalWealth, userProfile?.currency || 'BDT')}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-center justify-center border transition-colors ${creditDue >= loanDue ? 'bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-500/20 text-teal-700 dark:text-teal-400' : 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400'}`}>
-                                    <div className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                        {creditDue >= loanDue ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                                        {creditDue >= loanDue ? 'Net Receivable' : 'Net Due'}
-                                        <span className="text-sm font-black tracking-tighter ml-1">{formatCurrency(Math.abs(creditDue - loanDue), userProfile?.currency || 'BDT')}</span>
+                                        <span className={`text-[11px] font-black tracking-tighter ${creditDue >= loanDue ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                            {formatCurrency(Math.abs(creditDue - loanDue), userProfile?.currency || 'BDT')}
+                                        </span>
                                     </div>
                                 </div>
                             </div>

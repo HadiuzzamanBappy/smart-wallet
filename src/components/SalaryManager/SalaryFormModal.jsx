@@ -26,7 +26,7 @@ import Select from '../UI/base/Select';
 import Button from '../UI/base/Button';
 import GlassCard from '../UI/base/GlassCard';
 import IconBox from '../UI/base/IconBox';
-import GlassBadge from '../UI/base/GlassBadge';
+import Badge from '../UI/base/Badge';
 
 import { useAuth } from '../../hooks/useAuth';
 import { calculatePlan } from '../../utils/salaryCalculator';
@@ -50,7 +50,7 @@ const StepBar = ({ current, total }) => {
             <p className="text-sm font-bold text-white tracking-tight">{steps[current].label}</p>
           </div>
         </div>
-        <GlassBadge label={`${current + 1} / ${total}`} variant="gray" />
+        <Badge label={`${current + 1} / ${total}`} color="ink" />
       </div>
       <div className="flex gap-1.5 px-0.5">
         {Array.from({ length: total }).map((_, i) => (

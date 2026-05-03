@@ -10,7 +10,7 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
 import Select from '../UI/base/Select';
-import GlassBadge from '../UI/base/GlassBadge';
+import Badge from '../UI/base/Badge';
 import IconBox from '../UI/base/IconBox';
 
 const MonthlyBreakdownModal = ({ open, onClose }) => {
@@ -153,12 +153,14 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                 {/* Net Change */}
                 <div className="p-4 rounded-2xl bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center justify-between">
                   <span className={THEME.typography.label}>Net Surplus / Deficit</span>
-                  <div className={`px-3 py-1 rounded-lg text-sm font-bold tracking-tight border ${selectedData.income - selectedData.expense >= 0 
-                    ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20' 
-                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'}`}>
+                  <Badge 
+                    color={selectedData.income - selectedData.expense >= 0 ? 'success' : 'error'}
+                    variant="soft"
+                    size="md"
+                  >
                     {selectedData.income - selectedData.expense >= 0 ? '+' : ''}
                     {formatCurrencyWithUser(selectedData.income - selectedData.expense, userProfile)}
-                  </div>
+                  </Badge>
                 </div>
 
                 {/* Transaction Details */}

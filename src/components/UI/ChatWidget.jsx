@@ -5,6 +5,13 @@ import { addTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency } from '../../utils/helpers';
 
+// Base UI Components
+import Button from './base/Button';
+import SectionHeader from './base/SectionHeader';
+import GlassCard from './base/GlassCard';
+import Badge from './base/Badge';
+import IconBox from './base/IconBox';
+
 const ChatWidget = ({ onTransactionAdded, className = '' }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -206,245 +213,261 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
   return (
     <div className={`relative ${className}`}>
       {/* Chat Toggle Button */}
-      <button
+      <Button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-tr from-teal-500 to-blue-600 text-white rounded-full shadow-lg shadow-teal-500/20 hover:shadow-teal-500/40 transform hover:scale-110 active:scale-95 transition-all duration-500 flex items-center justify-center ${isVisible || isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-12 pointer-events-none'
-          }`}
+        variant="filled"
+        color="primary"
+        size="icon"
+        className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 !rounded-full shadow-lg shadow-primary-500/20 hover:scale-110 active:scale-95 transition-all duration-300 ${isVisible || isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-12 pointer-events-none'}`}
         title="Quick Add Transaction"
       >
-        <MessageSquare className="w-6 h-6" />
-      </button>
+        {isOpen ? (
+          <X className="w-5 h-5 sm:w-6 sm:h-6" />
+        ) : (
+          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
+        )}
+      </Button>
 
       {/* Chat Interface */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-40 w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-gray-200/50 dark:border-white/10 animate-in slide-in-from-bottom overflow-hidden">
-          {/* Header */}
-          <div className="p-4 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02]">
-            <h3 className="text-[11px] font-black uppercase tracking-widest text-gray-900 dark:text-white">Quick Add Transaction</h3>
-            <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mt-1 opacity-60">Natural Language Entry</p>
-          </div>
-
-          {/* Chat Area */}
-          <div className="p-4 space-y-4">
-            {/* Last Response or Preview */}
-            {lastResponse && (
-              <div className={`p-3 rounded-xl border ${lastResponse.type === 'success'
-                  ? 'bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-500/20 text-teal-700 dark:text-teal-400'
-                  : 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400'
-                }`}>
-                <p className="text-[10px] font-black uppercase tracking-wider">{lastResponse.message}</p>
-                {/* Show parsed transactions only when non-empty */}
-                {Array.isArray(lastResponse.transactions) && lastResponse.transactions.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {lastResponse.transactions.map((transaction, index) => (
-                      <div key={index} className="flex items-center justify-between text-[11px]">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm">{getCategoryEmoji(transaction.category)}</span>
-                          <div className="min-w-0">
-                            <div className="font-bold truncate text-gray-900 dark:text-white">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
-                            <div className="text-[9px] font-black uppercase tracking-widest opacity-60">{humanizeType(transaction.type)}</div>
-                          </div>
-                        </div>
-                        <span className={`font-black ${transaction.type === 'income' || transaction.type === 'loan'
-                            ? 'text-teal-600 dark:text-teal-400'
-                            : 'text-rose-600 dark:text-rose-400'
-                          }`}>
-                          {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
-                          {formatCurrency(transaction.amount, userCurrency)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Input Area */}
-            <div className="space-y-3">
-              <div className="relative">
-                <textarea
-                  ref={textareaRef}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder={
-                    userCurrency === 'BDT'
-                      ? "e.g., 'লাঞ্চে ২৫০ টাকা' or 'bought groceries for 500 taka'"
-                      : `e.g., 'bought lunch for ${userCurrency === 'USD' ? '$25' : userCurrency === 'EUR' ? '€20' : userCurrency === 'GBP' ? '£18' : '₹200'}'`
-                  }
-                  className="w-full px-4 py-3 bg-gray-100 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-xl text-[12px] font-bold text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-700 outline-none transition-all focus:ring-1 focus:ring-teal-500/20 focus:border-teal-500/30 resize-none"
-                  rows="3"
-                  disabled={loading}
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="flex-1 px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200/50 dark:border-white/5"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={handleParseMessage}
-                  disabled={!message.trim() || loading}
-                  className="flex-[1.5] flex items-center justify-center space-x-2 px-3 py-2 bg-gradient-to-tr from-teal-500 to-teal-600 hover:shadow-lg hover:shadow-teal-500/20 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <MessageSquare className="w-4 h-4" />
-                  )}
-                  <span>{loading ? 'Processing...' : 'Parse'}</span>
-                </button>
-              </div>
+        <div className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 w-[calc(100vw-2rem)] sm:w-80 animate-in slide-in-from-bottom duration-300">
+          <div className="bg-surface-card dark:bg-surface-card-dark backdrop-blur-3xl rounded-[2rem] shadow-2xl border border-paper-200 dark:border-paper-900/10 overflow-hidden flex flex-col max-h-[80vh]">
+            {/* Header */}
+            <div className="p-3 sm:p-4 border-b border-paper-100 dark:border-white/5 bg-paper-50/50 dark:bg-white/[0.02]">
+              <SectionHeader
+                title="Assistant"
+                subtitle="Natural language entry"
+                icon={MessageSquare}
+                titleSize="text-h6"
+                className="!mb-0"
+              />
             </div>
 
-            {/* Preview / Confirm area */}
-            {isPreviewOpen && Array.isArray(parsedTransactions) && parsedTransactions.length > 0 && (
-              <div className="pt-4 border-t border-gray-100 dark:border-white/5">
-                <div className="mb-4 text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2.5 rounded-xl border border-amber-200 dark:border-amber-500/20 flex items-start gap-2">
-                  <span className="text-xs">⚠️</span>
-                  <span>Verify parsed entries before saving.</span>
-                </div>
-
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 px-1">Verification Required</p>
-                <div className="space-y-2 max-h-56 overflow-auto mb-4 custom-scrollbar">
-                  {parsedTransactions.map((transaction, index) => (
-                    <div key={index} className="flex items-center gap-2 text-xs p-2.5 bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 rounded-xl">
-                      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 shadow-sm">
-                        <span className="text-xs">{getCategoryEmoji(transaction.category)}</span>
-                      </div>
-
-                      {/* Normal row view */}
-                      {editingIndex !== index ? (
-                        <>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-bold truncate text-[11px] text-gray-900 dark:text-white leading-tight">{transaction.description}</div>
-                            <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mt-0.5">{humanizeType(transaction.type)}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className={`font-black text-[11px] ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                              {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
-                              {formatCurrency(transaction.amount, userCurrency)}
+            {/* Chat Area */}
+            <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 overflow-y-auto custom-scrollbar">
+              {/* Last Response or Preview */}
+              {lastResponse && (
+                <div className={`p-3 rounded-2xl border transition-all duration-300 ${lastResponse.type === 'success'
+                  ? 'bg-success-500/[0.03] dark:bg-success-500/10 border-success-500/20 text-success-700 dark:text-success-400'
+                  : 'bg-error-500/[0.03] dark:bg-error-500/10 border-error-500/20 text-error-700 dark:text-error-400'
+                  }`}>
+                  <p className="text-overline uppercase tracking-widest">{lastResponse.message}</p>
+                  {/* Show parsed transactions only when non-empty */}
+                  {Array.isArray(lastResponse.transactions) && lastResponse.transactions.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {lastResponse.transactions.map((transaction, index) => (
+                        <div key={index} className="flex items-center justify-between text-label group/item">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-base">{getCategoryEmoji(transaction.category)}</span>
+                            <div className="min-w-0">
+                              <div className="text-body truncate text-ink-900 dark:text-white font-medium">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
+                              <div className="text-[9px] uppercase tracking-widest text-ink-400 mt-0.5">{humanizeType(transaction.type)}</div>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <button onClick={() => setEditingIndex(index)} className="p-1.5 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-lg hover:text-teal-500 shadow-sm transition-colors" aria-label="Edit">
-                              <Edit className="w-3 h-3" />
-                            </button>
-                            <button onClick={() => removeParsedTransaction(index)} className="p-1.5 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-gray-400 hover:text-rose-500 rounded-lg shadow-sm transition-colors" aria-label="Delete">
-                              <Trash className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        /* Edit mode for this row */
-                        <>
-                          <div className="flex-1 grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={transaction.description || ''}
-                              onChange={(e) => updateParsedTransaction(index, { description: e.target.value })}
-                              className="px-2 py-1 text-[11px] font-bold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-1 focus:ring-teal-500/20"
-                            />
-                            <input
-                              type="number"
-                              value={transaction.amount ?? ''}
-                              onChange={(e) => updateParsedTransaction(index, { amount: e.target.value })}
-                              className="px-2 py-1 text-[11px] font-bold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-1 focus:ring-teal-500/20"
-                            />
-                            <select
-                              value={transaction.type || 'expense'}
-                              onChange={(e) => updateParsedTransaction(index, { type: e.target.value })}
-                              className="col-span-2 px-2 py-1 text-[11px] font-bold rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:ring-1 focus:ring-teal-500/20"
-                            >
-                              <option value="expense">Expense</option>
-                              <option value="income">Income</option>
-                              <option value="credit">Credit (lent)</option>
-                              <option value="loan">Loan (borrowed)</option>
-                            </select>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <button onClick={() => setEditingIndex(null)} className="p-1.5 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg" aria-label="Cancel edit">
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                            <button onClick={saveRowEdit} className="p-1.5 bg-teal-500 text-white rounded-lg shadow-lg shadow-teal-500/20" aria-label="Save edit">
-                              <Check className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </>
-                      )}
+                          <Badge 
+                            variant="soft" 
+                            color={transaction.type === 'income' || transaction.type === 'loan' ? 'primary' : 'error'}
+                            size="sm"
+                          >
+                            {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
+                            {formatCurrency(transaction.amount, userCurrency)}
+                          </Badge>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
+              )}
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setIsPreviewOpen(false); setParsedTransactions(null); }}
-                    className="flex-1 px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200/50 dark:border-white/5"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleConfirmSave}
+              {/* Input Area */}
+              <div className="space-y-2">
+                <div className="relative group/input">
+                  <textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={
+                      userCurrency === 'BDT'
+                        ? "e.g., 'লাঞ্চে ২৫০ টাকা' or 'bought groceries for 500 taka'"
+                        : `e.g., 'bought lunch for ${userCurrency === 'USD' ? '$25' : '...'}'`
+                    }
+                    className="w-full px-4 py-3 bg-paper-100/50 dark:bg-white/[0.02] border border-paper-200 dark:border-white/5 rounded-2xl text-body text-ink-900 dark:text-white placeholder-paper-400 dark:placeholder-paper-700 outline-none transition-all focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500/30 resize-none min-h-[80px]"
+                    rows="3"
                     disabled={loading}
-                    className="flex-[1.5] px-3 py-2 bg-gradient-to-tr from-teal-500 to-teal-600 hover:shadow-lg hover:shadow-teal-500/20 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    {loading ? 'Saving...' : 'Confirm'}
-                  </button>
+                  />
+                  <div className="absolute bottom-3 right-3 flex gap-1">
+                    <Button
+                      onClick={handleParseMessage}
+                      disabled={!message.trim() || loading}
+                      loading={loading}
+                      variant="filled"
+                      color="primary"
+                      size="sm"
+                      className="!rounded-xl shadow-lg shadow-primary-500/20"
+                      icon={Plus}
+                    >
+                      Process
+                    </Button>
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Examples with quick-insert templates */}
-            {!lastResponse && !isPreviewOpen && (
-              <div className="text-[10px] text-gray-500 dark:text-gray-400">
-                <p className="font-black uppercase tracking-widest mb-3 px-1">Templates</p>
+              {/* Preview / Confirm area */}
+              {isPreviewOpen && Array.isArray(parsedTransactions) && parsedTransactions.length > 0 && (
+                <div className="pt-3 border-t border-paper-100 dark:border-white/5 space-y-3">
+                  <div className="p-2.5 rounded-2xl bg-amber-500/[0.03] dark:bg-amber-500/10 border border-amber-500/20 flex items-start gap-2.5">
+                    <span className="text-sm mt-0.5">⚠️</span>
+                    <p className="text-[10px] leading-relaxed text-amber-700 dark:text-amber-400 font-medium">Verify parsed entries before saving to vault</p>
+                  </div>
+
+                  <div className="space-y-1.5 max-h-48 overflow-auto custom-scrollbar">
+                    {parsedTransactions.map((transaction, index) => (
+                      <GlassCard
+                        key={index}
+                        variant="flat"
+                        padding="p-2"
+                        className="!bg-paper-100/30 dark:!bg-white/[0.01] border-paper-200/40 dark:border-white/5"
+                      >
+                        <div className="flex items-center gap-2 text-label">
+                          {/* Normal row view */}
+                          {editingIndex !== index ? (
+                            <>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-body truncate text-ink-900 dark:text-white font-medium">{transaction.description}</div>
+                                <div className="text-overline opacity-40 mt-0.5">{humanizeType(transaction.type)}</div>
+                              </div>
+                              <div className="text-right mr-1">
+                                <p className={`text-label font-bold ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
+                                  {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
+                                  {formatCurrency(transaction.amount, userCurrency)}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => setEditingIndex(index)}
+                                  className="p-1.5 rounded-lg hover:bg-paper-100 dark:hover:bg-white/5 transition-colors opacity-40 hover:opacity-100"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => removeParsedTransaction(index)}
+                                  className="p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors opacity-40 hover:opacity-100 text-rose-500"
+                                >
+                                  <Trash className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            /* Edit mode for this row */
+                            <div className="w-full space-y-2">
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  value={transaction.description || ''}
+                                  onChange={(e) => updateParsedTransaction(index, { description: e.target.value })}
+                                  className="px-2 py-1.5 text-label rounded-xl border border-paper-200 dark:border-white/10 bg-white dark:bg-ink-950 text-ink-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/10"
+                                />
+                                <input
+                                  type="number"
+                                  value={transaction.amount ?? ''}
+                                  onChange={(e) => updateParsedTransaction(index, { amount: e.target.value })}
+                                  className="px-2 py-1.5 text-label rounded-xl border border-paper-200 dark:border-white/10 bg-white dark:bg-ink-950 text-ink-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/10"
+                                />
+                              </div>
+                              <div className="flex items-center justify-between gap-2">
+                                <select
+                                  value={transaction.type || 'expense'}
+                                  onChange={(e) => updateParsedTransaction(index, { type: e.target.value })}
+                                  className="flex-1 px-2 py-1.5 text-label rounded-xl border border-paper-200 dark:border-white/10 bg-white dark:bg-ink-950 text-ink-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/10"
+                                >
+                                  <option value="expense">Expense</option>
+                                  <option value="income">Income</option>
+                                  <option value="credit">Credit (lent)</option>
+                                  <option value="loan">Loan (borrowed)</option>
+                                </select>
+                                <div className="flex gap-1">
+                                  <Button onClick={() => setEditingIndex(null)} variant="soft" color="ink" size="sm" className="!p-1.5">
+                                    <X className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button onClick={saveRowEdit} variant="filled" color="primary" size="sm" className="!p-1.5">
+                                    <Check className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </GlassCard>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => { setIsPreviewOpen(false); setParsedTransactions(null); }}
+                      variant="soft"
+                      color="ink"
+                      fullWidth
+                      size="sm"
+                    >
+                      Discard
+                    </Button>
+                    <Button
+                      onClick={handleConfirmSave}
+                      disabled={loading}
+                      loading={loading}
+                      variant="filled"
+                      color="primary"
+                      fullWidth
+                      size="sm"
+                      className="flex-[1.5]"
+                    >
+                      Confirm Entry
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Examples with quick-insert templates */}
+              {!lastResponse && !isPreviewOpen && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 p-2.5 rounded-xl group hover:border-teal-500/30 hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer shadow-sm hover:shadow-md"
-                    onClick={() => {
-                      const exampleMsg = userCurrency === 'BDT'
-                        ? 'Bought groceries for 500 taka today'
-                        : `Bought groceries for ${userCurrency === 'USD' ? '50' : userCurrency === 'EUR' ? '45' : userCurrency === 'GBP' ? '40' : '500'} ${userCurrency === 'USD' ? 'dollars' : userCurrency === 'EUR' ? 'euros' : userCurrency === 'GBP' ? 'pounds' : userCurrency === 'INR' ? 'rupees' : 'taka'}`;
-                      setMessage(exampleMsg);
-                      textareaRef.current?.focus();
-                    }}
-                  >
-                    <div className="flex-1 pr-2">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                        {userCurrency === 'BDT'
-                          ? 'Bought groceries for 500 taka'
-                          : `Bought groceries for ${userCurrency === 'USD' ? '50' : '...'} ${userCurrency === 'USD' ? 'dollars' : '...'}`}
-                      </div>
-                    </div>
-                    <div className="p-1.5 rounded-lg bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 opacity-40 group-hover:opacity-100 transition-opacity">
-                      <Plus className="w-3 h-3" />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 p-2.5 rounded-xl group hover:border-teal-500/30 hover:bg-white dark:hover:bg-white/5 transition-all cursor-pointer shadow-sm hover:shadow-md"
-                    onClick={() => {
-                      const exampleMsg = userCurrency === 'BDT'
-                        ? 'লাঞ্চে ২৫০ টাকা খরচ করেছি'
-                        : 'type:expense amount:25 category:food note:Lunch';
-                      setMessage(exampleMsg);
-                      textareaRef.current?.focus();
-                    }}
-                  >
-                    <div className="flex-1 pr-2">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                        {userCurrency === 'BDT'
-                          ? 'লাঞ্চে ২৫০ টাকা খরচ'
-                          : 'Lunch expense: 25'}
-                      </div>
-                    </div>
-                    <div className="p-1.5 rounded-lg bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 opacity-40 group-hover:opacity-100 transition-opacity">
-                      <Plus className="w-3 h-3" />
-                    </div>
+                  <p className="text-overline text-ink-400 px-1 uppercase tracking-widest">Suggestions</p>
+                  <div className="space-y-2">
+                    {[
+                      { 
+                        title: userCurrency === 'BDT' ? 'Bought groceries for 500 taka' : 'Groceries for $50',
+                        msg: userCurrency === 'BDT' ? 'Bought groceries for 500 taka today' : 'Bought groceries for 50 dollars'
+                      },
+                      { 
+                        title: userCurrency === 'BDT' ? 'লাঞ্চে ২৫০ টাকা খরচ' : 'Lunch for $25',
+                        msg: userCurrency === 'BDT' ? 'লাঞ্চে ২৫০ টাকা খরচ করেছি' : 'Lunch expense: 25'
+                      }
+                    ].map((item, i) => (
+                      <GlassCard
+                        key={i}
+                        variant="flat"
+                        hover={true}
+                        padding="p-2.5"
+                        className="!bg-paper-100/30 dark:!bg-white/[0.03] border-paper-200/50 dark:border-white/5 group/template"
+                        onClick={() => {
+                          setMessage(item.msg);
+                          textareaRef.current?.focus();
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 pr-2">
+                            <div className="text-label text-ink-900 dark:text-white opacity-40 group-hover/template:opacity-100 transition-all duration-300 transform group-hover/template:translate-x-1">
+                              {item.title}
+                            </div>
+                          </div>
+                          <IconBox icon={Plus} variant="glass" size="xs" color="primary" className="opacity-0 group-hover/template:opacity-100 scale-50 group-hover/template:scale-100 transition-all" />
+                        </div>
+                      </GlassCard>
+                    ))}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}

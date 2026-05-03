@@ -14,15 +14,15 @@ const Select = ({
     ...props
 }) => {
     const sizeClasses = {
-        sm: 'py-2 px-3 text-[12px] h-9',
-        md: 'py-2.5 px-4 text-[13px] h-11',
-        lg: 'py-3.5 px-5 text-[15px] h-13'
+        sm: 'py-2 px-3 text-label h-9',
+        md: 'py-2.5 px-4 text-body h-11',
+        lg: 'py-3.5 px-5 text-h6 h-13'
     };
 
     return (
         <div className={`${fullWidth ? 'w-full' : ''} ${className}`}>
             {label && (
-                <label className="text-xs font-semibold text-ink-500 dark:text-paper-400 mb-1.5 block px-1">
+                <label className="text-overline text-ink-500 dark:text-paper-400 mb-1.5 block px-1">
                     {label}
                 </label>
             )}
@@ -35,7 +35,7 @@ const Select = ({
                         appearance-none w-full pr-10
                         bg-paper-100/50 dark:bg-ink-800/40 backdrop-blur-sm
                         border border-paper-200 dark:border-paper-900/10
-                        rounded-2xl font-medium text-ink-900 dark:text-paper-50
+                        ${size === 'sm' ? 'rounded-xl' : 'rounded-2xl'} text-ink-900 dark:text-paper-50
                         outline-none transition-all cursor-pointer
                         hover:bg-paper-200/50 dark:hover:bg-ink-800/60
                         focus:ring-4 focus:ring-primary-500/10
@@ -49,7 +49,7 @@ const Select = ({
                         <option 
                             key={opt.value} 
                             value={opt.value}
-                            className="bg-surface-card dark:bg-surface-card-dark text-ink-900 dark:text-paper-50"
+                            className="bg-surface-light dark:bg-surface-dark text-ink-900 dark:text-paper-50"
                         >
                             {opt.label}
                         </option>

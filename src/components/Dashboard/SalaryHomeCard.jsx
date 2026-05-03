@@ -9,7 +9,7 @@ import { THEME } from '../../config/theme';
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
 import Button from '../UI/base/Button';
-import GlassBadge from '../UI/base/GlassBadge';
+import Badge from '../UI/base/Badge';
 import IconBox from '../UI/base/IconBox';
 
 const SalaryHomeCard = ({ userId, onOpen }) => {
@@ -138,9 +138,9 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
                   <span className={`${THEME.typography.label} ml-2 opacity-50`}>Assets</span>
                 </div>
                 {runway > 0 && (
-                  <div className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
+                  <Badge color="amber">
                     {runway.toFixed(1)}m Runway
-                  </div>
+                  </Badge>
                 )}
               </div>
             </div>

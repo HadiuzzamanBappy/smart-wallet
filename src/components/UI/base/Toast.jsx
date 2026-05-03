@@ -33,16 +33,16 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000, po
   };
 
   const getStyles = () => {
-    const base = "bg-surface-card/95 dark:bg-surface-card-dark/90 backdrop-blur-md shadow-2xl border border-paper-200 dark:border-paper-900/10";
+    const base = "bg-surface-light/95 dark:bg-surface-dark/90 backdrop-blur-md shadow-2xl border border-paper-200 dark:border-paper-900/10";
     switch (type) {
       case 'success':
-        return `${base} border-l-4 border-l-success-500`;
+        return `${base} border-l-2 border-l-success-500`;
       case 'error':
-        return `${base} border-l-4 border-l-error-500`;
+        return `${base} border-l-2 border-l-error-500`;
       case 'warning':
-        return `${base} border-l-4 border-l-warning-500`;
+        return `${base} border-l-2 border-l-warning-500`;
       default:
-        return `${base} border-l-4 border-l-info-500`;
+        return `${base} border-l-2 border-l-info-500`;
     }
   };
 
@@ -58,13 +58,13 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000, po
     <div
       className={`${positionClasses} transform transition-all duration-300 ease-out ${animationClasses}`}
     >
-      <div className={`${getStyles()} rounded-2xl p-4 overflow-hidden`}>
-        <div className="flex items-center gap-3">
+      <div className={`${getStyles()} rounded-2xl p-3 overflow-hidden`}>
+        <div className="flex items-center gap-2.5">
           <div className="flex-shrink-0">
             {getIcon()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] text-ink-900 dark:text-paper-50 font-semibold tracking-tight">
+            <p className="text-[13px] font-medium text-ink-900 dark:text-paper-50 leading-snug">
               {message}
             </p>
           </div>

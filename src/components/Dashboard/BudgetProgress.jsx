@@ -9,7 +9,7 @@ import { THEME } from '../../config/theme';
 
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
-import StatBadge from '../UI/base/StatBadge';
+import Badge from '../UI/base/Badge';
 import IconBox from '../UI/base/IconBox';
 
 const BudgetProgress = () => {
@@ -71,30 +71,22 @@ const BudgetProgress = () => {
         switch (warningLevel) {
             case 'danger':
                 return {
-                    color: 'text-rose-600 dark:text-rose-400',
-                    bg: 'bg-rose-500/10',
-                    progressFill: 'bg-rose-500',
+                    color: 'error',
                     icon: AlertTriangle
                 };
             case 'warning':
                 return {
-                    color: 'text-amber-600 dark:text-amber-400',
-                    bg: 'bg-amber-500/10',
-                    progressFill: 'bg-amber-500',
+                    color: 'warning',
                     icon: AlertTriangle
                 };
             case 'caution':
                 return {
-                    color: 'text-sky-600 dark:text-sky-400',
-                    bg: 'bg-sky-500/10',
-                    progressFill: 'bg-sky-500',
+                    color: 'info',
                     icon: TrendingUp
                 };
             default:
                 return {
-                    color: 'text-emerald-600 dark:text-emerald-400',
-                    bg: 'bg-emerald-500/10',
-                    progressFill: 'bg-emerald-500',
+                    color: 'success',
                     icon: CheckCircle
                 };
         }
@@ -105,6 +97,13 @@ const BudgetProgress = () => {
     const percentage = Math.max(0, Math.min(100, Math.round(budgetStatus.percentage)));
     const remaining = Math.max(0, (budgetStatus.budget || 0) - currentSpending);
 
+    const progressFills = {
+        error: 'bg-rose-500',
+        warning: 'bg-amber-500',
+        info: 'bg-sky-500',
+        success: 'bg-emerald-500'
+    };
+
     return (
         <GlassCard padding="p-4" className="shadow-sm transition-colors duration-500">
             <div className="flex items-start justify-between gap-2 mb-4">
@@ -112,13 +111,12 @@ const BudgetProgress = () => {
                     <IconBox 
                         icon={colors.icon}
                         variant="glass"
-                        colorClass={colors.color}
-                        bgClass={colors.bg}
+                        color={colors.color}
                         size="md"
-                        className={`!rounded-xl border ${budgetStatus.warningLevel === 'danger' ? 'border-rose-500/30' : 'border-gray-200/50 dark:border-white/10'}`}
+                        className={`!rounded-xl border ${colors.color === 'error' ? 'border-rose-500/30' : 'border-gray-200/50 dark:border-white/10'}`}
                     />
                     <div>
-                        <div className={`${THEME.typography.label} ${colors.color} mb-1.5`}>
+                        <div className={`${THEME.typography.label} mb-1.5 opacity-80 uppercase tracking-widest`}>
                             {budgetStatus.status}
                         </div>
                         <div className="flex items-center gap-2">
@@ -128,12 +126,12 @@ const BudgetProgress = () => {
                     </div>
                 </div>
 
-                <div className={`text-sm font-bold tracking-tight ${colors.color}`}>{percentage}%</div>
+                <div className={`text-sm font-bold tracking-tight opacity-80`}>{percentage}%</div>
             </div>
 
             <div className="w-full h-2 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden mb-4">
                 <div
-                    className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.1)] ${colors.progressFill}`}
+                    className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.1)] ${progressFills[colors.color] || 'bg-emerald-500'}`}
                     style={{ width: `${percentage}%` }}
                 />
             </div>
@@ -152,14 +150,16 @@ const BudgetProgress = () => {
                 </div>
                 
                 <div className="text-right">
-                    <div className={`${THEME.typography.label} px-2.5 py-1 rounded-lg border ${budgetStatus.exceeded 
-                        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' 
-                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'}`}>
+                    <Badge 
+                        color={budgetStatus.exceeded ? 'error' : 'success'}
+                        variant="soft"
+                        size="md"
+                    >
                         {budgetStatus.exceeded 
                             ? `${formatCurrency(currentSpending - budgetLimit, currency)} Over` 
                             : `${formatCurrency(remaining, currency)} Left`
                         }
-                    </div>
+                    </Badge>
                 </div>
             </div>
         </GlassCard>

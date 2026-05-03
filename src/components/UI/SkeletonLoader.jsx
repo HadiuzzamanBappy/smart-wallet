@@ -7,12 +7,12 @@ const Skeleton = ({
   className = '',
   width = 'w-full',
   height = 'h-4',
-  rounded = 'rounded',
+  rounded = 'rounded-lg',
   animated = true
 }) => (
   <div
     className={`
-      bg-gray-100 dark:bg-white/5
+      bg-gray-100/80 dark:bg-white/[0.04]
       ${width} ${height} ${rounded} 
       ${animated ? 'animate-pulse' : ''}
       ${className}
@@ -26,33 +26,30 @@ const Skeleton = ({
 export const TransactionSkeleton = ({ count = 5 }) => (
   <div className="divide-y divide-gray-100 dark:divide-white/5">
     {Array.from({ length: count }, (_, index) => (
-      <div key={index} className="p-4 sm:p-5">
-        <div className="flex items-center gap-4">
+      <div key={index} className="p-3">
+        <div className="flex items-center gap-3">
           {/* Avatar Icon */}
           <div className="shrink-0">
-            <Skeleton width="w-10" height="h-10" rounded="rounded-xl" />
+            <Skeleton width="w-9" height="h-9" rounded="rounded-xl" />
           </div>
 
           {/* Description & Metadata */}
-          <div className="flex-1 min-w-0 space-y-2">
+          <div className="flex-1 min-w-0 space-y-1.5">
             <div className="flex items-center gap-2">
-              <Skeleton width="w-32 sm:w-48" height="h-4" rounded="rounded-md" />
-              <div className="hidden sm:block">
-                <Skeleton width="w-16" height="h-4" rounded="rounded-full" />
-              </div>
+              <Skeleton width="w-24 sm:w-40" height="h-3.5" rounded="rounded-md" />
             </div>
-            <div className="flex items-center gap-3">
-              <Skeleton width="w-12" height="h-3" rounded="rounded-sm" />
-              <Skeleton width="w-20" height="h-3" rounded="rounded-sm" />
+            <div className="flex items-center gap-2">
+              <Skeleton width="w-10" height="h-2.5" rounded="rounded-sm" />
+              <Skeleton width="w-16" height="h-2.5" rounded="rounded-sm" />
             </div>
           </div>
 
           {/* Amount & Actions */}
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <Skeleton width="w-20 sm:w-24" height="h-5" rounded="rounded-md" />
-            <div className="flex items-center gap-2">
-              <Skeleton width="w-6" height="h-6" rounded="rounded-lg" />
-              <Skeleton width="w-6" height="h-6" rounded="rounded-lg" />
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <Skeleton width="w-16 sm:w-20" height="h-4" rounded="rounded-md" />
+            <div className="flex items-center gap-1.5">
+              <Skeleton width="w-5" height="h-5" rounded="rounded-lg" />
+              <Skeleton width="w-5" height="h-5" rounded="rounded-lg" />
             </div>
           </div>
         </div>
@@ -65,25 +62,19 @@ export const TransactionSkeleton = ({ count = 5 }) => (
  * Skeleton for summary cards (CompactSummary)
  */
 export const SummaryCardSkeleton = ({ count = 4 }) => (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
     {Array.from({ length: count }, (_, index) => (
       <div
         key={index}
-        className={`${index >= 2 ? 'col-span-2 md:col-span-1' : ''} relative overflow-hidden rounded-2xl p-4 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center gap-3.5`}
+        className={`${index >= 2 ? 'col-span-2 md:col-span-1' : ''} relative overflow-hidden rounded-2xl p-3 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 flex items-center gap-2.5`}
       >
         <div className="shrink-0">
-          <Skeleton width="w-9" height="h-9" rounded="rounded-xl" />
+          <Skeleton width="w-8" height="h-8" rounded="rounded-xl" />
         </div>
         <div className="min-w-0 flex-1">
-          <Skeleton width="w-16" height="h-2.5" className="mb-2" rounded="rounded-sm" />
-          <Skeleton width="w-24" height="h-4" rounded="rounded-md" />
+          <Skeleton width="w-14" height="h-2" className="mb-1.5" rounded="rounded-sm" />
+          <Skeleton width="w-20" height="h-3.5" rounded="rounded-md" />
         </div>
-        {/* Optional eye icon for clickable cards */}
-        {(index === 2 || index === 3) && (
-          <div className="shrink-0">
-            <Skeleton width="w-6" height="h-6" rounded="rounded-lg" />
-          </div>
-        )}
       </div>
     ))}
   </div>
@@ -121,19 +112,19 @@ export const FilterSkeleton = () => (
  */
 export const TransactionListSkeleton = () => (
   <div className="flex flex-col h-full">
-    <div className="px-5 py-6 space-y-5 border-b border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/[0.01]">
+    <div className="px-4 py-4 space-y-4 border-b border-gray-100 dark:border-white/5 bg-gray-50/30 dark:bg-white/[0.01]">
       {/* Header - Audit Log Count */}
-      <div className="flex items-center gap-2.5">
-        <Skeleton width="w-2" height="h-2" rounded="rounded-full" className="shadow-[0_0_8px_rgba(20,184,166,0.4)]" />
-        <Skeleton width="w-48" height="h-3" rounded="rounded-sm" />
+      <div className="flex items-center gap-2">
+        <Skeleton width="w-2" height="h-2" rounded="rounded-full" className="shadow-[0_0_8px_rgba(20,184,166,0.3)]" />
+        <Skeleton width="w-40" height="h-3" rounded="rounded-sm" />
       </div>
 
       {/* Filters Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Skeleton width="w-full" height="h-9" rounded="rounded-xl" />
-        <Skeleton width="w-full" height="h-9" rounded="rounded-xl" />
-        <Skeleton width="w-full" height="h-9" rounded="rounded-xl" />
-        <Skeleton width="w-full" height="h-9" rounded="rounded-xl" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        <Skeleton width="w-full" height="h-8" rounded="rounded-xl" />
+        <Skeleton width="w-full" height="h-8" rounded="rounded-xl" />
+        <Skeleton width="w-full" height="h-8" rounded="rounded-xl" />
+        <Skeleton width="w-full" height="h-8" rounded="rounded-xl" />
       </div>
     </div>
 
@@ -165,29 +156,29 @@ export const CompactSummarySkeleton = () => (
  * Skeleton specifically for the BudgetProgress card to match full-width layout
  */
 export const BudgetSkeleton = () => (
-  <div className="rounded-2xl p-4 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 w-full">
-    <div className="flex items-start justify-between gap-3 mb-4">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <Skeleton width="w-10" height="h-10" rounded="rounded-xl" />
+  <div className="rounded-3xl p-4 bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 w-full">
+    <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+        <Skeleton width="w-8" height="h-8" rounded="rounded-xl" />
         <div className="flex-1 min-w-0">
-          <Skeleton width="w-28" height="h-3" className="mb-2" />
-          <Skeleton width="w-40" height="h-3" />
+          <Skeleton width="w-24" height="h-2.5" className="mb-1.5" />
+          <Skeleton width="w-32" height="h-2.5" />
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Skeleton width="w-10" height="h-5" rounded="rounded-lg" />
-        <Skeleton width="w-8" height="h-8" rounded="rounded-full" />
+      <div className="flex items-center gap-1.5">
+        <Skeleton width="w-8" height="h-4" rounded="rounded-lg" />
+        <Skeleton width="w-7" height="h-7" rounded="rounded-full" />
       </div>
     </div>
 
-    <div className="w-full mb-4">
-      <Skeleton width="w-full" height="h-3" rounded="rounded-full" />
+    <div className="w-full mb-3">
+      <Skeleton width="w-full" height="h-2.5" rounded="rounded-full" />
     </div>
 
     <div className="flex items-center justify-between">
-      <Skeleton width="w-32" height="h-2.5" />
-      <Skeleton width="w-36" height="h-2.5" />
+      <Skeleton width="w-24" height="h-2" />
+      <Skeleton width="w-28" height="h-2" />
     </div>
   </div>
 );

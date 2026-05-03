@@ -24,42 +24,49 @@ const Button = ({
         primary: {
             bg: "bg-primary-500",
             text: "text-primary-600 dark:text-primary-400",
-            border: "border-primary-500",
+            contrast: "text-white",
+            border: "border-primary-500/40",
             glow: "shadow-primary-500/20"
         },
         secondary: {
             bg: "bg-secondary-500",
             text: "text-secondary-600 dark:text-secondary-400",
-            border: "border-secondary-500",
+            contrast: "text-white",
+            border: "border-secondary-500/40",
             glow: "shadow-secondary-500/20"
         },
         success: {
             bg: "bg-success-500",
             text: "text-success-600 dark:text-success-400",
-            border: "border-success-500",
+            contrast: "text-white",
+            border: "border-success-500/40",
             glow: "shadow-success-500/20"
         },
         error: {
             bg: "bg-error-500",
             text: "text-error-600 dark:text-error-400",
-            border: "border-error-500",
+            contrast: "text-white",
+            border: "border-error-500/40",
             glow: "shadow-error-500/20"
         },
         warning: {
             bg: "bg-warning-500",
             text: "text-warning-600 dark:text-warning-400",
-            border: "border-warning-500",
+            contrast: "text-white",
+            border: "border-warning-500/40",
             glow: "shadow-warning-500/20"
         },
         info: {
             bg: "bg-info-500",
             text: "text-info-600 dark:text-info-400",
+            contrast: "text-white",
             border: "border-info-500",
             glow: "shadow-info-500/20"
         },
         ink: {
             bg: "bg-ink-800 dark:bg-ink-700",
-            text: "text-ink-800 dark:text-paper-100",
+            text: "text-paper-500 dark:text-paper-100",
+            contrast: "text-white dark:text-paper-50",
             border: "border-ink-800 dark:border-ink-700",
             glow: "shadow-ink-950/10"
         }
@@ -68,19 +75,19 @@ const Button = ({
     const config = colorConfigs[color] || colorConfigs.primary;
 
     const variants = {
-        filled: `${config.bg} hover:brightness-110 text-white shadow-lg ${config.glow}`,
-        outlined: `bg-transparent border ${config.border}/40 ${config.text} hover:${config.bg} hover:text-white`,
-        soft: `${config.bg}/10 ${config.text} hover:${config.bg}/20`,
-        text: `${config.text} hover:${config.bg}/10`,
-        ghost: "bg-transparent hover:bg-paper-100 dark:hover:bg-ink-800 text-ink-600 dark:text-paper-400 hover:text-ink-900 dark:hover:text-paper-50 transition-colors",
-        icon: "p-2 rounded-xl bg-paper-100 dark:bg-ink-800 hover:bg-paper-200 dark:hover:bg-ink-700 border border-paper-200 dark:border-ink-700 text-ink-600 dark:text-paper-400 hover:text-ink-900 dark:hover:text-paper-50"
+        filled: `${config.bg} ${config.contrast} hover:brightness-110 shadow-lg ${config.glow} hover:-translate-y-0.5`,
+        outlined: `bg-transparent border ${config.border} ${config.text} hover:bg-current/10 hover:border-current/60 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`,
+        soft: `${config.bg}/10 ${config.text} hover:bg-current/20 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`,
+        text: `${config.text} hover:${config.bg}/10 hover:-translate-y-0.5`,
+        ghost: "bg-transparent hover:bg-paper-100 dark:hover:bg-ink-800 text-ink-500 dark:text-paper-400 transition-colors hover:-translate-y-0.5",
+        icon: `p-2 rounded-xl bg-paper-100 dark:bg-ink-800 border border-paper-200 dark:border-ink-700 ${config.text} hover:bg-current/10 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`
     };
 
     const sizes = {
-        xsm: "px-2.5 py-1 text-xs rounded-lg",
-        sm: "px-3.5 py-1.5 text-sm rounded-xl",
-        md: "px-5 py-2.5 text-[15px] rounded-2xl",
-        lg: "px-7 py-3.5 text-base rounded-2xl",
+        xsm: "px-2.5 py-1 text-overline rounded-xl",
+        sm: "px-3.5 py-2 text-label rounded-xl",
+        md: "px-5 py-3 text-body rounded-2xl",
+        lg: "px-7 py-3.5 text-h6 rounded-2xl",
         icon: "p-2.5 rounded-xl aspect-square"
     };
 
@@ -106,7 +113,7 @@ const Button = ({
                 <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
                 <>
-                    {Icon && <Icon className={`${(size === 'sm' || size === 'xsm') ? 'w-4 h-4' : 'w-5 h-5'} shrink-0`} />}
+                    {Icon && <Icon className={`${(size === 'sm' || size === 'xsm') ? 'w-4 h-4' : 'w-5 h-5'} shrink-0 text-inherit transition-colors duration-300`} />}
                     {children}
                 </>
             )}

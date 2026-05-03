@@ -95,22 +95,22 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Edit Transaction"
-      size="md"
+      title="Modify Entry"
+      size="sm"
       footer={
-        <div className="flex gap-3 w-full">
+        <div className="flex gap-2 w-full">
           <Button
             variant="ghost"
-            color="gray"
+            color="ink"
             fullWidth
             onClick={onClose}
             disabled={loading}
-            icon={X}
           >
             Cancel
           </Button>
           <Button
-            color="teal"
+            variant="filled"
+            color="primary"
             fullWidth
             onClick={handleSubmit}
             form={formId}
@@ -118,36 +118,46 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             disabled={!editData.amount || !editData.description}
             icon={Save}
           >
-            Save Changes
+            Save
           </Button>
         </div>
       }
     >
-      <form id={formId} onSubmit={handleSubmit} className="space-y-6 px-1">
-        {/* Transaction Type */}
-        <div className="space-y-2">
-          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
-            Transaction Type
-          </label>
-          <Select
-            name="type"
-            value={editData.type}
-            onChange={(e) => handleInputChange({ target: { name: 'type', value: e.target.value }})}
-            options={[
-              { value: 'expense', label: 'Expense' },
-              { value: 'income', label: 'Income' },
-              { value: 'credit', label: 'Credit Given' },
-              { value: 'loan', label: 'Loan Taken' }
-            ]}
-          />
+      <form id={formId} onSubmit={handleSubmit} className="space-y-4 px-1">
+        {/* Type & Category Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-overline opacity-40 px-1">Type</label>
+            <Select
+              name="type"
+              value={editData.type}
+              onChange={(e) => handleInputChange({ target: { name: 'type', value: e.target.value }})}
+              options={[
+                { value: 'expense', label: 'Expense' },
+                { value: 'income', label: 'Income' },
+                { value: 'credit', label: 'Credit Given' },
+                { value: 'loan', label: 'Loan Taken' }
+              ]}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-overline opacity-40 px-1">Category</label>
+            <Select
+              name="category"
+              value={editData.category}
+              onChange={(e) => handleInputChange({ target: { name: 'category', value: e.target.value }})}
+              options={categories.map(c => ({
+                value: c.value,
+                label: `${c.emoji} ${c.label}`
+              }))}
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-5">
-          {/* Amount */}
-          <div className="space-y-2">
-            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
-              Amount
-            </label>
+        {/* Amount & Date Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-overline opacity-40 px-1">Amount</label>
             <GlassInput
               type="number"
               name="amount"
@@ -157,12 +167,8 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
               required
             />
           </div>
-
-          {/* Date */}
-          <div className="space-y-2">
-            <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
-              Date
-            </label>
+          <div className="space-y-1">
+            <label className="text-overline opacity-40 px-1">Date</label>
             <GlassInput
               type="date"
               name="date"
@@ -174,10 +180,8 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
         </div>
 
         {/* Description */}
-        <div className="space-y-2">
-          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
-            Description
-          </label>
+        <div className="space-y-1">
+          <label className="text-overline opacity-40 px-1">Description</label>
           <GlassInput
             type="text"
             name="description"
@@ -185,22 +189,6 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             onChange={handleInputChange}
             placeholder="What was this for?"
             required
-          />
-        </div>
-
-        {/* Category */}
-        <div className="space-y-2">
-          <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
-            Category
-          </label>
-          <Select
-            name="category"
-            value={editData.category}
-            onChange={(e) => handleInputChange({ target: { name: 'category', value: e.target.value }})}
-            options={categories.map(c => ({
-              value: c.value,
-              label: `${c.emoji} ${c.label}`
-            }))}
           />
         </div>
       </form>

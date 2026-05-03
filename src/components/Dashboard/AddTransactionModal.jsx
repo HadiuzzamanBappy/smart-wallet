@@ -13,7 +13,7 @@ import GlassInput from '../UI/base/GlassInput';
 import Select from '../UI/base/Select';
 import IconBox from '../UI/base/IconBox';
 import GlassCard from '../UI/base/GlassCard';
-import GlassBadge from '../UI/base/GlassBadge';
+import Badge from '../UI/base/Badge';
 
 const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -325,7 +325,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                   <div className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                     Entry Preview ({parsedTransactions.length})
                   </div>
-                  <GlassBadge label="Draft" variant="teal" />
+                  <Badge color="info" className="mb-2">New Entry</Badge>
                 </div>
 
                 <div className="space-y-2.5 max-h-[300px] overflow-auto px-1 custom-scrollbar">

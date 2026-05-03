@@ -23,7 +23,7 @@ import { THEME } from '../../config/theme';
 import Button from '../UI/base/Button';
 import GlassInput from '../UI/base/GlassInput';
 import Select from '../UI/base/Select';
-import GlassBadge from '../UI/base/GlassBadge';
+import Badge from '../UI/base/Badge';
 
 const TransactionList = ({ onTransactionChange }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -278,10 +278,10 @@ const TransactionList = ({ onTransactionChange }) => {
                     <div className="min-w-0">
                       <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate mb-1.5 tracking-tight">{transaction.description}</p>
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/5 border border-gray-200/50 dark:border-white/10">
+                        <Badge color="ink" size="sm" className="bg-gray-100 dark:bg-white/5">
                           <span className="text-[10px]">{getCategoryEmoji(dc)}</span>
                           <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">{dc}</span>
-                        </div>
+                        </Badge>
                         <span className="text-[10px] font-bold text-gray-400 dark:text-gray-600">
                           {formatDate(transaction.createdAt)}
                         </span>
@@ -390,11 +390,12 @@ const TransactionList = ({ onTransactionChange }) => {
                 </div>
               </div>
               <div className="text-right">
-                <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] border ${adjustmentDetail.type === 'repayment' 
-                  ? 'bg-rose-500/5 text-rose-600 border-rose-500/10' 
-                  : 'bg-emerald-500/5 text-emerald-600 border-emerald-500/10'}`}>
-                  {adjustmentDetail.type === 'repayment' ? 'Loan Repay' : 'Credit Collect'}
-                </div>
+                  <Badge 
+                    color={adjustmentDetail.type === 'repayment' ? 'error' : 'success'}
+                    variant="soft"
+                  >
+                    {adjustmentDetail.type === 'repayment' ? 'Loan Repay' : 'Credit Collect'}
+                  </Badge>
               </div>
             </div>
 

@@ -37,7 +37,7 @@ const LandingNav = ({ onGetStarted }) => {
           <div className="flex items-center">
             <Button
               onClick={onGetStarted}
-              size="md"
+              size="sm"
               color="teal"
               icon={ArrowRight}
               className="!rounded-xl sm:!rounded-2xl shadow-xl shadow-primary-500/10"
@@ -51,4 +51,4 @@ const LandingNav = ({ onGetStarted }) => {
   );
 };
 
-export default LandingNav;
+export default LandingNav;

@@ -25,9 +25,6 @@ import {
 import { AnalyticsSkeleton } from '../UI/SkeletonLoader';
 
 // Base UI Components
-import GlassCard from '../UI/base/GlassCard';
-import Button from '../UI/base/Button';
-import GlassBadge from '../UI/base/GlassBadge';
 import IconBox from '../UI/base/IconBox';
 
 ChartJS.register(
@@ -255,10 +252,10 @@ const SpendingAnalytics = () => {
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { 
-          usePointStyle: true, 
-          padding: 12, 
-          boxWidth: 8, 
+        labels: {
+          usePointStyle: true,
+          padding: 12,
+          boxWidth: 8,
           font: { size: 10, weight: 'bold' },
           color: 'rgba(156, 163, 175, 0.8)' // gray-400
         }
@@ -281,17 +278,17 @@ const SpendingAnalytics = () => {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { 
-          maxRotation: 0, 
-          autoSkip: true, 
-          maxTicksLimit: 7, 
+        ticks: {
+          maxRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 7,
           font: { size: 9, weight: 'bold' },
           color: 'rgba(156, 163, 175, 0.5)'
         }
       },
       y: {
         beginAtZero: true,
-        grid: { 
+        grid: {
           color: 'rgba(156, 163, 175, 0.05)',
           drawBorder: false
         },
@@ -331,9 +328,9 @@ const SpendingAnalytics = () => {
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { 
-          boxWidth: 8, 
-          padding: 12, 
+        labels: {
+          boxWidth: 8,
+          padding: 12,
           usePointStyle: true,
           font: { size: 10, weight: 'bold' },
           color: 'rgba(156, 163, 175, 0.8)'
@@ -396,8 +393,8 @@ const SpendingAnalytics = () => {
             <button
               key={chart.id}
               onClick={() => setActiveChart(chart.id)}
-              className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeChart === chart.id 
-                ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20' 
+              className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeChart === chart.id
+                ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
                 : 'text-gray-400 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-400'}`}
             >
               {chart.label}
@@ -481,9 +478,13 @@ const SpendingAnalytics = () => {
 
           return stats.map((stat, index) => (
             <div key={index} className="p-4 rounded-2xl bg-white/50 dark:bg-white/[0.01] border border-gray-100/50 dark:border-white/5 flex flex-col items-center text-center group hover:bg-white dark:hover:bg-white/[0.03] transition-all">
-              <div className={`w-8 h-8 flex items-center justify-center rounded-lg mb-3 ${stat.bg} ${stat.color} opacity-40 group-hover:opacity-100 transition-opacity`}>
-                <stat.icon className="w-4 h-4" />
-              </div>
+              <IconBox
+                icon={stat.icon}
+                size="sm"
+                color={stat.color.includes('teal') ? 'success' : stat.color.includes('sky') ? 'info' : stat.color.includes('amber') ? 'warning' : 'ink'}
+                variant="soft"
+                className="mb-3 opacity-40 group-hover:opacity-100"
+              />
               <span className="text-[10px] text-gray-400 dark:text-gray-600 font-black uppercase tracking-[0.1em] mb-1.5 leading-none">
                 {stat.label}
               </span>
