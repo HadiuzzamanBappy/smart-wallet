@@ -95,19 +95,21 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
   if (!hasPlan) {
     return (
       <GlassCard
-        padding="p-4"
-        className="cursor-pointer group hover:border-primary-500/30 transition-all duration-500"
+        padding="p-3.5"
+        className="cursor-pointer group hover:bg-paper-100/50 dark:hover:bg-white/[0.04] transition-all border-paper-200/50 dark:border-white/5"
         onClick={() => onOpen('wizard')}
+        backgroundIcon={BarChart2}
+        iconColor="primary"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <IconBox icon={BarChart2} size="sm" color="primary" variant="soft" />
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-3">
+            <IconBox icon={BarChart2} size="xs" color="primary" variant="glass" />
             <div>
-              <h3 className="text-body text-ink-900 dark:text-paper-50 mb-1.5">Financial Intelligence</h3>
-              <p className="text-nano text-ink-400 dark:text-paper-700">Setup 50/30/20 & Daily Limits</p>
+              <div className="text-overline opacity-40 uppercase tracking-widest mb-1 ">Financial Intelligence</div>
+              <div className="text-label font-bold text-ink-900 dark:text-paper-50">Setup 50/30/20 & Daily Limits</div>
             </div>
           </div>
-          <IconBox icon={Edit3} size="xs" color="ink" variant="soft" className="group-hover:text-primary-500" />
+          <IconBox icon={Edit3} size="xs" color="ink" variant="soft" className="group-hover:text-primary-500 opacity-40 group-hover:opacity-100" />
         </div>
       </GlassCard>
     );
@@ -116,21 +118,23 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
   return (
     <div className="relative group/card w-full">
       <GlassCard
-        padding="p-4"
-        className="cursor-pointer transition-all active:scale-[0.99] hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-500"
+        padding="p-3.5"
+        className="cursor-pointer transition-all active:scale-[0.99] hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-500 border-paper-200/50 dark:border-white/5"
         onClick={() => onOpen('result')}
+        backgroundIcon={BarChart2}
+        iconColor="primary"
       >
-        <div className="flex items-start justify-between gap-2 mb-4">
-          <div className="flex items-center gap-4">
-            <IconBox icon={BarChart2} size="sm" color="primary" variant="soft" />
+        <div className="flex items-start justify-between gap-2 mb-4 relative z-10">
+          <div className="flex items-center gap-3">
+            <IconBox icon={BarChart2} size="xs" color="primary" variant="glass" />
             <div>
-              <div className="text-nano text-primary-600 dark:text-primary-400 mb-1.5 uppercase">Intelligence Suite</div>
+              <div className="text-overline opacity-40 uppercase tracking-widest mb-1 ">Intelligence Suite</div>
               <div className="flex items-center gap-2.5">
-                <div className="text-h5 text-ink-900 dark:text-paper-50">
+                <div className="text-h5 font-bold tracking-tight text-ink-900 dark:text-paper-50">
                   {planData.currencySymbol}{Math.round(totalAssets).toLocaleString()}
                 </div>
                 {runway > 0 && (
-                  <Badge color="warning" variant="soft" size="sm">
+                  <Badge color="warning" variant="soft" size="sm" className="!rounded-lg">
                     {runway.toFixed(1)}m Runway
                   </Badge>
                 )}
@@ -173,27 +177,27 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
                   <span>{item.target}%</span>
                 </div>
               </div>
-              <span className="text-nano text-ink-900 dark:text-paper-50 font-medium">
+              <span className="text-nano text-ink-900 dark:text-paper-50 ">
                 {planData.currencySymbol}{Math.round(item.val).toLocaleString()}
               </span>
             </div>
           ))}
         </div>
 
-        <div className="flex gap-2.5">
-          <div className={`flex-[2] rounded-2xl py-2.5 px-3 flex flex-col items-center justify-center border transition-colors ${totalSurplus >= 0
+        <div className="flex gap-2.5 relative z-10">
+          <div className={`flex-[2] rounded-xl py-2 px-3 flex flex-col items-center justify-center border transition-colors ${totalSurplus >= 0
             ? 'bg-primary-500/5 dark:bg-primary-500/[0.02] text-primary-600 dark:text-primary-400 border-primary-500/10 hover:bg-primary-500/10'
             : 'bg-error-500/5 dark:bg-error-500/[0.02] text-error-600 dark:text-error-400 border-error-500/10 hover:bg-error-500/10'
             }`}>
-            <span className="text-nano uppercase opacity-60 mb-1">Net Surplus</span>
-            <span className="text-nano font-bold">{planData.currencySymbol}{Math.round(totalSurplus).toLocaleString()}</span>
+            <span className="text-overline opacity-40 uppercase mb-0.5">Net Surplus</span>
+            <span className="text-label font-bold">{planData.currencySymbol}{Math.round(totalSurplus).toLocaleString()}</span>
           </div>
-          <div className={`flex-[3] rounded-2xl py-2.5 px-4 border flex justify-between items-center group/limit transition-colors ${totalSurplus >= 0
+          <div className={`flex-[3] rounded-xl py-2 px-4 border flex justify-between items-center group/limit transition-colors ${totalSurplus >= 0
             ? 'bg-paper-100/30 dark:bg-white/[0.01] border-ink-100/50 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.04]'
             : 'bg-error-500/5 dark:bg-error-500/[0.02] border-error-500/10 hover:bg-error-500/10'
             }`}>
-            <span className={`text-nano uppercase ${totalSurplus >= 0 ? 'text-ink-400 dark:text-paper-700' : 'text-error-600/60 dark:text-error-400/60'}`}>Daily Ops</span>
-            <span className={`text-nano font-bold ${totalSurplus >= 0 ? 'text-ink-900 dark:text-paper-50' : 'text-error-600 dark:text-error-400'}`}>
+            <span className={`text-overline opacity-40 uppercase ${totalSurplus >= 0 ? 'text-ink-400 dark:text-paper-700' : 'text-error-600/60 dark:text-error-400/60'}`}>Daily Ops</span>
+            <span className={`text-label font-bold ${totalSurplus >= 0 ? 'text-ink-900 dark:text-paper-50' : 'text-error-600 dark:text-error-400'}`}>
               {planData.currencySymbol}{Math.round(dailyLimit).toLocaleString()}
             </span>
           </div>
@@ -201,15 +205,13 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
       </GlassCard>
 
       {/* Settings Button - Always visible as requested */}
-      <div className="absolute top-4 right-4 z-10 transition-all">
-        <IconBox
-          icon={Edit3}
-          size="xs"
-          color="ink"
-          variant="soft"
-          className="!bg-white/50 dark:!bg-white/[0.05] !backdrop-blur-md !border-paper-100 dark:!border-white/10 hover:!text-primary-500 cursor-pointer shadow-sm"
+      <div className="absolute top-3.5 right-3.5 z-10 transition-all">
+        <button
           onClick={(e) => { e.stopPropagation(); onOpen('wizard'); }}
-        />
+          className="p-1.5 rounded-lg bg-ink-900/5 dark:bg-white/5 text-paper-400 hover:text-primary-500 transition-colors border border-transparent hover:border-primary-500/20"
+        >
+          <Edit3 className="w-3 h-3" />
+        </button>
       </div>
     </div>
   );

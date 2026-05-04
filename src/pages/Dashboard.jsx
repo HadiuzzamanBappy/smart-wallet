@@ -121,7 +121,7 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-paper-50 dark:bg-ink-950 transition-colors duration-500 relative overflow-hidden">
+      <div className="min-h-screen bg-paper-50 dark:bg-ink-700 transition-colors duration-500 relative overflow-hidden">
         {/* Subtle Atmospheric Glow - Nexus Atmosphere */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-primary-500/[0.03] dark:bg-primary-500/[0.05] rounded-full blur-[160px] pointer-events-none z-0" />
         <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-secondary-500/[0.02] dark:bg-secondary-500/[0.04] rounded-full blur-[140px] pointer-events-none z-0" />

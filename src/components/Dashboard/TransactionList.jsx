@@ -6,7 +6,9 @@ import {
   TrendingUp,
   TrendingDown,
   Search,
-  Eye
+  Eye,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
@@ -181,7 +183,7 @@ const TransactionList = ({ onTransactionChange }) => {
   return (
     <>
       <div className="flex flex-col h-full">
-        <div className="px-4 py-4 space-y-3 border-b border-paper-100 dark:border-white/5 bg-paper-100/10 dark:bg-white/[0.01]">
+        <div className="px-4 py-4 space-y-3 border-b border-paper-100 dark:border-white/5 bg-paper-100 dark:bg-white/5">
           {/* Filters Bar - Executive Style Compact */}
           <div className="flex flex-col sm:flex-row gap-2">
             <GlassInput
@@ -264,12 +266,12 @@ const TransactionList = ({ onTransactionChange }) => {
 
                     {/* Middle: Executive Typography */}
                     <div className="min-w-0">
-                      <p className="text-label text-ink-900 dark:text-paper-50 truncate mb-1">{transaction.description}</p>
+                      <p className="text-label font-bold text-ink-900 dark:text-paper-50 truncate mb-1">{transaction.description}</p>
                       <div className="flex items-center gap-3">
-                        <Badge color="primary" variant="soft" size="sm" className="bg-paper-100/50 dark:bg-white/5 h-4 !px-1.5">
-                          <span className="text-nano uppercase text-ink-400 dark:text-paper-700">{dc}</span>
-                        </Badge>
-                        <span className="text-nano">
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-paper-100 dark:bg-white/5 border border-paper-200/50 dark:border-white/5">
+                          <span className="text-overline opacity-60 uppercase tracking-widest">{dc}</span>
+                        </div>
+                        <span className="text-overline opacity-40">
                           {formatDate(transaction.createdAt)}
                         </span>
                       </div>
@@ -277,7 +279,7 @@ const TransactionList = ({ onTransactionChange }) => {
 
                     {/* Right: Premium Currency & Quick Actions */}
                     <div className="flex flex-col items-end gap-1.5">
-                      <div className={`text-label whitespace-nowrap ${isPositive ? 'text-success-600 dark:text-success-400' : 'text-ink-900 dark:text-paper-50'}`}>
+                      <div className={`text-label font-bold whitespace-nowrap ${isPositive ? 'text-success-600 dark:text-success-400' : 'text-ink-900 dark:text-paper-50'}`}>
                         {isPositive ? '+' : '-'}{formatCurrency(transaction.amount, currency)}
                       </div>
                       <div className="flex gap-1 transition-all">
@@ -317,41 +319,48 @@ const TransactionList = ({ onTransactionChange }) => {
 
         {/* Pagination Controls - Executive Density */}
         {filteredTransactions.length > PAGE_SIZE && (
-          <div className="py-6 px-5 flex items-center justify-between border-t border-paper-100 dark:border-white/5 bg-paper-100/30 dark:bg-white/[0.01]">
-            <div className="text-label text-ink-400 dark:text-paper-700">
-              Page <span className="text-ink-900 dark:text-paper-50">{page}</span> of {totalPages}
+          <div className="py-6 px-5 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-paper-100 dark:border-white/5 bg-paper-50 dark:bg-white/[0.02]">
+            <div className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest">
+              Audit Page <span className="text-ink-900 dark:text-white font-bold">{page}</span> of {totalPages}
             </div>
-            <div className="flex items-center gap-3">
-              <button
+            <div className="flex items-center gap-2">
+              <Button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className={`px-4 py-2 rounded-2xl border border-paper-200/50 dark:border-white/10 text-label text-ink-400 dark:text-paper-700 disabled:opacity-20 hover:bg-surface-card dark:hover:bg-white/10 transition-all`}
+                variant="soft"
+                color="ink"
+                size="sm"
+                icon={ChevronLeft}
               >
-                Back
-              </button>
+                Previous
+              </Button>
 
-              <div className="hidden sm:flex items-center gap-1.5">
+              <div className="hidden md:flex items-center gap-1.5 px-2">
                 {[...Array(totalPages)].map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setPage(i + 1)}
-                    className={`w-9 h-9 flex items-center justify-center rounded-2xl text-overline transition-all ${page === i + 1
-                      ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
-                      : 'text-ink-400 dark:text-paper-700 hover:bg-surface-card dark:hover:bg-white/10 hover:text-ink-900 dark:hover:text-white'
+                    className={`w-8 h-8 flex items-center justify-center rounded-xl text-overline transition-all duration-300 ${page === i + 1
+                      ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20 font-bold'
+                      : 'text-ink-400 dark:text-paper-700 hover:bg-paper-100 dark:hover:bg-white/10'
                       }`}
                   >
-                    {String(i + 1).padStart(2, '0')}
+                    {i + 1}
                   </button>
                 ))}
               </div>
 
-              <button
+              <Button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className={`px-4 py-2 rounded-2xl border border-paper-200/50 dark:border-white/10 text-label text-ink-400 dark:text-paper-700 disabled:opacity-20 hover:bg-surface-card dark:hover:bg-white/10 transition-all`}
+                variant="soft"
+                color="ink"
+                size="sm"
+                icon={ChevronRight}
+                iconPosition="right"
               >
                 Next
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -366,48 +375,48 @@ const TransactionList = ({ onTransactionChange }) => {
       >
         {adjustmentDetail ? (
           <div className="space-y-6">
-            <GlassCard padding="p-5" className="flex items-center justify-between gap-4 !bg-paper-100/30 dark:!bg-white/[0.02]">
+            <GlassCard padding="p-5" className="flex items-center justify-between gap-4 !bg-paper-50 dark:!bg-white/[0.02] border-paper-200/50 dark:border-white/5">
               <div>
-                <div className="text-overline text-ink-400 dark:text-paper-700 mb-2">Net Adjustment</div>
-                <div className={`text-h2 tracking-tighter ${adjustmentDetail.type === 'collection' ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
+                <div className="text-overline text-ink-400 dark:text-paper-700 mb-1 uppercase tracking-widest">Net Adjustment</div>
+                <div className={`text-h2 font-bold tracking-tighter ${adjustmentDetail.type === 'collection' ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
                   {adjustmentDetail.type === 'collection' ? '+' : '-'}{formatCurrency(adjustmentDetail.amount, currency)}
                 </div>
               </div>
               <div className="text-right">
                 <Badge
                   color={adjustmentDetail.type === 'repayment' ? 'error' : 'success'}
-                  variant="soft"
+                  variant="filled"
                 >
-                  {adjustmentDetail.type === 'repayment' ? 'Loan Repay' : 'Credit Collect'}
+                  {adjustmentDetail.type === 'repayment' ? 'Loan Repayment' : 'Credit Collection'}
                 </Badge>
               </div>
             </GlassCard>
 
             <div className="grid grid-cols-2 gap-4">
               {adjustmentDetail.originalAmount !== undefined && (
-                <GlassCard padding="p-4" className="!bg-paper-100/30 dark:!bg-white/[0.02]">
-                  <div className="text-overline text-ink-400 dark:text-paper-700 mb-2">Original Principal</div>
-                  <div className="text-body text-ink-900 dark:text-paper-50">{formatCurrency(adjustmentDetail.originalAmount, currency)}</div>
-                </GlassCard>
+                <div className="space-y-1.5 px-1">
+                  <label className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest opacity-50">Principal</label>
+                  <div className="text-label font-bold text-ink-900 dark:text-white">{formatCurrency(adjustmentDetail.originalAmount, currency)}</div>
+                </div>
               )}
-              <GlassCard padding="p-4" className="!bg-paper-100/30 dark:!bg-white/[0.02]">
-                <div className="text-overline text-ink-400 dark:text-paper-700 mb-2">Audit Timestamp</div>
-                <div className="text-body text-ink-900 dark:text-paper-50">{formatDate(adjustmentDetail.createdAt)}</div>
-              </GlassCard>
-              <GlassCard padding="p-4" className="!bg-paper-100/30 dark:!bg-white/[0.02] col-span-2">
-                <div className="text-overline text-ink-400 dark:text-paper-700 mb-2">Reference Entity</div>
-                <div className="text-body text-ink-900 dark:text-paper-50 truncate">{adjustmentDetail.originalDescription || 'No Reference Found'}</div>
-              </GlassCard>
+              <div className="space-y-1.5 px-1">
+                <label className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest opacity-50">Timestamp</label>
+                <div className="text-label font-bold text-ink-900 dark:text-white">{formatDate(adjustmentDetail.createdAt)}</div>
+              </div>
+              <div className="space-y-1.5 px-1 col-span-2 pt-2 border-t border-paper-100 dark:border-white/5">
+                <label className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest opacity-50">Reference Entity</label>
+                <div className="text-label font-bold text-ink-900 dark:text-white truncate">{adjustmentDetail.originalDescription || 'No Reference Found'}</div>
+              </div>
             </div>
 
-            <div>
-              <div className="text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1">Internal Audit Notes</div>
-              <GlassCard padding="p-5" className="!bg-paper-100/30 dark:!bg-black/20 text-body text-ink-900 dark:text-paper-50 leading-relaxed">
+            <div className="space-y-2">
+              <label className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest opacity-50 px-1">Internal Audit Notes</label>
+              <GlassCard padding="p-4" className="!bg-paper-100/50 dark:!bg-black/20 text-label text-ink-900 dark:text-white leading-relaxed border-none">
                 {adjustmentDetail.description || 'No manual notes recorded for this operation.'}
               </GlassCard>
             </div>
 
-            <Button fullWidth onClick={() => setAdjustmentModalOpen(false)} color="ink" variant="soft">Close Audit</Button>
+            <Button fullWidth onClick={() => setAdjustmentModalOpen(false)} color="ink" variant="soft">Close Audit Record</Button>
           </div>
         ) : (
           <div className="py-12 text-center text-nano uppercase text-gray-400">Audit Data Unavailable</div>

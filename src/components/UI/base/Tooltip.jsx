@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 /**
  * Premium Tooltip component with Framer Motion animations
  */
-const Tooltip = ({ 
-  children, 
-  content, 
+const Tooltip = ({
+  children,
+  content,
   position = 'top',
   delay = 0.3,
-  className = ''
+  className = '',
+  block = false
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [timeoutId, setTimeoutId] = useState(null);
@@ -42,8 +43,8 @@ const Tooltip = ({
   };
 
   return (
-    <div 
-      className="relative inline-block"
+    <div
+      className={`relative ${block ? 'block' : 'inline-block'} ${className}`}
       onMouseEnter={showTooltip}
       onMouseLeave={hideTooltip}
       onFocus={showTooltip}
@@ -60,7 +61,7 @@ const Tooltip = ({
             className={`absolute z-[100] ${positions[position]} ${className} pointer-events-none`}
           >
             <div className="bg-white dark:bg-ink-950 text-ink-900 dark:text-paper-50 px-3 py-2 rounded-xl shadow-2xl border border-paper-200 dark:border-white/10 backdrop-blur-xl min-w-[180px] max-w-[240px]">
-              <div className="text-[11px] leading-relaxed font-medium">
+              <div className="text-nano leading-relaxed ">
                 {content}
               </div>
               {/* Arrow */}

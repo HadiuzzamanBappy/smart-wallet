@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Plus, Loader2, Edit, Trash, Check, X } from 'lucide-react';
+import { MessageSquare, Plus, Loader2, Edit, Trash, Check, X, AlertTriangle } from 'lucide-react';
 import { parseTransaction } from '../../services/aiService';
 import { addTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
@@ -233,14 +233,14 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
         <div className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 w-[calc(100vw-2rem)] sm:w-80 animate-in slide-in-from-bottom duration-300">
           <div className="bg-surface-card dark:bg-surface-card-dark backdrop-blur-3xl rounded-3xl shadow-2xl border border-paper-200 dark:border-paper-900/10 overflow-hidden flex flex-col max-h-[80vh]">
             {/* Header */}
-            <div className="p-3 sm:p-4 border-b border-paper-100 dark:border-white/5 bg-paper-50/50 dark:bg-white/[0.02]">
-              <SectionHeader
-                title="Assistant"
-                subtitle="Natural language entry"
-                icon={MessageSquare}
-                titleSize="text-h6"
-                className="!mb-0"
-              />
+            <div className="p-4 border-b border-paper-100 dark:border-white/5 bg-paper-50/50 dark:bg-white/[0.02]">
+              <div className="flex items-center gap-3">
+                <IconBox icon={MessageSquare} variant="glass" size="sm" color="primary" />
+                <div className="flex flex-col">
+                  <h3 className="text-label font-bold text-ink-900 dark:text-white uppercase tracking-wider">Financial Assistant</h3>
+                  <p className="text-overline opacity-40">Intelligence Layer</p>
+                </div>
+              </div>
             </div>
 
             {/* Chat Area */}
@@ -264,8 +264,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                               <div className="text-overline text-ink-400 mt-0.5">{humanizeType(transaction.type)}</div>
                             </div>
                           </div>
-                          <Badge 
-                            variant="soft" 
+                          <Badge
+                            variant="soft"
                             color={transaction.type === 'income' || transaction.type === 'loan' ? 'primary' : 'error'}
                             size="sm"
                           >
@@ -316,9 +316,9 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
               {/* Preview / Confirm area */}
               {isPreviewOpen && Array.isArray(parsedTransactions) && parsedTransactions.length > 0 && (
                 <div className="pt-3 border-t border-paper-100 dark:border-white/5 space-y-3">
-                  <div className="p-2.5 rounded-2xl bg-amber-500/[0.03] dark:bg-amber-500/10 border border-amber-500/20 flex items-start gap-2.5">
-                    <span className="text-body mt-0.5">⚠️</span>
-                    <p className="text-overline text-amber-700 dark:text-amber-400">Verify parsed entries before saving to vault</p>
+                  <div className="p-2 sm:p-3 rounded-2xl bg-amber-500/[0.03] dark:bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
+                    <AlertTriangle size={14} className="text-amber-500 shrink-0" />
+                    <p className="text-overline text-amber-700 dark:text-amber-400 ">Verify parsed entries before saving to vault</p>
                   </div>
 
                   <div className="space-y-1.5 max-h-48 overflow-auto custom-scrollbar">
@@ -329,32 +329,36 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                         padding="p-2"
                         className="!bg-paper-100/30 dark:!bg-white/[0.01] border-paper-200/40 dark:border-white/5"
                       >
-                        <div className="flex items-center gap-2 text-label">
+                        <div className="flex items-center gap-3">
                           {/* Normal row view */}
                           {editingIndex !== index ? (
                             <>
                               <div className="flex-1 min-w-0">
-                                <div className="text-body truncate text-ink-900 dark:text-white">{transaction.description}</div>
-                                <div className="text-overline opacity-40 mt-0.5">{humanizeType(transaction.type)}</div>
+                                <div className="text-label font-bold text-ink-900 dark:text-white truncate">
+                                  {transaction.description}
+                                </div>
+                                <div className="text-overline opacity-40 uppercase tracking-widest mt-0.5">
+                                  {humanizeType(transaction.type)}
+                                </div>
                               </div>
-                              <div className="text-right mr-1">
-                                <p className={`text-label ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
+                              <div className="text-right">
+                                <p className={`text-label font-bold ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
                                   {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
                                   {formatCurrency(transaction.amount, userCurrency)}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-0.5 border-l border-paper-100 dark:border-white/5 ml-1 pl-1">
                                 <button
                                   onClick={() => setEditingIndex(index)}
-                                  className="p-1.5 rounded-lg hover:bg-paper-100 dark:hover:bg-white/5 transition-colors opacity-40 hover:opacity-100"
+                                  className="p-1.5 rounded-lg hover:bg-paper-100 dark:hover:bg-white/5 transition-colors text-ink-400 hover:text-primary-500"
                                 >
-                                  <Edit className="w-3 h-3" />
+                                  <Edit className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                   onClick={() => removeParsedTransaction(index)}
-                                  className="p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors opacity-40 hover:opacity-100 text-rose-500"
+                                  className="p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors text-rose-500/40 hover:text-rose-500"
                                 >
-                                  <Trash className="w-3 h-3" />
+                                  <Trash className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             </>
@@ -406,8 +410,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                     <Button
                       onClick={() => { setIsPreviewOpen(false); setParsedTransactions(null); }}
                       variant="soft"
-                      color="ink"
-                      fullWidth
+                      color="error"
+                      className="flex-1"
                       size="sm"
                     >
                       Discard
@@ -417,10 +421,9 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                       disabled={loading}
                       loading={loading}
                       variant="filled"
-                      color="primary"
-                      fullWidth
+                      color="success"
+                      className="flex-1"
                       size="sm"
-                      className="flex-[1.5]"
                     >
                       Confirm Entry
                     </Button>
@@ -434,11 +437,11 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                   <p className="text-overline text-ink-400 px-1">Suggestions</p>
                   <div className="space-y-2">
                     {[
-                      { 
+                      {
                         title: userCurrency === 'BDT' ? 'Bought groceries for 500 taka' : 'Groceries for $50',
                         msg: userCurrency === 'BDT' ? 'Bought groceries for 500 taka today' : 'Bought groceries for 50 dollars'
                       },
-                      { 
+                      {
                         title: userCurrency === 'BDT' ? 'লাঞ্চে ২৫০ টাকা খরচ' : 'Lunch for $25',
                         msg: userCurrency === 'BDT' ? 'লাঞ্চে ২৫০ টাকা খরচ করেছি' : 'Lunch expense: 25'
                       }

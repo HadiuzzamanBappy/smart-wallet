@@ -130,28 +130,27 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
               key={section.id}
               onClick={() => toggleSection(section.id)}
               className={`group relative flex items-center gap-4 px-6 py-5 rounded-3xl transition-all duration-500 border w-full sm:w-auto sm:min-w-[280px] ${isActive
-                  ? `bg-surface-card dark:bg-surface-card-dark border-primary-500 shadow-xl shadow-primary-500/10 scale-[1.02] z-10`
-                  : `bg-paper-100/30 dark:bg-white/[0.02] border-paper-100 dark:border-white/5 hover:border-paper-200 dark:hover:border-white/10 shadow-sm opacity-70 hover:opacity-100`
+                ? `bg-surface-card dark:bg-surface-card-dark border-primary-500 shadow-xl shadow-primary-500/10 scale-[1.02] z-10`
+                : `bg-paper-100/30 dark:bg-white/[0.02] border-paper-100 dark:border-white/5 hover:border-paper-200 dark:hover:border-white/10 shadow-sm opacity-70 hover:opacity-100`
                 }`}
             >
-              <IconBox 
-                icon={section.icon} 
-                size="sm" 
-                color={isActive ? 'primary' : 'ink'} 
+              <IconBox
+                icon={section.icon}
+                size="sm"
+                color={isActive ? 'primary' : 'ink'}
                 variant={isActive ? 'filled' : 'soft'}
-                className="transition-all duration-500 group-hover:scale-110" 
+                className="transition-all duration-500 group-hover:scale-110"
               />
               <div className="text-left flex-1 min-w-0">
-                <h3 className={`text-label ${
-                  isActive 
-                    ? 'text-ink-900 dark:text-paper-50' 
+                <h3 className={`text-label ${isActive
+                    ? 'text-ink-900 dark:text-paper-50'
                     : 'text-ink-400 dark:text-paper-700'
-                }`}>
+                  }`}>
                   {section.title}
                 </h3>
                 <p className={`text-nano opacity-30 ${isActive
-                    ? 'text-primary-600 dark:text-primary-400 font-bold'
-                    : 'text-ink-300 dark:text-paper-900'
+                  ? 'text-primary-600 dark:text-primary-400 font-bold'
+                  : 'text-ink-300 dark:text-paper-900'
                   }`}>
                   {section.description}
                 </p>
@@ -160,7 +159,7 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
               <div className={`transition-all duration-500 ${isActive ? 'rotate-180 text-primary-500' : 'text-ink-400 group-hover:text-ink-900'}`}>
                 <ChevronDown className="w-4 h-4" />
               </div>
-              
+
               {isActive && (
                 <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-12 h-1 bg-primary-500 rounded-full shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
               )}
@@ -173,7 +172,7 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
       <div>
         {activeSection && (
           <div className="mt-6 animate-in slide-in-from-top-4 duration-500 fade-in fill-mode-both">
-            <GlassCard padding="p-0" className="!rounded-[2rem] shadow-2xl overflow-hidden">
+            <GlassCard padding="p-0" className="shadow-2xl overflow-hidden">
               {/* Content Integration */}
               <div className="relative">
                 {renderSectionContent(activeSection)}

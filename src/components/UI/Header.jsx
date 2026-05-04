@@ -27,9 +27,7 @@ const Header = ({
     const { userProfile, user } = useAuth();
     const { salaryPlan, loading: globalLoading, netBalance, currentMonthIncome, currentMonthExpense } = useTransactions();
     const cashInHand = salaryPlan?.plan?.cashInHand || 0;
-    const actualSavings = salaryPlan?.plan?.actualSavings || 0;
     const goalSaving = salaryPlan?.plan?.monthlyForGoal || 0;
-    const remainingGoalTarget = Math.max(0, goalSaving - actualSavings);
     const netBalanceAmount = netBalance || 0;
     const monthlySurplus = netBalanceAmount + cashInHand - goalSaving;
     const balance = netBalanceAmount + cashInHand;
@@ -40,7 +38,7 @@ const Header = ({
     const remainingDays = Math.max(1, totalDaysInMonth - now.getDate() + 1);
     const vaultDailyLimit = balance / remainingDays;
     const surplusDailyLimit = monthlySurplus / remainingDays;
-    const goalDailyTarget = remainingGoalTarget / remainingDays;
+    const goalDailyTarget = goalSaving / remainingDays;
 
     const [showFloatingBalance, setShowFloatingBalance] = useState(false);
     const [entered, setEntered] = useState(false);
@@ -219,112 +217,128 @@ const Header = ({
             </header>
 
             {showFloatingBalance && (
-                <div className="fixed top-16 left-0 right-0 flex justify-center z-50 pointer-events-none">
-                    <div className="pointer-events-auto w-11/12 max-w-lg px-4">
-                        <GlassCard
-                            variant="flat"
-                            padding="p-5"
-                            className={`relative !overflow-visible !bg-surface-card dark:!bg-surface-card-dark backdrop-blur-2xl text-ink-900 dark:text-paper-50 shadow-2xl border-paper-200 dark:border-white/10 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-3' : 'opacity-0 translate-y-0'}`}
-                        >
-                            <Button
-                                variant="icon"
-                                size="sm"
-                                onClick={handleFloatingClose}
-                                className="absolute -top-7 -right-7 z-10 w-8 h-8 !rounded-full bg-white dark:bg-ink-950 shadow-xl border border-paper-200 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-transform text-ink-400 hover:text-ink-900 dark:text-paper-700 dark:hover:text-paper-50"
+                <>
+                    <div
+                        className={`fixed inset-0 z-[45] bg-ink-950/20 backdrop-blur-md transition-opacity duration-300 ${entered && !isClosing ? 'opacity-100' : 'opacity-0'}`}
+                        onClick={handleFloatingClose}
+                    />
+                    <div className="fixed top-16 left-0 right-0 flex justify-center z-50 pointer-events-none">
+                        <div className="pointer-events-auto w-11/12 max-w-lg px-4">
+                            <GlassCard
+                                variant="flat"
+                                padding="p-5"
+                                className={`relative !overflow-visible !bg-surface-card dark:!bg-surface-card-dark backdrop-blur-2xl text-ink-900 dark:text-paper-50 shadow-2xl border-paper-200 dark:border-white/10 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-3' : 'opacity-0 translate-y-0'}`}
                             >
-                                <X className="w-4 h-4" />
-                            </Button>
+                                <Button
+                                    variant="icon"
+                                    size="sm"
+                                    onClick={handleFloatingClose}
+                                    className="absolute -top-7 -right-7 z-10 w-8 h-8 !rounded-full bg-white dark:bg-ink-950 shadow-xl border border-paper-200 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-transform text-ink-400 hover:text-ink-900 dark:text-paper-700 dark:hover:text-paper-50"
+                                >
+                                    <X className="w-4 h-4" />
+                                </Button>
 
-                            <div className="flex flex-col gap-6 select-none">
-                                <div className="flex items-center justify-between px-1">
-                                    <div className="space-y-0.5">
-                                        <Tooltip content="Your total comprehensive wealth across all tracked liquid assets and accounts." position="right">
-                                            <div className="flex items-center gap-1.5 cursor-help group/vault">
-                                                <p className="text-overline opacity-30">Vault Total</p>
-                                                <Info size={10} className="opacity-0 group-hover/vault:opacity-40 transition-opacity" />
+                                <div className="flex flex-col gap-6 select-none">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 pb-4 border-b border-paper-100 dark:border-white/5">
+                                        <div className="space-y-1">
+                                            <Tooltip content="Your total comprehensive wealth across all tracked liquid assets and accounts." position="top" block>
+                                                <div className="flex items-center gap-1.5 cursor-help group/vault">
+                                                    <p className="text-overline opacity-30">Vault Total</p>
+                                                    <Info size={10} className="opacity-0 group-hover/vault:opacity-40 transition-opacity" />
+                                                </div>
+                                            </Tooltip>
+                                            <div className="flex items-baseline gap-2 flex-wrap">
+                                                <h2 className="text-h3 text-ink-900 dark:text-paper-50 leading-none">
+                                                    {formatCurrency(balance, userProfile?.currency || 'BDT')}
+                                                </h2>
+                                                <span className="text-label opacity-40 font-normal">
+                                                    / {formatCurrency(vaultDailyLimit, userProfile?.currency || 'BDT')} <span className="lowercase">daily</span>
+                                                </span>
                                             </div>
-                                        </Tooltip>
-                                        <h2 className="text-h4 text-ink-900 dark:text-paper-50 flex items-baseline gap-2">
-                                            {formatCurrency(balance, userProfile?.currency || 'BDT')}
-                                            <span className="text-nano opacity-40 font-normal">/ {formatCurrency(vaultDailyLimit, userProfile?.currency || 'BDT')} <span className="lowercase">daily</span></span>
-                                        </h2>
-                                    </div>
-                                    <div className="text-right flex flex-col items-end gap-1.5">
-                                        <Badge label="Goal Target" value={formatCurrency(salaryPlan?.plan?.goal || 0, userProfile?.currency || 'BDT')} color="primary" variant="glass" size="sm" />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2">
-                                    {[
-                                        {
-                                            label: 'Month Margin',
-                                            val: formatCurrency(netBalance || 0, userProfile?.currency || 'BDT'),
-                                            color: 'text-primary-500',
-                                            tip: `Dynamic Monthly Performance: ${formatCurrency(currentMonthIncome || 0, userProfile?.currency || 'BDT')} (Earned) - ${formatCurrency(currentMonthExpense || 0, userProfile?.currency || 'BDT')} (Expended) = ${formatCurrency(netBalance || 0, userProfile?.currency || 'BDT')}`
-                                        },
-                                        {
-                                            label: 'Cash In Hand',
-                                            val: formatCurrency(cashInHand, userProfile?.currency || 'BDT'),
-                                            color: 'text-amber-500',
-                                            tip: `Immediate Liquidity: ${formatCurrency(cashInHand, userProfile?.currency || 'BDT')} (Physical cash and accessible bank funds).`
-                                        },
-                                        {
-                                            label: 'Goal Saving',
-                                            val: (
-                                                <div className="flex items-baseline gap-1.5 flex-wrap">
-                                                    <span className="text-secondary-500">{formatCurrency(remainingGoalTarget, userProfile?.currency || 'BDT')}</span>
-                                                    <span className="text-nano opacity-40 font-normal">/ {formatCurrency(goalDailyTarget, userProfile?.currency || 'BDT')} <span className="lowercase">daily</span></span>
-                                                </div>
-                                            ),
-                                            color: '', // handled in val
-                                            tip: `Cash Target: ${formatCurrency(goalSaving, userProfile?.currency || 'BDT')} (Monthly Goal) - ${formatCurrency(actualSavings, userProfile?.currency || 'BDT')} (Actual Savings Done) = ${formatCurrency(remainingGoalTarget, userProfile?.currency || 'BDT')}. Daily Cash Target: ${formatCurrency(goalDailyTarget, userProfile?.currency || 'BDT')} for ${remainingDays} days.`
-                                        },
-                                        {
-                                            label: 'Monthly Surplus',
-                                            val: (
-                                                <div className="flex items-baseline gap-1.5 flex-wrap">
-                                                    <span className="text-teal-500 font-bold">{formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')}</span>
-                                                    <span className="text-nano opacity-40 font-normal">/ {formatCurrency(surplusDailyLimit, userProfile?.currency || 'BDT')} <span className="lowercase">daily</span></span>
-                                                </div>
-                                            ),
-                                            color: '', // handled in val
-                                            tip: `Operational Surplus: (${formatCurrency(netBalanceAmount, userProfile?.currency || 'BDT')} [Margin] + ${formatCurrency(cashInHand, userProfile?.currency || 'BDT')} [Cash]) - ${formatCurrency(goalSaving, userProfile?.currency || 'BDT')} [Goal] = ${formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')}. Daily Limit: ${formatCurrency(surplusDailyLimit, userProfile?.currency || 'BDT')} for ${remainingDays} days.`
-                                        }
-                                    ].map(item => (
-                                        <Tooltip key={item.label} content={item.tip} position="top" className="w-full">
-                                            <div className="p-2.5 rounded-xl bg-paper-100/50 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 w-full cursor-help hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-300 group/item">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <p className="text-nano text-ink-400 dark:text-paper-700 uppercase tracking-wider">{item.label}</p>
-                                                    <Info size={10} className="text-ink-400 dark:text-paper-700 opacity-20 group-hover/item:opacity-60 transition-opacity" />
-                                                </div>
-                                                <p className={`text-label ${item.color}`}>{item.val}</p>
-                                            </div>
-                                        </Tooltip>
-                                    ))}
-                                </div>
-
-                                <div className="pt-1">
-                                    <div className={`p-3 rounded-3xl flex items-center justify-between border transition-all duration-500 ${creditDue >= loanDue ? 'bg-success-500/[0.03] dark:bg-success-500/10 border-success-500/20' : 'bg-error-500/[0.03] dark:bg-error-500/10 border-error-500/20'}`}>
-                                        <div className="flex items-center gap-2">
-                                            <IconBox
-                                                icon={creditDue >= loanDue ? TrendingUp : TrendingDown}
-                                                color={creditDue >= loanDue ? 'success' : 'error'}
+                                        </div>
+                                        <div className="flex flex-col items-start sm:items-end gap-1.5">
+                                            <Badge
+                                                label="Goal Target"
+                                                value={formatCurrency(salaryPlan?.plan?.goal || 0, userProfile?.currency || 'BDT')}
+                                                color="primary"
                                                 variant="glass"
-                                                size="xs"
+                                                size="md"
                                             />
-                                            <span className="text-overline opacity-80">
-                                                {creditDue >= loanDue ? 'Net Receivable' : 'Net Due'}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {[
+                                            {
+                                                label: 'Month Margin',
+                                                val: formatCurrency(netBalance || 0, userProfile?.currency || 'BDT'),
+                                                color: 'text-primary-500',
+                                                tip: `Dynamic Monthly Performance: ${formatCurrency(currentMonthIncome || 0, userProfile?.currency || 'BDT')} (Earned) - ${formatCurrency(currentMonthExpense || 0, userProfile?.currency || 'BDT')} (Expended) = ${formatCurrency(netBalance || 0, userProfile?.currency || 'BDT')}`
+                                            },
+                                            {
+                                                label: 'Cash In Hand',
+                                                val: formatCurrency(cashInHand, userProfile?.currency || 'BDT'),
+                                                color: 'text-amber-500',
+                                                tip: `Immediate Liquidity: ${formatCurrency(cashInHand, userProfile?.currency || 'BDT')} (Physical cash and accessible bank funds).`
+                                            },
+                                            {
+                                                label: 'Goal Saving',
+                                                val: (
+                                                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                                                        <span className="text-secondary-500">{formatCurrency(goalSaving, userProfile?.currency || 'BDT')}</span>
+                                                        <span className="text-nano opacity-40 font-normal">/ {formatCurrency(goalDailyTarget, userProfile?.currency || 'BDT')} <span className="lowercase">daily</span></span>
+                                                    </div>
+                                                ),
+                                                color: '', // handled in val
+                                                tip: `Goal Target: ${formatCurrency(goalSaving, userProfile?.currency || 'BDT')} (Monthly Gap). Calculated as (Target Value - Projected Assets) / Months Left. This is the additional amount needed every month to reach your goal.`
+                                            },
+                                            {
+                                                label: 'Monthly Surplus',
+                                                val: (
+                                                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                                                        <span className="text-teal-500 font-bold">{formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')}</span>
+                                                        <span className="text-nano opacity-40 font-normal">/ {formatCurrency(surplusDailyLimit, userProfile?.currency || 'BDT')} <span className="lowercase">daily</span></span>
+                                                    </div>
+                                                ),
+                                                color: '', // handled in val
+                                                tip: `Operational Surplus: (${formatCurrency(netBalanceAmount, userProfile?.currency || 'BDT')} [Margin] + ${formatCurrency(cashInHand, userProfile?.currency || 'BDT')} [Cash]) - ${formatCurrency(goalSaving, userProfile?.currency || 'BDT')} [Goal] = ${formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')}. Daily Limit: ${formatCurrency(surplusDailyLimit, userProfile?.currency || 'BDT')} for ${remainingDays} days.`
+                                            }
+                                        ].map(item => (
+                                            <Tooltip key={item.label} content={item.tip} position="top" block>
+                                                <div className="p-2.5 rounded-xl bg-paper-100/50 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 w-full cursor-help hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-300 group/item">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <p className="text-nano text-ink-400 dark:text-paper-700 uppercase tracking-wider">{item.label}</p>
+                                                        <Info size={10} className="text-ink-400 dark:text-paper-700 opacity-20 group-hover/item:opacity-60 transition-opacity" />
+                                                    </div>
+                                                    <p className={`text-label ${item.color}`}>{item.val}</p>
+                                                </div>
+                                            </Tooltip>
+                                        ))}
+                                    </div>
+
+                                    <div className="pt-1">
+                                        <div className={`p-3 rounded-3xl flex items-center justify-between border transition-all duration-500 ${creditDue >= loanDue ? 'bg-success-500/[0.03] dark:bg-success-500/10 border-success-500/20' : 'bg-error-500/[0.03] dark:bg-error-500/10 border-error-500/20'}`}>
+                                            <div className="flex items-center gap-2">
+                                                <IconBox
+                                                    icon={creditDue >= loanDue ? TrendingUp : TrendingDown}
+                                                    color={creditDue >= loanDue ? 'success' : 'error'}
+                                                    variant="glass"
+                                                    size="xs"
+                                                />
+                                                <span className="text-overline opacity-80">
+                                                    {creditDue >= loanDue ? 'Net Receivable' : 'Net Due'}
+                                                </span>
+                                            </div>
+                                            <span className={`text-label ${creditDue >= loanDue ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
+                                                {formatCurrency(Math.abs(creditDue - loanDue), userProfile?.currency || 'BDT')}
                                             </span>
                                         </div>
-                                        <span className={`text-label ${creditDue >= loanDue ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
-                                            {formatCurrency(Math.abs(creditDue - loanDue), userProfile?.currency || 'BDT')}
-                                        </span>
                                     </div>
                                 </div>
-                            </div>
-                        </GlassCard>
+                            </GlassCard>
+                        </div>
                     </div>
-                </div>
+                </>
             )}
         </>
     );

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { User, Mail, Calendar, Check } from 'lucide-react';
 import Modal from '../UI/base/Modal';
 import GlassInput from '../UI/base/GlassInput';
 import Select from '../UI/base/Select';
 import Button from '../UI/base/Button';
-import IconBox from '../UI/base/IconBox';
+import Badge from '../UI/base/Badge';
 import GlassCard from '../UI/base/GlassCard';
 import { useAuth } from '../../hooks/useAuth';
 import { updateUserProfile } from '../../services/authService';
@@ -13,7 +13,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const detectDefaultName = () => {
+  const detectDefaultName = useCallback(() => {
     if (userProfile?.displayName) return userProfile.displayName;
     if (user?.displayName) return user.displayName;
     try {
@@ -22,7 +22,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     } catch (err) { void err; }
     if (user?.email) return String(user.email).split('@')[0];
     return '';
-  };
+  }, [user, userProfile]);
 
   const [formData, setFormData] = useState({
     displayName: detectDefaultName(),
@@ -34,7 +34,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
       displayName: detectDefaultName(),
       currency: userProfile?.currency || 'BDT'
     });
-  }, [user, userProfile]);
+  }, [user, userProfile, detectDefaultName]);
 
   const currencies = [
     { value: 'BDT', label: 'BDT (৳)', flag: '🇧🇩' },
@@ -80,7 +80,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
       isOpen={isOpen}
       onClose={onClose}
       title="Identity Management"
-      size="md"
+      size="sm"
       footer={
         <div className="flex gap-3 w-full">
           <Button
@@ -105,53 +105,57 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         </div>
       }
     >
-      <form id={formId} onSubmit={handleSubmit} className="space-y-6">
-        {/* User Identity Header */}
-        <div className="p-4 rounded-3xl bg-paper-100/50 dark:bg-ink-950/20 border border-paper-200 dark:border-paper-900/10 shadow-sm">
-          <div className="flex items-center gap-4">
+      <form id={formId} onSubmit={handleSubmit} className="space-y-5">
+        {/* Compact User Identity */}
+        <div className="p-3 rounded-2xl bg-paper-100/50 dark:bg-ink-950/20 border border-paper-200/60 dark:border-paper-900/10 shadow-sm">
+          <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-14 h-14 bg-gradient-to-tr from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-xl shadow-primary-500/10 overflow-hidden border-2 border-white dark:border-ink-950">
+              <div className="w-11 h-11 bg-primary-500 rounded-xl flex items-center justify-center text-white text-lg shadow-lg shadow-primary-500/20 overflow-hidden border border-white/50 dark:border-ink-950">
                 {user?.photoURL ? (
-                  <img 
-                    src={user.photoURL} 
-                    alt={formData.displayName} 
+                  <img
+                    src={user.photoURL}
+                    alt={formData.displayName}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <span className="drop-shadow-md">
+                  <span className="font-bold">
                     {userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 )}
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-primary-500 border-2 border-white dark:border-ink-950 rounded-full flex items-center justify-center shadow-lg">
-                <div className="w-1 h-1 bg-white rounded-full animate-pulse" />
-              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success-500 border border-white dark:border-ink-950 rounded-full" />
             </div>
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="flex items-center gap-2.5">
-                <IconBox icon={Mail} size="xs" variant="glass" color="ink" className="opacity-40" />
-                <span className="text-label truncate text-ink-400 dark:text-paper-600">{user?.email}</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <IconBox icon={Calendar} size="xs" variant="glass" color="ink" className="opacity-40" />
-                <span className="text-label text-ink-300 dark:text-paper-700">
-                  Active since {new Date(user?.metadata?.creationTime).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
-                </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-label font-bold text-ink-900 dark:text-paper-50 truncate leading-tight">
+                {formData.displayName || 'Identity Node'}
+              </p>
+              <div className="flex items-center gap-3 mt-0.5">
+                <div className="flex items-center gap-1 opacity-50">
+                  <Mail className="w-2.5 h-2.5" />
+                  <span className="text-label truncate">{user?.email}</span>
+                </div>
+                <div className="flex items-center gap-1 opacity-40">
+                  <Calendar className="w-2.5 h-2.5" />
+                  <span className="text-label">
+                    {new Date(user?.metadata?.creationTime).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-3">
           {/* Display Name */}
-          <div className="space-y-1.5">
-            <label className="text-overline opacity-40 px-1 flex items-center gap-2">
+          <div className="space-y-1">
+            <label className="text-label font-bold uppercase tracking-wider opacity-40 px-1 flex items-center gap-2">
               <User className="w-3 h-3" />
               Display Name
             </label>
             <GlassInput
               name="displayName"
+              size="sm"
               value={formData.displayName}
               onChange={handleInputChange}
               placeholder="Your Name"
@@ -160,13 +164,14 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
           </div>
 
           {/* Currency Selection */}
-          <div className="space-y-1.5">
-            <label className="text-overline opacity-40 px-1 flex items-center gap-2">
-              <span className="w-3 h-3 flex items-center justify-center font-bold">৳</span>
+          <div className="space-y-1">
+            <label className="text-label font-bold uppercase tracking-wider opacity-40 px-1 flex items-center gap-2">
+              <Badge size="sm" color="ink" variant="soft" className="!p-0 !bg-transparent">৳</Badge>
               Master Currency
             </label>
             <Select
               name="currency"
+              size="sm"
               value={formData.currency}
               onChange={handleInputChange}
               options={currencies.map(c => ({
@@ -177,9 +182,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
           </div>
         </div>
 
-        <GlassCard variant="flat" padding="p-4" className="bg-primary-500/[0.03] dark:bg-primary-500/[0.01] border-primary-500/10">
-          <p className="text-overline text-primary-600/60 dark:text-primary-400/40 text-center opacity-80 uppercase">
-            Currency modifications propagate through all analytics and historical logs.
+        <GlassCard variant="flat" padding="p-2.5" className="bg-primary-500/[0.03] dark:bg-primary-500/[0.01] border-primary-500/10">
+          <p className="text-overline text-primary-600/60 dark:text-primary-400/40 text-center uppercase tracking-tighter">
+            Modifications propagate through all historical audit logs.
           </p>
         </GlassCard>
       </form>

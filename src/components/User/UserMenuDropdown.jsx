@@ -134,81 +134,86 @@ const UserMenuDropdown = ({
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-3 w-64 bg-surface-card dark:bg-surface-card-dark backdrop-blur-2xl rounded-3xl shadow-2xl border border-paper-200/60 dark:border-paper-900/10 z-20 animate-in fade-in zoom-in-95 origin-top-right duration-200 overflow-hidden">
-            <GlassCard variant="flat" padding="p-4" className="border-b border-paper-100 dark:border-paper-900/10 bg-paper-100/30 dark:bg-ink-900/10 rounded-none">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-tr from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center text-white text-lg shadow-lg shadow-primary-500/10 overflow-hidden border-2 border-white dark:border-ink-950">
-                    {user?.photoURL ? (
-                      <img
-                        src={user.photoURL}
-                        alt={userProfile?.displayName}
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <span className="drop-shadow-md">
-                        {userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
-                      </span>
-                    )}
+          <div className="absolute right-0 top-full mt-2 w-52 z-20 animate-in fade-in zoom-in-95 origin-top-right duration-200">
+            <GlassCard
+              variant="thick"
+              padding="p-0"
+              className="overflow-hidden shadow-2xl border-paper-200/50 dark:border-paper-900/20"
+            >
+              {/* Compact Profile Section */}
+              <GlassCard variant="flat" padding="p-3" className="bg-paper-100/30 dark:bg-ink-900/10 rounded-none border-none">
+                <div className="flex items-center gap-2.5">
+                  <div className="relative">
+                    <div className="w-9 h-9 bg-primary-500 rounded-xl flex items-center justify-center text-white text-base shadow-lg shadow-primary-500/20 overflow-hidden border border-white/50 dark:border-ink-950">
+                      {user?.photoURL ? (
+                        <img
+                          src={user.photoURL}
+                          alt={userProfile?.displayName}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <User className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success-500 border border-white dark:border-ink-950 rounded-full" />
                   </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-primary-500 border-2 border-white dark:border-ink-950 rounded-full" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-label font-bold text-ink-900 dark:text-paper-50 truncate leading-tight">
+                      {userProfile?.displayName?.split(' ')[0] || 'User'}
+                    </p>
+                    <p className="text-label text-ink-400 dark:text-paper-600 truncate opacity-60 leading-tight">
+                      {userProfile?.email}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-body text-ink-900 dark:text-paper-50 truncate">
-                    {userProfile?.displayName || 'User Account'}
-                  </p>
-                  <p className="text-label text-ink-400 dark:text-paper-600 truncate mt-0.5 opacity-60">
-                    {userProfile?.email}
-                  </p>
-                </div>
+              </GlassCard>
+
+              {/* Tighter Menu Items */}
+              <div className="p-1.5 space-y-0.5">
+                {menuItems.map((item, index) => {
+                  const Icon = item.icon;
+                  const isSignOut = item.label === 'Sign Out';
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (isSignOut) {
+                          if (logoutLoading) return;
+                          item.onClick();
+                        } else {
+                          item.onClick();
+                          setIsOpen(false);
+                        }
+                      }}
+                      disabled={isSignOut && logoutLoading}
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all ${isSignOut
+                        ? 'text-error-600 dark:text-error-400 hover:bg-error-500/10'
+                        : 'text-ink-600 dark:text-paper-400 hover:bg-paper-100 dark:hover:bg-ink-900/40 hover:text-ink-900 dark:hover:text-paper-50'
+                        } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : 'active:scale-[0.98] group'}`}
+                    >
+                      <IconBox
+                        icon={Icon}
+                        size="xs"
+                        variant="soft"
+                        color={isSignOut ? 'error' : 'ink'}
+                        className="!p-1.5 !rounded-lg group-hover:scale-105 transition-transform"
+                      />
+                      <span className="flex-1 text-left text-label ">{item.label}</span>
+                      {isSignOut && logoutLoading && (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-            </GlassCard>
 
-            <div className="p-2">
-              {menuItems.map((item, index) => {
-                const Icon = item.icon;
-                const isSignOut = item.label === 'Sign Out';
-                return (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      if (isSignOut) {
-                        if (logoutLoading) return;
-                        item.onClick();
-                      } else {
-                        item.onClick();
-                        setIsOpen(false);
-                      }
-                    }}
-                    disabled={isSignOut && logoutLoading}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all ${isSignOut
-                      ? 'text-error-600 dark:text-error-400 hover:bg-error-500/5'
-                      : 'text-ink-600 dark:text-paper-400 hover:bg-paper-100 dark:hover:bg-ink-900/40 hover:text-ink-900 dark:hover:text-paper-50'
-                      } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : 'active:scale-[0.98] group'}`}
-                  >
-                    <IconBox 
-                      icon={Icon} 
-                      size="xs" 
-                      variant="glass" 
-                      color={isSignOut ? 'error' : 'ink'}
-                      className="group-hover:scale-110 transition-transform"
-                    />
-                    <span className="flex-1 text-left text-label">{item.label}</span>
-                    {isSignOut && logoutLoading && (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            <GlassCard variant="flat" padding="px-4 py-3" className="bg-paper-100/30 dark:bg-ink-900/10 border-t border-paper-100 dark:border-paper-900/10 rounded-none">
-              <div className="flex items-center justify-between">
-                <Badge variant="glass" color="ink" size="sm" className="opacity-50">
-                  v1.2.0 Audited
+              {/* Minimal Footer */}
+              <div className="px-3 py-2 bg-paper-100/30 dark:bg-ink-900/10 border-t border-paper-100 dark:border-paper-900/10 flex items-center justify-between">
+                <span className="text-overline text-ink-300 dark:text-paper-700 uppercase font-bold tracking-tighter">v1.2.0 Audited</span>
+                <Badge variant="soft" color="primary" size="sm" className="!px-1.5 !py-0 opacity-40 uppercase">
+                  Secure
                 </Badge>
-                <span className="text-overline text-primary-600 dark:text-primary-500/50 uppercase">Vault Secure</span>
               </div>
             </GlassCard>
           </div>

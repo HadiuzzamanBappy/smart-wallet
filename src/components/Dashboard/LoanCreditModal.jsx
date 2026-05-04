@@ -237,7 +237,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
 
     return (
         <>
-            <Modal isOpen={open} onClose={onClose} title={title} size="lg" disableScroll={true}>
+            <Modal isOpen={open} onClose={onClose} title={title} size="lg" disableScroll={true} fullMobile>
                 <div className="flex flex-col h-full">
                     {/* Summary Header - Executive Metrics */}
                     <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-paper-100 dark:border-white/5">
@@ -253,26 +253,26 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                         </div>
 
                         {/* Modern Toggle System */}
-                        <div className="flex p-1 bg-paper-100/30 dark:bg-white/5 border border-paper-100 dark:border-white/5 rounded-2xl w-full sm:w-auto">
+                        <div className="flex p-0.5 bg-paper-100/30 dark:bg-white/5 border border-paper-100 dark:border-white/5 rounded-2xl w-fit">
                             <button
                                 onClick={() => setShowAllItems(false)}
-                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-overline transition-all duration-300 ${!showAllItems
+                                className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-xl text-overline transition-all duration-300 ${!showAllItems
                                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
                                     : 'text-ink-400 dark:text-paper-700 hover:text-ink-900 dark:hover:text-paper-50'}`}
                             >
                                 <User className={`w-3 h-3 ${!showAllItems ? 'text-white' : ''}`} />
                                 <span className={!showAllItems ? 'text-white' : ''}>Unpaid</span>
-                                <span className={`px-1.5 py-0.5 rounded-md text-nano ml-1 ${!showAllItems ? 'bg-white/20 text-white' : 'bg-paper-100 dark:bg-white/10 text-ink-400'}`}>{unpaidCount}</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-nano ml-1 ${!showAllItems ? 'bg-white/20 text-white' : 'bg-paper-100 dark:bg-white/10 text-ink-400 dark:text-paper-700'}`}>{unpaidCount}</span>
                             </button>
                             <button
                                 onClick={() => setShowAllItems(true)}
-                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-overline transition-all duration-300 ${showAllItems
+                                className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-xl text-overline transition-all duration-300 ${showAllItems
                                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
                                     : 'text-ink-400 dark:text-paper-700 hover:text-ink-900 dark:hover:text-paper-50'}`}
                             >
                                 <CheckCircle className={`w-3 h-3 ${showAllItems ? 'text-white' : ''}`} />
                                 <span className={showAllItems ? 'text-white' : ''}>Paid</span>
-                                <span className={`px-1.5 py-0.5 rounded-md text-nano ml-1 ${showAllItems ? 'bg-white/20 text-white' : 'bg-paper-100 dark:bg-white/10 text-ink-400'}`}>{paidCount}</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-nano ml-1 ${showAllItems ? 'bg-white/20 text-white' : 'bg-paper-100 dark:bg-white/10 text-ink-400 dark:text-paper-700'}`}>{paidCount}</span>
                             </button>
                         </div>
                     </div>

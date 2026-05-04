@@ -90,45 +90,54 @@ const CompactSummary = () => {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {summaryCards.map((card, index) => {
-            const spanClass = index >= 2 ? 'col-span-2 md:col-span-1' : '';
+            const isDebt = card.label === 'Credit' || card.label === 'Loans';
+            const importance = isDebt ? 'medium' : 'high';
 
             return (
               <GlassCard
                 key={index}
-                className={spanClass}
                 onClick={card.onClick}
                 hover={card.isClickable}
-                padding="p-4"
+                padding="p-3.5"
+                backgroundIcon={card.icon}
+                iconColor={card.color}
+                className="group relative overflow-hidden hover:bg-paper-100/50 dark:hover:bg-white/[0.04] transition-all border-paper-200/50 dark:border-white/5"
               >
-                <div className="flex items-center gap-3.5 relative z-10">
-                  <IconBox
-                    icon={card.icon}
-                    size="sm"
-                    color={card.color}
-                    variant="soft"
-                    className="group-hover:scale-110 transition-transform"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-overline text-ink-400 dark:text-paper-700 mb-1">
+                <div className="flex flex-col gap-3 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <IconBox
+                      icon={card.icon}
+                      size="xs"
+                      color={card.color}
+                      variant={importance === 'high' ? 'glass' : 'soft'}
+                      className={`group-hover:scale-110 transition-transform ${importance === 'medium' ? 'opacity-60' : 'opacity-90'}`}
+                    />
+                    {card.onClick && (
+                      <div className="shrink-0 w-5 h-5 flex items-center justify-center rounded-lg bg-ink-900/5 dark:bg-white/5 text-paper-400 group-hover:text-primary-500 transition-colors">
+                        <Eye className="w-3 h-3" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="text-overline opacity-40 uppercase tracking-widest mb-1 ">
                       {card.label}
                     </div>
-                    <div className="flex items-baseline gap-2 flex-wrap min-w-0">
-                      <span className="text-h5 text-ink-900 dark:text-paper-50 truncate">
+                    <div className="flex items-baseline gap-1.5 flex-wrap min-w-0">
+                      <span className={`text-h5 font-bold tracking-tight ${card.color === 'primary' ? 'text-primary-600 dark:text-primary-400' :
+                        card.color === 'error' ? 'text-red-600 dark:text-red-400' :
+                          card.color === 'info' ? 'text-blue-600 dark:text-blue-400' :
+                            'text-amber-600 dark:text-amber-400'
+                        }`}>
                         {card.value}
                       </span>
                       {card.total && (
-                        <span className="text-overline text-ink-400 dark:text-paper-700 opacity-60 truncate">
+                        <span className="text-nano opacity-30  truncate">
                           / {card.total}
                         </span>
                       )}
                     </div>
                   </div>
-
-                  {card.onClick && (
-                    <div className="shrink-0 w-6 h-6 flex items-center justify-center rounded-2xl bg-primary-500/10 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 border border-primary-500/20 transition-all">
-                      <Eye className="w-3 h-3" />
-                    </div>
-                  )}
                 </div>
               </GlassCard>
             );

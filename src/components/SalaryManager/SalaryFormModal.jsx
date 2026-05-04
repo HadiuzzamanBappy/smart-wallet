@@ -43,20 +43,19 @@ const StepBar = ({ current, total }) => {
   return (
     <div className="mb-6 space-y-3">
       <div className="flex justify-between items-center px-1">
-        <div className="flex items-center gap-2.5">
-          <IconBox icon={steps[current].icon} size="sm" color="teal" variant="glass" />
-          <div>
-            <p className="text-overline text-primary-500">Step {current + 1}</p>
-            <p className="text-body text-ink-900 dark:text-paper-50">{steps[current].label}</p>
+        <div className="flex items-center gap-3">
+          <IconBox icon={steps[current].icon} size="sm" color="primary" variant="glass" />
+          <div className="flex flex-col">
+            <h3 className="text-label font-bold text-ink-900 dark:text-white uppercase tracking-wider">{steps[current].label}</h3>
+            <p className="text-overline opacity-40">Phase {current + 1} of {total}</p>
           </div>
         </div>
-        <Badge label={`${current + 1} / ${total}`} color="ink" />
       </div>
       <div className="flex gap-1.5 px-0.5">
         {Array.from({ length: total }).map((_, i) => (
-          <div key={i} className="flex-1 h-1 rounded-full bg-white/5 overflow-hidden relative">
+          <div key={i} className="flex-1 h-1.5 rounded-full bg-paper-100 dark:bg-white/5 overflow-hidden relative">
             <div
-              className={`absolute inset-0 transition-all duration-700 ease-in-out ${i <= current ? 'bg-gradient-to-r from-teal-500 to-emerald-400 shadow-[0_0_8px_rgba(45,212,191,0.4)]' : 'bg-transparent'}`}
+              className={`absolute inset-0 transition-all duration-700 ease-in-out ${i <= current ? 'bg-primary-500 shadow-[0_0_8px_rgba(20,184,166,0.3)]' : 'bg-transparent'}`}
             />
           </div>
         ))}
@@ -401,6 +400,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
       onClose={onClose}
       title="Wealth Architect"
       size="lg"
+      fullMobile
       footer={
         <div className="flex justify-between items-center w-full gap-4">
           <Button
@@ -431,44 +431,44 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
         {/* Intelligence Summary Island */}
         <GlassCard
           variant="flat"
-          padding="p-6"
+          padding="p-4 sm:p-6"
           className="!bg-surface-card dark:!bg-surface-card-dark backdrop-blur-xl rounded-3xl border-paper-200/50 dark:border-white/5 shadow-sm"
         >
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-y-6 items-center">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-y-4 sm:gap-y-6 items-center">
             {[
               { label: 'Income', val: c(livePlan.totalIncome), color: 'text-ink-900 dark:text-paper-50' },
               { label: 'Fixed Ops', val: c(livePlan.totalFixedCosts), color: 'text-error-600 dark:text-error-400' },
               { label: 'Debt Load', val: c(livePlan.totalEMI), color: 'text-amber-600 dark:text-amber-400' },
               { label: 'Saved', val: c(livePlan.actualSavings), color: 'text-success-600 dark:text-success-400' },
               { label: 'Goal Alloc', val: c(livePlan.monthlyForGoal), color: 'text-indigo-600 dark:text-indigo-400' },
-              { label: 'Surplus', val: `${livePlan.isDeficit ? '-' : '+'}${c(Math.abs(livePlan.netBalance))}`, color: livePlan.isDeficit ? 'text-error-600 dark:text-error-500' : 'text-sky-600 dark:text-sky-400' }
+              { label: 'Surplus', val: `${livePlan.isDeficit ? '-' : '+'}${c(Math.abs(livePlan.netBalance))}`, color: livePlan.isDeficit ? 'text-error-600 dark:text-error-500' : 'text-primary-600 dark:text-primary-400' }
             ].map((metric, i) => (
               <div key={metric.label} className={`flex flex-col items-center text-center px-1 ${i < 5 ? 'md:border-r border-paper-200 dark:border-white/5' : ''}`}>
-                <span className="text-overline text-ink-400 dark:text-paper-700 mb-2 opacity-70">{metric.label}</span>
-                <span className={`text-label font-mono truncate max-w-full ${metric.color}`}>{metric.val}</span>
+                <span className="text-overline text-ink-400 dark:text-paper-700 mb-1 opacity-50 uppercase tracking-widest">{metric.label}</span>
+                <span className={`text-label font-bold truncate max-w-full ${metric.color}`}>{metric.val}</span>
               </div>
             ))}
           </div>
 
-          <div className="mt-6 space-y-3">
-            <div className="h-2 w-full bg-paper-200 dark:bg-white/5 rounded-full flex overflow-hidden border border-paper-200 dark:border-white/5 shadow-inner">
+          <div className="mt-6 space-y-4">
+            <div className="h-1.5 w-full bg-paper-100 dark:bg-white/5 rounded-full flex overflow-hidden border border-paper-200 dark:border-white/5">
               <div className="h-full bg-error-500 transition-all duration-700" style={{ width: `${Math.min(livePlan.fixedRatio * 100, 100)}%` }} />
-              <div className="h-full bg-amber-500 transition-all duration-700 border-l border-black/20" style={{ width: `${Math.min(livePlan.loanRatio * 100, 100)}%` }} />
-              <div className="h-full bg-success-500 transition-all duration-700 border-l border-black/20" style={{ width: `${Math.min(livePlan.savingsRatio * 100, 100)}%` }} />
-              <div className="h-full bg-indigo-500 transition-all duration-700 border-l border-black/20" style={{ width: `${Math.min(livePlan.goalRatio * 100, 100)}%` }} />
-              <div className="h-full bg-sky-400 transition-all duration-700 border-l border-black/20" style={{ width: `${Math.max(0, 100 - (livePlan.fixedRatio + livePlan.loanRatio + livePlan.savingsRatio + livePlan.goalRatio) * 100)}%` }} />
+              <div className="h-full bg-amber-500 transition-all duration-700 border-l border-black/10" style={{ width: `${Math.min(livePlan.loanRatio * 100, 100)}%` }} />
+              <div className="h-full bg-success-500 transition-all duration-700 border-l border-black/10" style={{ width: `${Math.min(livePlan.savingsRatio * 100, 100)}%` }} />
+              <div className="h-full bg-indigo-500 transition-all duration-700 border-l border-black/10" style={{ width: `${Math.min(livePlan.goalRatio * 100, 100)}%` }} />
+              <div className="h-full bg-primary-400 transition-all duration-700 border-l border-black/10" style={{ width: `${Math.max(0, 100 - (livePlan.fixedRatio + livePlan.loanRatio + livePlan.savingsRatio + livePlan.goalRatio) * 100)}%` }} />
             </div>
-            <div className="flex justify-between px-1">
+            <div className="flex flex-wrap justify-center sm:justify-between gap-x-4 gap-y-2 px-1">
               {[
                 { label: 'Fixed', color: 'bg-error-500', pct: Math.round(livePlan.fixedRatio * 100) },
                 { label: 'Debt', color: 'bg-amber-500', pct: Math.round(livePlan.loanRatio * 100) },
                 { label: 'Saved', color: 'bg-success-500', pct: Math.round(livePlan.savingsRatio * 100) },
                 { label: 'Goal', color: 'bg-indigo-500', pct: Math.round(livePlan.goalRatio * 100) },
-                { label: 'Free', color: 'bg-sky-400', pct: Math.round(livePlan.freeRatio * 100) }
+                { label: 'Free', color: 'bg-primary-400', pct: Math.round(livePlan.freeRatio * 100) }
               ].map(leg => (
-                <div key={leg.label} className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${leg.color}`} />
-                  <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest">{leg.pct}%</span>
+                <div key={leg.label} className="flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${leg.color}`} />
+                  <span className="text-overline text-ink-400 dark:text-paper-700 tracking-wider ">{leg.pct}% <span className="opacity-40">{leg.label}</span></span>
                 </div>
               ))}
             </div>

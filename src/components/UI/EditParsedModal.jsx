@@ -131,7 +131,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             <Select
               name="type"
               value={editData.type}
-              onChange={(e) => handleInputChange({ target: { name: 'type', value: e.target.value }})}
+              onChange={(e) => handleInputChange({ target: { name: 'type', value: e.target.value } })}
               options={[
                 { value: 'expense', label: 'Expense' },
                 { value: 'income', label: 'Income' },
@@ -145,7 +145,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             <Select
               name="category"
               value={editData.category}
-              onChange={(e) => handleInputChange({ target: { name: 'category', value: e.target.value }})}
+              onChange={(e) => handleInputChange({ target: { name: 'category', value: e.target.value } })}
               options={categories.map(c => ({
                 value: c.value,
                 label: `${c.emoji} ${c.label}`

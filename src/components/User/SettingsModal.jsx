@@ -242,7 +242,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         isOpen={isOpen}
         onClose={onClose}
         title="System Configuration"
-        size="md"
+        size="sm"
         footer={
           <div className="flex gap-3 w-full">
             <Button variant="soft" color="ink" fullWidth onClick={onClose}>
@@ -254,27 +254,27 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
           </div>
         }
       >
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Theme & Visuals */}
           <section>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <SectionHeader
                 icon={Sun}
-                title="Appearance Suite"
-                titleSize="text-h6"
+                title="Appearance"
+                titleSize="text-label font-bold"
                 className="mb-0"
               />
               {persistStatus !== 'idle' && (
                 <Badge
                   color={persistStatus === 'success' ? 'success' : persistStatus === 'error' ? 'error' : 'ink'}
-                  variant="glass"
+                  variant="soft"
                   size="sm"
                 >
-                  {persistStatus === 'saving' ? 'Syncing...' : persistStatus === 'success' ? 'Vault Updated' : 'Sync Error'}
+                  {persistStatus === 'saving' ? 'Syncing' : persistStatus === 'success' ? 'Saved' : 'Error'}
                 </Badge>
               )}
             </div>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 gap-2">
               {themes.map((t) => {
                 const Icon = t.icon;
                 const isActive = settings.theme === t.value;
@@ -282,18 +282,19 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                   <button
                     key={t.value}
                     onClick={() => setSettings(prev => ({ ...prev, theme: t.value }))}
-                    className={`flex flex-col items-center gap-2.5 p-4 rounded-2xl border transition-all duration-300 ${isActive
-                      ? 'bg-primary-500/5 border-primary-500/30 shadow-lg shadow-primary-500/5'
+                    className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all duration-300 ${isActive
+                      ? 'bg-primary-500/10 border-primary-500/30 shadow-md shadow-primary-500/5'
                       : 'bg-paper-100/50 dark:bg-ink-950/20 border-paper-200 dark:border-paper-900/10 hover:bg-paper-200 dark:hover:bg-ink-900/40'
                       }`}
                   >
                     <IconBox
                       icon={Icon}
                       size="sm"
-                      variant={isActive ? 'primary' : 'glass'}
+                      variant={isActive ? 'soft' : 'glass'}
                       color={isActive ? 'primary' : 'ink'}
+                      className="!p-1.5"
                     />
-                    <span className={`text-label ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-ink-400 dark:text-paper-600'}`}>
+                    <span className={`text-label  ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-ink-400 dark:text-paper-600'}`}>
                       {t.label}
                     </span>
                   </button>
@@ -303,27 +304,28 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
           </section>
 
           {/* Regional & Intelligence */}
-          <div className="space-y-4">
-            <GlassCard padding="p-3" variant="flat" className="bg-paper-100/50 dark:bg-ink-950/20">
-              <SectionHeader icon={Globe} title="Localization" titleSize="text-overline" className="mb-3" />
+          <div className="grid grid-cols-2 gap-3">
+            <GlassCard padding="p-2.5" variant="flat" className="bg-paper-100/50 dark:bg-ink-950/20">
+              <SectionHeader icon={Globe} title="Locale" titleSize="text-label" className="mb-2" />
               <Select
                 size="sm"
                 value={settings.language}
                 onChange={(e) => setSettings(prev => ({ ...prev, language: e.target.value }))}
                 options={languages.map(l => ({ value: l.value, label: `${l.flag} ${l.label}` }))}
+                className="scale-95 origin-left"
               />
             </GlassCard>
 
-            <GlassCard padding="p-3" variant="flat" className="bg-paper-100/50 dark:bg-ink-950/20">
-              <SectionHeader icon={ShieldCheck} title="Intelligence" titleSize="text-overline" className="mb-3" />
-              <div className="space-y-3">
+            <GlassCard padding="p-2.5" variant="flat" className="bg-paper-100/50 dark:bg-ink-950/20">
+              <SectionHeader icon={ShieldCheck} title="Intelligence" titleSize="text-label" className="mb-2" />
+              <div className="space-y-2">
                 {[
-                  { key: 'budgetAlerts', label: 'Predictive Ceilings' },
-                  { key: 'notifications', label: 'Executive Insights' }
+                  { key: 'budgetAlerts', label: 'Ceilings' },
+                  { key: 'notifications', label: 'Insights' }
                 ].map(item => (
                   <label key={item.key} className="flex items-center justify-between cursor-pointer group">
                     <span className="text-label text-ink-900 dark:text-paper-50 group-hover:text-primary-500 transition-colors">{item.label}</span>
-                    <div className="relative inline-flex items-center cursor-pointer">
+                    <div className="relative inline-flex items-center cursor-pointer scale-75 origin-right">
                       <input
                         type="checkbox"
                         className="sr-only peer"
@@ -340,27 +342,27 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
           {/* Data Governance */}
           <section>
-            <SectionHeader icon={Database} title="Data Sovereignty" titleSize="text-h6" className="mb-4" />
-            <div className="space-y-3">
+            <SectionHeader icon={Database} title="Data Sovereignty" titleSize="text-label font-bold" className="mb-3" />
+            <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={handleExportData}
-                className="w-full flex items-center justify-between p-4 rounded-2xl bg-paper-100/50 dark:bg-ink-950/20 border border-paper-200 dark:border-paper-900/10 hover:border-primary-500/30 transition-all group shadow-sm"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-paper-100/50 dark:bg-ink-950/20 border border-paper-200 dark:border-paper-900/10 hover:border-primary-500/30 transition-all group"
               >
                 <div className="text-left">
-                  <p className="text-label text-ink-900 dark:text-paper-50">Vault Export</p>
-                  <p className="text-overline text-ink-400 dark:text-paper-700 mt-1 opacity-60 uppercase">JSON Snapshot</p>
+                  <p className="text-label font-bold text-ink-900 dark:text-paper-50">Export</p>
+                  <p className="text-overline text-ink-400 dark:text-paper-700 opacity-60 uppercase">JSON Snapshot</p>
                 </div>
-                <IconBox icon={Download} size="sm" variant="glass" color="ink" className="group-hover:text-primary-500" />
+                <IconBox icon={Download} size="xs" variant="glass" color="ink" className="group-hover:text-primary-500" />
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full flex items-center justify-between p-4 rounded-2xl bg-paper-100/50 dark:bg-ink-950/20 border border-paper-200 dark:border-paper-900/10 hover:border-success-500/30 transition-all group shadow-sm"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-paper-100/50 dark:bg-ink-950/20 border border-paper-200 dark:border-paper-900/10 hover:border-success-500/30 transition-all group"
               >
                 <div className="text-left">
-                  <p className="text-label text-ink-900 dark:text-paper-50">Import Vault</p>
-                  <p className="text-overline text-ink-400 dark:text-paper-700 mt-1 opacity-60 uppercase">Restore Data</p>
+                  <p className="text-label font-bold text-ink-900 dark:text-paper-50">Restore</p>
+                  <p className="text-overline text-ink-400 dark:text-paper-700 opacity-60 uppercase">Import Vault</p>
                 </div>
-                <IconBox icon={Plus} size="sm" variant="glass" color="ink" className="group-hover:text-success-500" />
+                <IconBox icon={Plus} size="xs" variant="glass" color="ink" className="group-hover:text-success-500" />
               </button>
             </div>
             <input ref={fileInputRef} type="file" accept="application/json" onChange={onFileSelect} className="hidden" />
@@ -369,19 +371,14 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
             {importResult && (
               <GlassCard
                 variant="flat"
-                padding="p-4"
-                className={`mt-3 ${importResult.success ? 'bg-success-500/[0.03] border-success-500/10' : 'bg-error-500/[0.03] border-error-500/10'} animate-in slide-in-from-top-2 duration-500`}
+                padding="p-2.5"
+                className={`mt-2 ${importResult.success ? 'bg-success-500/[0.03] border-success-500/10' : 'bg-error-500/[0.03] border-error-500/10'} animate-in slide-in-from-top-1 duration-300`}
               >
-                <div className="flex items-center gap-3">
-                  <IconBox icon={importResult.success ? CheckCircle : AlertCircle} size="sm" variant="glass" color={importResult.success ? 'success' : 'error'} />
+                <div className="flex items-center gap-2">
+                  <IconBox icon={importResult.success ? CheckCircle : AlertCircle} size="xs" variant="glass" color={importResult.success ? 'success' : 'error'} />
                   <div className="flex-1">
-                    <p className={`text-overline ${importResult.success ? 'text-success-600' : 'text-error-600'}`}>
-                      {importResult.success ? 'Vault Integrated' : 'Integration Failed'}
-                    </p>
-                    <p className="text-overline mt-1 opacity-60">
-                      {importResult.success
-                        ? `Audit complete: ${importResult.imported} of ${importResult.total} entries synchronized.`
-                        : importResult.error || 'Identity verification mismatch.'}
+                    <p className={`text-label font-bold ${importResult.success ? 'text-success-600' : 'text-error-600'}`}>
+                      {importResult.success ? 'Integrated' : 'Failed'}
                     </p>
                   </div>
                 </div>
@@ -390,13 +387,12 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
             <button
               onClick={handleDeleteAccount}
-              className="w-full flex items-center justify-between p-4 rounded-2xl bg-error-500/[0.03] dark:bg-error-500/[0.01] border border-error-500/10 hover:bg-error-500/10 transition-all group mt-3 shadow-sm"
+              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-error-500/[0.03] dark:bg-error-500/[0.01] border border-error-500/10 hover:bg-error-500/10 transition-all group mt-2 shadow-sm"
             >
               <div className="text-left">
-                <p className="text-label text-error-600 dark:text-error-400">Purge Protocol</p>
-                <p className="text-overline text-error-500/40 mt-1 uppercase">Total Vault Erasure</p>
+                <p className="text-label font-bold text-error-600 dark:text-error-400 uppercase tracking-tighter">Purge Protocol</p>
               </div>
-              <IconBox icon={Trash2} size="sm" variant="glass" color="error" className="group-hover:scale-110 transition-transform" />
+              <IconBox icon={Trash2} size="xs" variant="glass" color="error" className="group-hover:scale-110 transition-transform" />
             </button>
           </section>
         </div>

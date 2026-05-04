@@ -75,6 +75,7 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
       onClose={onClose}
       title="Strategic Intelligence"
       size="xl"
+      fullMobile
       footer={
         <div className="flex items-center gap-2 w-full print:hidden">
           <Button variant="ghost" color="ink" size="sm" icon={RefreshCw} onClick={onRecalculate}>

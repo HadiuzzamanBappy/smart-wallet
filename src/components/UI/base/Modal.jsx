@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableScroll = false }) => {
+const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableScroll = false, fullMobile = false }) => {
   if (!isOpen) return null;
 
   const sizes = {
@@ -18,14 +18,16 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableS
     }
   };
 
+  const isFull = size === 'full' || fullMobile;
+
   const modalContent = (
     <div
-      className="fixed inset-0 z-[150] flex items-center justify-center sm:p-4 bg-ink-950/40 backdrop-blur-md animate-in fade-in duration-300"
+      className={`fixed inset-0 z-[150] flex items-center justify-center ${isFull ? 'p-0 sm:p-4' : 'p-4'} bg-ink-950/40 backdrop-blur-md animate-in fade-in duration-300`}
       onClick={handleBackdropClick}
     >
       <div
-        className={`w-full ${sizes[size]} mx-4 bg-surface-card dark:bg-surface-card-dark backdrop-blur-2xl shadow-2xl animate-in zoom-in-95 duration-200
-          ${size === 'full' ? 'rounded-none sm:rounded-3xl' : 'rounded-3xl'} max-h-[100vh] sm:max-h-[90vh] flex flex-col border border-paper-200 dark:border-paper-900/10 overflow-hidden`}
+        className={`w-full ${sizes[size]} ${isFull ? 'mx-0 sm:mx-4' : 'mx-4'} bg-surface-card dark:bg-surface-card-dark backdrop-blur-2xl shadow-2xl animate-in zoom-in-95 duration-200
+          ${isFull ? 'rounded-none sm:rounded-3xl h-full sm:h-auto' : 'rounded-3xl max-h-[95vh]'} sm:max-h-[90vh] flex flex-col border border-paper-200 dark:border-paper-900/10 overflow-hidden`}
       >
         {title && (
           <div className="flex items-center justify-between px-5 py-4 border-b border-paper-200 dark:border-paper-900/10 flex-shrink-0">

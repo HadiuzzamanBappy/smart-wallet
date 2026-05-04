@@ -38,35 +38,35 @@ const AboutModal = ({ isOpen, onClose }) => {
   ];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Operational Intelligence" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Operational Intelligence" size="lg" fullMobile>
       <div className="space-y-6">
 
         {/* Core Systems */}
         <section>
-          <SectionHeader 
-            icon={Zap} 
-            title="Core Systems" 
+          <SectionHeader
+            icon={Zap}
+            title="Core Systems"
             titleSize="text-h6"
             className="mb-4"
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {features.map((feature, index) => (
-              <GlassCard 
-                key={index} 
-                padding="p-3"
+              <GlassCard
+                key={index}
+                padding="p-4"
                 className="group/feature"
                 hover
               >
-                <div className="flex items-start gap-3">
-                  <IconBox 
-                    icon={feature.icon} 
-                    variant="glass" 
-                    size="md" 
+                <div className="flex items-start gap-4">
+                  <IconBox
+                    icon={feature.icon}
+                    variant="glass"
+                    size="md"
                     color="primary"
                     className="group-hover/feature:scale-110 transition-transform duration-500"
                   />
                   <div>
-                    <h4 className="text-label text-ink-900 dark:text-paper-50">
+                    <h4 className="text-label font-bold text-ink-900 dark:text-paper-50">
                       {feature.title}
                     </h4>
                     <p className="text-body text-ink-500 dark:text-paper-400 mt-1">
@@ -81,30 +81,30 @@ const AboutModal = ({ isOpen, onClose }) => {
 
         {/* Transaction Matrix */}
         <section>
-          <SectionHeader 
-            icon={CreditCard} 
-            title="Transaction Matrix" 
+          <SectionHeader
+            icon={CreditCard}
+            title="Transaction Matrix"
             titleSize="text-h6"
             className="mb-4"
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {types.map((type, index) => (
-              <GlassCard 
-                key={index} 
-                variant="flat" 
-                padding="p-3" 
+              <GlassCard
+                key={index}
+                variant="flat"
+                padding="p-4"
                 className="bg-paper-100/50 dark:bg-ink-950/20 border-paper-200/50 dark:border-paper-900/10"
               >
                 <div className="flex flex-col gap-2">
-                  <Badge 
-                    variant="glass" 
+                  <Badge
+                    variant="glass"
                     color={type.color.includes('emerald') ? 'success' : type.color.includes('red') ? 'error' : type.color.includes('blue') ? 'info' : 'secondary'}
                     size="sm"
                     className="self-start"
                   >
                     {type.label}
                   </Badge>
-                  <p className="text-overline text-ink-500 dark:text-paper-500">
+                  <p className="text-body text-ink-500 dark:text-paper-500">
                     {type.desc}
                   </p>
                 </div>
@@ -115,9 +115,9 @@ const AboutModal = ({ isOpen, onClose }) => {
 
         {/* Quick Protocols */}
         <section>
-          <SectionHeader 
-            icon={Zap} 
-            title="Quick Protocols" 
+          <SectionHeader
+            icon={Zap}
+            title="Quick Protocols"
             titleSize="text-h6"
             className="mb-4"
           />
@@ -133,7 +133,7 @@ const AboutModal = ({ isOpen, onClose }) => {
               ].map((tip, index) => (
                 <div key={index} className="flex items-start gap-2.5">
                   <IconBox icon={Zap} variant="glass" size="xs" color="primary" className="shrink-0 mt-0.5 opacity-40" />
-                  <p className="text-label text-ink-600 dark:text-paper-400">{tip}</p>
+                  <p className="text-body text-ink-600 dark:text-paper-400">{tip}</p>
                 </div>
               ))}
             </div>

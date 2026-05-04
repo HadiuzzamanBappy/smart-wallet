@@ -60,9 +60,9 @@ module.exports = {
         ink: generateScale('#0f172a', true),
 
         surface: {
-          light: '#fafafa',
+          light: '#f1f1f1',
           dark: '#0f172a',
-          card: '#ffffff',
+          card: '#fafafa',
           'card-dark': '#172033',
         }
       },
@@ -105,7 +105,7 @@ module.exports = {
         'label': ['11px', { lineHeight: '1rem', letterSpacing: '0.1em', fontWeight: '500' }],
         'overline': ['10px', { lineHeight: '1rem', letterSpacing: '0.1em', fontWeight: '500' }],
         'button': ['14px', { lineHeight: '1rem', letterSpacing: '0.02em', fontWeight: '500' }],
-        'nano': ['9px', { lineHeight: '0.75rem', letterSpacing: '0.1em', fontWeight: '500' }],
+        'nano': ['10px', { lineHeight: '0.75rem', letterSpacing: '0.1em', fontWeight: '300' }],
 
         // Data Values
         'value': ['14px', { lineHeight: '1.25rem', letterSpacing: '-0.02em', fontWeight: '300' }],

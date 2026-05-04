@@ -67,14 +67,15 @@ export const SummaryCardSkeleton = ({ count = 4 }) => (
     {Array.from({ length: count }, (_, index) => (
       <div
         key={index}
-        className={`${index >= 2 ? 'col-span-2 md:col-span-1' : ''} relative overflow-hidden rounded-[2rem] p-4 bg-paper-100/50 dark:bg-white/[0.02] border border-paper-200/60 dark:border-white/5 flex items-center gap-3`}
+        className="relative overflow-hidden rounded-3xl p-3.5 bg-paper-100/50 dark:bg-white/[0.02] border border-paper-200/60 dark:border-white/5 flex flex-col gap-3"
       >
-        <div className="shrink-0">
-          <Skeleton width="w-9" height="h-9" rounded="rounded-2xl" />
+        <div className="flex items-center justify-between">
+          <Skeleton width="w-8" height="h-8" rounded="rounded-xl" />
+          {index >= 2 && <Skeleton width="w-5" height="h-5" rounded="rounded-lg" />}
         </div>
-        <div className="min-w-0 flex-1">
-          <Skeleton width="w-16" height="h-2.5" className="mb-2" rounded="rounded-sm" />
-          <Skeleton width="w-24" height="h-4" rounded="rounded-md" />
+        <div className="min-w-0">
+          <Skeleton width="w-12" height="h-2.5" className="mb-2" rounded="rounded-sm" />
+          <Skeleton width="w-24" height="h-4.5" rounded="rounded-md" />
         </div>
       </div>
     ))}

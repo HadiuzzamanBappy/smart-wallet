@@ -243,10 +243,10 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         )}
 
         {/* Modern Glass Mode Toggle */}
-        <div className="flex bg-paper-100/30 dark:bg-white/5 p-1 rounded-2xl border border-paper-100 dark:border-white/5 mx-1">
+        <div className="flex bg-paper-100/30 dark:bg-white/5 p-0.5 rounded-2xl border border-paper-100 dark:border-white/5 mx-1 w-fit">
           <button
             onClick={() => setMode('chat')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-overline transition-all duration-300 ${mode === 'chat'
+            className={`flex items-center justify-center gap-2 px-6 py-1.5 rounded-xl text-overline transition-all duration-300 ${mode === 'chat'
               ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
               : 'text-ink-400 dark:text-paper-700 hover:text-ink-900 dark:hover:text-paper-50'
               }`}
@@ -256,7 +256,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
           </button>
           <button
             onClick={() => setMode('manual')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-overline transition-all duration-300 ${mode === 'manual'
+            className={`flex items-center justify-center gap-2 px-6 py-1.5 rounded-xl text-overline transition-all duration-300 ${mode === 'manual'
               ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
               : 'text-ink-400 dark:text-paper-700 hover:text-ink-900 dark:hover:text-paper-50'
               }`}
@@ -277,7 +277,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 placeholder={`e.g., I bought groceries for ${userCurrency === 'BDT' ? '500 taka' : '50'} today`}
-                className="w-full h-28 bg-paper-100/30 dark:bg-white/[0.01] border border-paper-100 dark:border-white/5 rounded-2xl p-4 text-label text-ink-900 dark:text-paper-50 placeholder:text-ink-400 dark:placeholder:text-paper-700 outline-none transition-all focus:border-primary-500/30 focus:ring-1 focus:ring-primary-500/20 resize-none font-medium"
+                className="w-full h-28 bg-paper-100/30 dark:bg-white/[0.01] border border-paper-100 dark:border-white/5 rounded-2xl p-4 text-label text-ink-900 dark:text-paper-50 placeholder:text-ink-400 dark:placeholder:text-paper-700 outline-none transition-all focus:border-primary-500/30 focus:ring-1 focus:ring-primary-500/20 resize-none "
                 rows="3"
               />
               <div className="absolute bottom-3 right-3">
@@ -363,24 +363,28 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                       ) : (
                         <div className="flex items-center justify-between group">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 flex items-center justify-center rounded-2xl text-lg ${tx.type === 'income' ? 'bg-emerald-500/10' : 'bg-paper-100/30 dark:bg-white/5 border border-paper-100 dark:border-white/5'}`}>
-                              {getCategoryEmoji(tx.category)}
-                            </div>
+                            <IconBox
+                              icon={() => <span>{getCategoryEmoji(tx.category)}</span>}
+                              size="xs"
+                              color={tx.type === 'income' ? 'primary' : 'ink'}
+                              variant="soft"
+                              className="!rounded-xl"
+                            />
                             <div>
-                              <div className="text-label text-ink-900 dark:text-paper-50 truncate leading-tight">{tx.description}</div>
-                              <div className="text-overline text-ink-400 dark:text-paper-700 mt-1">{humanizeType(tx.type)} • {getCategoryLabel(tx.category)}</div>
+                              <div className="text-label font-bold text-ink-900 dark:text-paper-50 truncate leading-tight">{tx.description}</div>
+                              <div className="text-overline opacity-40 mt-0.5">{humanizeType(tx.type)} • {getCategoryLabel(tx.category)}</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <div className={`text-label ${tx.type === 'income' ? 'text-primary-600 dark:text-primary-400' : 'text-ink-900 dark:text-paper-50'}`}>
+                          <div className="flex items-center gap-4">
+                            <div className={`text-label font-bold tracking-tight ${tx.type === 'income' ? 'text-primary-600 dark:text-primary-400' : 'text-ink-900 dark:text-paper-50'}`}>
                               {tx.type === 'income' ? '+' : ''}{formatCurrency(tx.amount, userCurrency)}
                             </div>
-                            <div className="flex items-center gap-1">
-                              <button onClick={() => setEditingIndex(idx)} className="p-1.5 hover:bg-paper-100 dark:hover:bg-white/10 rounded-xl text-ink-400 hover:text-ink-900 dark:hover:text-white transition-all border border-transparent">
-                                <Edit className="w-3 h-3" />
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={() => setEditingIndex(idx)} className="p-1.5 hover:bg-paper-100 dark:hover:bg-white/10 rounded-xl text-ink-400 hover:text-ink-900 dark:hover:text-white transition-all">
+                                <Edit className="w-3.5 h-3.5" />
                               </button>
-                              <button onClick={() => removeParsedTransaction(idx)} className="p-1.5 hover:bg-error-500/10 rounded-xl text-ink-400 hover:text-error-600 transition-all border border-transparent">
-                                <Trash className="w-3 h-3" />
+                              <button onClick={() => removeParsedTransaction(idx)} className="p-1.5 hover:bg-rose-500/10 rounded-xl text-ink-400 hover:text-rose-600 transition-all">
+                                <Trash className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
@@ -421,26 +425,36 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
           <form onSubmit={handleManualSubmit} className="space-y-6 px-1">
             {/* Manual Entry Form */}
             <div>
-              <label className="block text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1">
+              <label className="block text-overline opacity-40 uppercase tracking-widest mb-2 px-1">
                 Transaction Type
               </label>
-              <Select
-                name="type"
-                value={manualData.type}
-                onChange={(e) => setManualData(prev => ({ ...prev, type: e.target.value }))}
-                className="!rounded-2xl"
-                options={[
-                  { value: 'expense', label: 'Expense' },
-                  { value: 'income', label: 'Income' },
-                  { value: 'credit', label: 'Credit Given' },
-                  { value: 'loan', label: 'Loan Taken' }
-                ]}
-              />
+              <div className="flex p-0.5 bg-paper-100/30 dark:bg-white/5 border border-paper-100 dark:border-white/5 rounded-2xl w-fit">
+                {[
+                  { value: 'expense', label: 'Expense', color: 'error' },
+                  { value: 'income', label: 'Income', color: 'primary' },
+                  { value: 'credit', label: 'Credit', color: 'info' },
+                  { value: 'loan', label: 'Loan', color: 'warning' }
+                ].map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setManualData(prev => ({ ...prev, type: type.value }))}
+                    className={`px-4 py-1.5 rounded-xl text-overline transition-all duration-300 ${manualData.type === type.value
+                      ? type.color === 'primary' ? 'bg-primary-500 text-white' :
+                        type.color === 'error' ? 'bg-rose-500 text-white' :
+                          type.color === 'info' ? 'bg-blue-500 text-white' :
+                            'bg-amber-500 text-white'
+                      : 'text-ink-400 dark:text-paper-700 hover:text-ink-900 dark:hover:text-paper-50'}`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-5">
               <div>
-                <label className="block text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1">
+                <label className="block text-overline opacity-40 uppercase tracking-widest mb-2 px-1">
                   Amount ({userCurrency})
                 </label>
                 <GlassInput
@@ -449,7 +463,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                   value={manualData.amount}
                   onChange={handleManualInputChange}
                   placeholder="0.00"
-                  className="!rounded-2xl"
+                  className="!rounded-2xl font-bold !text-label"
                   required
                 />
               </div>
