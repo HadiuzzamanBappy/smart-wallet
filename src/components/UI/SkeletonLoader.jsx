@@ -130,7 +130,7 @@ export const TransactionListSkeleton = () => (
     </div>
 
     {/* Transaction Items */}
-    <TransactionSkeleton count={6} />
+    <TransactionSkeleton count={4} />
 
     {/* Pagination placeholder */}
     <div className="p-6 flex items-center justify-between bg-paper-100/30 dark:bg-white/[0.01] border-t border-paper-200/60 dark:border-white/5">

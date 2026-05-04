@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Wallet, Plus, RefreshCw, DollarSign, X, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Info } from 'lucide-react';
+import { Wallet, Plus, RefreshCw, X, TrendingUp, TrendingDown, Info } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import useLocalRefresh from '../../hooks/useLocalRefresh';
@@ -25,10 +25,22 @@ const Header = ({
     isRefreshing = false
 }) => {
     const { userProfile, user } = useAuth();
-    const { smartBalance: totalWealth, netSurplus: surplus, salaryPlan, monthlyNetFlowTransactions } = useTransactions();
+    const { salaryPlan, loading: globalLoading, netBalance, currentMonthIncome, currentMonthExpense } = useTransactions();
     const cashInHand = salaryPlan?.plan?.cashInHand || 0;
-    const monthlySurplus = surplus;
-    const balance = totalWealth;
+    const actualSavings = salaryPlan?.plan?.actualSavings || 0;
+    const goalSaving = salaryPlan?.plan?.monthlyForGoal || 0;
+    const remainingGoalTarget = Math.max(0, goalSaving - actualSavings);
+    const netBalanceAmount = netBalance || 0;
+    const monthlySurplus = netBalanceAmount + cashInHand - goalSaving;
+    const balance = netBalanceAmount + cashInHand;
+
+    // Daily Limit Logic
+    const now = new Date();
+    const totalDaysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const remainingDays = Math.max(1, totalDaysInMonth - now.getDate() + 1);
+    const vaultDailyLimit = balance / remainingDays;
+    const surplusDailyLimit = monthlySurplus / remainingDays;
+    const goalDailyTarget = remainingGoalTarget / remainingDays;
 
     const [showFloatingBalance, setShowFloatingBalance] = useState(false);
     const [entered, setEntered] = useState(false);
@@ -155,7 +167,7 @@ const Header = ({
                                     Smart Wallet
                                 </h1>
                                 <div className={`flex items-center gap-2 text-label text-gray-400 dark:text-gray-500`}>
-                                    {isRefreshing || isLocalRefreshing ? (
+                                    {isRefreshing || isLocalRefreshing || globalLoading ? (
                                         <div className="flex items-center gap-2">
                                             <Skeleton width="w-16" height="h-3" />
                                             <RefreshCw className="w-3 h-3 animate-spin text-teal-500" />
@@ -232,8 +244,9 @@ const Header = ({
                                                 <Info size={10} className="opacity-0 group-hover/vault:opacity-40 transition-opacity" />
                                             </div>
                                         </Tooltip>
-                                        <h2 className="text-h4 text-ink-900 dark:text-paper-50">
-                                            {formatCurrency(totalWealth, userProfile?.currency || 'BDT')}
+                                        <h2 className="text-h4 text-ink-900 dark:text-paper-50 flex items-baseline gap-2">
+                                            {formatCurrency(balance, userProfile?.currency || 'BDT')}
+                                            <span className="text-nano opacity-40 font-normal">/ {formatCurrency(vaultDailyLimit, userProfile?.currency || 'BDT')} <span className="lowercase">daily</span></span>
                                         </h2>
                                     </div>
                                     <div className="text-right flex flex-col items-end gap-1.5">
@@ -243,41 +256,39 @@ const Header = ({
 
                                 <div className="grid grid-cols-2 gap-2">
                                     {[
-                                        { 
-                                            label: 'Month Margin', 
-                                            val: formatCurrency(salaryPlan?.plan?.disposable || 0, userProfile?.currency || 'BDT'), 
+                                        {
+                                            label: 'Month Margin',
+                                            val: formatCurrency(netBalance || 0, userProfile?.currency || 'BDT'),
                                             color: 'text-primary-500',
-                                            tip: `Available after bills: ${formatCurrency(salaryPlan?.plan?.totalIncome || 0, userProfile?.currency || 'BDT')} (Income) - ${formatCurrency(salaryPlan?.plan?.totalFixed || 0, userProfile?.currency || 'BDT')} (Fixed)`
+                                            tip: `Dynamic Monthly Performance: ${formatCurrency(currentMonthIncome || 0, userProfile?.currency || 'BDT')} (Earned) - ${formatCurrency(currentMonthExpense || 0, userProfile?.currency || 'BDT')} (Expended) = ${formatCurrency(netBalance || 0, userProfile?.currency || 'BDT')}`
                                         },
-                                        { 
-                                            label: 'Cash In Hand', 
-                                            val: formatCurrency(cashInHand, userProfile?.currency || 'BDT'), 
+                                        {
+                                            label: 'Cash In Hand',
+                                            val: formatCurrency(cashInHand, userProfile?.currency || 'BDT'),
                                             color: 'text-amber-500',
-                                            tip: "Your immediate liquid balance including physical cash and accessible bank funds."
+                                            tip: `Immediate Liquidity: ${formatCurrency(cashInHand, userProfile?.currency || 'BDT')} (Physical cash and accessible bank funds).`
                                         },
-                                        { 
-                                            label: 'Monthly Savings', 
-                                            val: formatCurrency(salaryPlan?.plan?.actualSavings || 0, userProfile?.currency || 'BDT'), 
-                                            color: 'text-teal-600',
-                                            tip: "Actual amount successfully allocated to your savings accounts this month."
+                                        {
+                                            label: 'Goal Saving',
+                                            val: (
+                                                <div className="flex items-baseline gap-1.5 flex-wrap">
+                                                    <span className="text-secondary-500">{formatCurrency(remainingGoalTarget, userProfile?.currency || 'BDT')}</span>
+                                                    <span className="text-nano opacity-40 font-normal">/ {formatCurrency(goalDailyTarget, userProfile?.currency || 'BDT')} <span className="lowercase">daily</span></span>
+                                                </div>
+                                            ),
+                                            color: '', // handled in val
+                                            tip: `Cash Target: ${formatCurrency(goalSaving, userProfile?.currency || 'BDT')} (Monthly Goal) - ${formatCurrency(actualSavings, userProfile?.currency || 'BDT')} (Actual Savings Done) = ${formatCurrency(remainingGoalTarget, userProfile?.currency || 'BDT')}. Daily Cash Target: ${formatCurrency(goalDailyTarget, userProfile?.currency || 'BDT')} for ${remainingDays} days.`
                                         },
-                                        { 
-                                            label: 'Goal Saving', 
-                                            val: formatCurrency(salaryPlan?.plan?.monthlyForGoal || 0, userProfile?.currency || 'BDT'), 
-                                            color: 'text-secondary-500',
-                                            tip: `Required monthly to reach your ${formatCurrency(salaryPlan?.plan?.goal || 0, userProfile?.currency || 'BDT')} goal target.`
-                                        },
-                                        { 
-                                            label: 'Net Flow', 
-                                            val: `${monthlyNetFlowTransactions >= 0 ? '+' : ''}${formatCurrency(monthlyNetFlowTransactions, userProfile?.currency || 'BDT')}`, 
-                                            color: monthlyNetFlowTransactions >= 0 ? 'text-teal-500' : 'text-rose-500',
-                                            tip: "Real-time calculation: Total Actual Income - Total Actual Expenses (Transactions)."
-                                        },
-                                        { 
-                                            label: 'Monthly Surplus', 
-                                            val: formatCurrency(monthlySurplus, userProfile?.currency || 'BDT'), 
-                                            color: 'text-teal-500 font-bold',
-                                            tip: "Remaining disposable income after all planned expenses and savings targets."
+                                        {
+                                            label: 'Monthly Surplus',
+                                            val: (
+                                                <div className="flex items-baseline gap-1.5 flex-wrap">
+                                                    <span className="text-teal-500 font-bold">{formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')}</span>
+                                                    <span className="text-nano opacity-40 font-normal">/ {formatCurrency(surplusDailyLimit, userProfile?.currency || 'BDT')} <span className="lowercase">daily</span></span>
+                                                </div>
+                                            ),
+                                            color: '', // handled in val
+                                            tip: `Operational Surplus: (${formatCurrency(netBalanceAmount, userProfile?.currency || 'BDT')} [Margin] + ${formatCurrency(cashInHand, userProfile?.currency || 'BDT')} [Cash]) - ${formatCurrency(goalSaving, userProfile?.currency || 'BDT')} [Goal] = ${formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')}. Daily Limit: ${formatCurrency(surplusDailyLimit, userProfile?.currency || 'BDT')} for ${remainingDays} days.`
                                         }
                                     ].map(item => (
                                         <Tooltip key={item.label} content={item.tip} position="top" className="w-full">

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { getTransactions } from '../services/transactionService';
 import { getSalaryPlan } from '../services/salaryService';
@@ -101,14 +101,14 @@ export const TransactionProvider = ({ children }) => {
   // Aggregated Monthly Income (Transactions only - for display)
   const currentMonthIncomeTransactions = React.useMemo(() => {
     return currentMonthTransactions
-      .filter(tx => tx.type === 'income')
+      .filter(tx => ['income', 'loan', 'collection'].includes(tx.type))
       .reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
   }, [currentMonthTransactions]);
 
   // Aggregated Monthly Expense (Transactions only - for display)
   const currentMonthExpenseTransactions = React.useMemo(() => {
     return currentMonthTransactions
-      .filter(tx => tx.type === 'expense')
+      .filter(tx => ['expense', 'credit', 'repayment'].includes(tx.type))
       .reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
   }, [currentMonthTransactions]);
 
@@ -162,40 +162,6 @@ export const TransactionProvider = ({ children }) => {
   }, [transactions]);
 
   /**
-   * OPENING BALANCE (Carry-over from previous months)
-   * This calculates the sum of all transactions before the current month began.
-   */
-  const openingBalance = useMemo(() => {
-    const now = new Date();
-    const firstOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    return transactions.reduce((sum, tx) => {
-      const txDate = new Date(tx.date || tx.createdAt);
-      if (txDate < firstOfCurrentMonth) {
-        try {
-          const eff = computeTransactionEffects(tx);
-          return sum + (eff.balance || 0);
-        } catch {
-          if (tx.type === 'income') return sum + (tx.amount || 0);
-          if (tx.type === 'expense') return sum - (tx.amount || 0);
-          if (tx.type === 'credit') return sum - (tx.amount || 0);
-          if (tx.type === 'loan') return sum + (tx.amount || 0);
-          return sum;
-        }
-      }
-      return sum;
-    }, 0);
-  }, [transactions, computeTransactionEffects]);
-
-  /**
-   * SMART BALANCE CALCULATION (Auto-Deduct Model)
-   * Wallet = Net Surplus (Income - Fixed - Savings - Goal) + Opening Balance + Initial Cash + Actual Extra Transactions
-   * This ensures previous month's leftovers (surplus) are carried over automatically.
-   */
-  const smartBalance = (salaryPlan?.plan?.disposable || 0) + cashInHand + openingBalance + monthlyNetFlowTransactions;
-  const netSurplus = (salaryPlan?.plan?.netBalance || 0) + cashInHand + openingBalance + monthlyNetFlowTransactions;
-
-  /**
    * LIQUID BALANCE (Actual Wallet)
    * Wallet = All-time Transactions Sum + Initial Cash in Hand
    * This is the REAL money the user has right now.
@@ -210,8 +176,6 @@ export const TransactionProvider = ({ children }) => {
     currentMonthIncome,
     currentMonthExpense,
     balance,
-    smartBalance,
-    netSurplus,
     liquidBalance,
     monthlyNetFlowTransactions,
     netBalance: currentMonthIncome - currentMonthExpense,

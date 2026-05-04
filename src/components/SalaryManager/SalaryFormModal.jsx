@@ -190,11 +190,10 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
           <button
             key={item.key}
             onClick={() => update(item.key, !form[item.key])}
-            className={`flex items-center gap-3 p-5 rounded-3xl border transition-all duration-300 shadow-sm ${
-              form[item.key] 
-                ? 'bg-primary-500/10 border-primary-500/30 text-ink-900 dark:text-paper-50' 
-                : 'bg-paper-100/50 dark:bg-white/5 border-paper-200/50 dark:border-white/5 text-ink-400 dark:text-paper-700 hover:bg-paper-200/50 dark:hover:bg-white/10 hover:border-paper-300 dark:hover:border-white/10'
-            }`}
+            className={`flex items-center gap-3 p-5 rounded-3xl border transition-all duration-300 shadow-sm ${form[item.key]
+              ? 'bg-primary-500/10 border-primary-500/30 text-ink-900 dark:text-paper-50'
+              : 'bg-paper-100/50 dark:bg-white/5 border-paper-200/50 dark:border-white/5 text-ink-400 dark:text-paper-700 hover:bg-paper-200/50 dark:hover:bg-white/10 hover:border-paper-300 dark:hover:border-white/10'
+              }`}
           >
             <item.icon className={`w-4 h-4 ${form[item.key] ? 'text-primary-600 dark:text-primary-400' : 'text-ink-400'}`} />
             <span className="text-overline">{item.label}</span>
@@ -266,7 +265,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
         <Button
           variant="soft"
-          color="ink"
+          color="info"
           fullWidth
           onClick={() => update('loans', [...form.loans, { name: '', emi: '', remaining: '' }])}
           icon={Plus}
@@ -341,7 +340,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
         <Button
           variant="soft"
-          color="ink"
+          color="info"
           fullWidth
           onClick={() => update('deposits', [...form.deposits, { type: 'Deposit', name: '', monthly: '', balance: '', useForGoal: true }])}
           icon={Plus}
@@ -430,10 +429,10 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
         <StepBar current={step} total={5} />
 
         {/* Intelligence Summary Island */}
-        <GlassCard 
-            variant="flat" 
-            padding="p-6" 
-            className="!bg-surface-card dark:!bg-surface-card-dark backdrop-blur-xl rounded-3xl border-paper-200/50 dark:border-white/5 shadow-sm"
+        <GlassCard
+          variant="flat"
+          padding="p-6"
+          className="!bg-surface-card dark:!bg-surface-card-dark backdrop-blur-xl rounded-3xl border-paper-200/50 dark:border-white/5 shadow-sm"
         >
           <div className="grid grid-cols-3 md:grid-cols-6 gap-y-6 items-center">
             {[
