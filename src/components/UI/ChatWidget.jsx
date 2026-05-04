@@ -251,7 +251,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                   ? 'bg-success-500/[0.03] dark:bg-success-500/10 border-success-500/20 text-success-700 dark:text-success-400'
                   : 'bg-error-500/[0.03] dark:bg-error-500/10 border-error-500/20 text-error-700 dark:text-error-400'
                   }`}>
-                  <p className="text-overline tracking-wide">{lastResponse.message}</p>
+                  <p className="text-overline">{lastResponse.message}</p>
                   {/* Show parsed transactions only when non-empty */}
                   {Array.isArray(lastResponse.transactions) && lastResponse.transactions.length > 0 && (
                     <div className="mt-3 space-y-2">
@@ -260,7 +260,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                           <div className="flex items-center gap-2.5 min-w-0">
                             <span className="text-base">{getCategoryEmoji(transaction.category)}</span>
                             <div className="min-w-0">
-                              <div className="text-body truncate text-ink-900 dark:text-white font-medium">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
+                              <div className="text-body truncate text-ink-900 dark:text-white">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
                               <div className="text-overline text-ink-400 mt-0.5">{humanizeType(transaction.type)}</div>
                             </div>
                           </div>
@@ -318,7 +318,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                 <div className="pt-3 border-t border-paper-100 dark:border-white/5 space-y-3">
                   <div className="p-2.5 rounded-2xl bg-amber-500/[0.03] dark:bg-amber-500/10 border border-amber-500/20 flex items-start gap-2.5">
                     <span className="text-body mt-0.5">⚠️</span>
-                    <p className="text-overline leading-relaxed text-amber-700 dark:text-amber-400 font-medium">Verify parsed entries before saving to vault</p>
+                    <p className="text-overline text-amber-700 dark:text-amber-400">Verify parsed entries before saving to vault</p>
                   </div>
 
                   <div className="space-y-1.5 max-h-48 overflow-auto custom-scrollbar">
@@ -334,11 +334,11 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                           {editingIndex !== index ? (
                             <>
                               <div className="flex-1 min-w-0">
-                                <div className="text-body truncate text-ink-900 dark:text-white font-medium">{transaction.description}</div>
+                                <div className="text-body truncate text-ink-900 dark:text-white">{transaction.description}</div>
                                 <div className="text-overline opacity-40 mt-0.5">{humanizeType(transaction.type)}</div>
                               </div>
                               <div className="text-right mr-1">
-                                <p className={`text-label font-bold ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
+                                <p className={`text-label ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
                                   {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
                                   {formatCurrency(transaction.amount, userCurrency)}
                                 </p>
@@ -431,7 +431,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
               {/* Examples with quick-insert templates */}
               {!lastResponse && !isPreviewOpen && (
                 <div className="space-y-2">
-                  <p className="text-overline text-ink-400 px-1 tracking-wide">Suggestions</p>
+                  <p className="text-overline text-ink-400 px-1">Suggestions</p>
                   <div className="space-y-2">
                     {[
                       { 

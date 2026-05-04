@@ -3,7 +3,6 @@ import { ChevronDown, ChevronUp, BarChart3, FileText, PieChart, Calendar, List, 
 import Skeleton from '../UI/SkeletonLoader';
 import TransactionList from './TransactionList';
 import SpendingAnalytics from './SpendingAnalytics';
-import { THEME } from '../../config/theme';
 
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
@@ -77,8 +76,8 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
         return (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>Financial reports will be displayed here</p>
-            <p className="text-sm">Coming soon...</p>
+            <p className="text-body">Financial reports will be displayed here</p>
+            <p className="text-body">Coming soon...</p>
           </div>
         );
       case 'analytics':
@@ -88,8 +87,8 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
           <div className="p-4">
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <PieChart className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>Category breakdown charts will be displayed here</p>
-              <p className="text-sm">Coming soon...</p>
+              <p className="text-body">Category breakdown charts will be displayed here</p>
+              <p className="text-body">Coming soon...</p>
             </div>
           </div>
         );
@@ -98,8 +97,8 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
           <div className="p-4">
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>Monthly trends and comparisons will be displayed here</p>
-              <p className="text-sm">Coming soon...</p>
+              <p className="text-body">Monthly trends and comparisons will be displayed here</p>
+              <p className="text-body">Coming soon...</p>
             </div>
           </div>
         );
@@ -108,8 +107,8 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
           <div className="p-4">
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>Transaction calendar view will be displayed here</p>
-              <p className="text-sm">Coming soon...</p>
+              <p className="text-body">Transaction calendar view will be displayed here</p>
+              <p className="text-body">Coming soon...</p>
             </div>
           </div>
         );
@@ -143,14 +142,14 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
                 className="transition-all duration-500 group-hover:scale-110" 
               />
               <div className="text-left flex-1 min-w-0">
-                <h3 className={`text-label mb-1.5 leading-none font-bold ${
+                <h3 className={`text-label ${
                   isActive 
                     ? 'text-ink-900 dark:text-paper-50' 
                     : 'text-ink-400 dark:text-paper-700'
                 }`}>
                   {section.title}
                 </h3>
-                <p className={`text-overline leading-none opacity-40 truncate ${isActive
+                <p className={`text-nano ${isActive
                     ? 'text-primary-600 dark:text-primary-400'
                     : 'text-ink-400 dark:text-paper-700'
                   }`}>
@@ -187,4 +186,4 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   );
 };
 
-export default ExpandableDetailsSection;
+export default ExpandableDetailsSection;

@@ -8,7 +8,6 @@ import UserMenuDropdown from '../User/UserMenuDropdown';
 import { getOutstandingCredits, getOutstandingLoans } from '../../services/debtService';
 import Skeleton, { HeaderSkeleton } from './SkeletonLoader';
 import { APP_EVENTS } from '../../config/constants';
-import { THEME } from '../../config/theme';
 
 // Base UI Components
 import Button from './base/Button';
@@ -154,7 +153,7 @@ const Header = ({
                                 <h1 className="text-body font-bold text-ink-900 dark:text-paper-50 tracking-tight">
                                     Smart Wallet
                                 </h1>
-                                <div className={`flex items-center gap-2 ${THEME.typography.label} text-gray-400 dark:text-gray-500`}>
+                                <div className={`flex items-center gap-2 text-label text-gray-400 dark:text-gray-500`}>
                                     {isRefreshing || isLocalRefreshing ? (
                                         <div className="flex items-center gap-2">
                                             <Skeleton width="w-16" height="h-3" />
@@ -209,9 +208,9 @@ const Header = ({
             {showFloatingBalance && (
                 <div className="fixed top-16 left-0 right-0 flex justify-center z-50 pointer-events-none">
                     <div className="pointer-events-auto w-11/12 max-w-lg px-4">
-                        <GlassCard 
-                            variant="flat" 
-                            padding="p-5" 
+                        <GlassCard
+                            variant="flat"
+                            padding="p-5"
                             className={`relative !bg-surface-card dark:!bg-surface-card-dark backdrop-blur-2xl text-ink-900 dark:text-paper-50 shadow-2xl border-paper-200 dark:border-white/10 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-3' : 'opacity-0 translate-y-0'}`}
                         >
                             <Button
@@ -222,12 +221,12 @@ const Header = ({
                             >
                                 <X className="w-3 h-3" />
                             </Button>
-    
+
                             <div className="flex flex-col gap-6 select-none">
                                 <div className="flex items-center justify-between px-1">
                                     <div className="space-y-0.5">
-                                        <p className="text-overline font-black tracking-widest opacity-30">Vault Total</p>
-                                        <h2 className="text-h4 font-black tracking-tighter text-ink-900 dark:text-paper-50">
+                                        <p className="text-overline opacity-30">Vault Total</p>
+                                        <h2 className="text-h4 text-ink-900 dark:text-paper-50">
                                             {formatCurrency(totalWealth, userProfile?.currency || 'BDT')}
                                         </h2>
                                     </div>
@@ -236,7 +235,7 @@ const Header = ({
                                         <Badge label="Monthly Surplus" value={formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')} color="success" variant="glass" size="sm" />
                                     </div>
                                 </div>
-    
+
                                 <div className="grid grid-cols-2 gap-2">
                                     {[
                                         { label: 'Month Margin', val: formatCurrency(salaryPlan?.plan?.disposable || 0, userProfile?.currency || 'BDT'), color: 'text-primary-500' },
@@ -247,12 +246,12 @@ const Header = ({
                                         { label: 'Total Assets', val: formatCurrency(totalWealth, userProfile?.currency || 'BDT'), color: 'text-ink-900 dark:text-paper-50' }
                                     ].map(item => (
                                         <div key={item.label} className="p-2 rounded-xl bg-paper-100/50 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5">
-                                            <p className="text-overline font-black tracking-widest text-ink-400 dark:text-paper-700 mb-0.5" style={{ fontSize: '7px' }}>{item.label}</p>
-                                            <p className={`text-label font-black tracking-tight ${item.color}`}>{item.val}</p>
+                                            <p className="text-nano text-ink-400 dark:text-paper-700 mb-0.5">{item.label}</p>
+                                            <p className={`text-label ${item.color}`}>{item.val}</p>
                                         </div>
                                     ))}
                                 </div>
-    
+
                                 <div className="pt-1">
                                     <div className={`p-3 rounded-3xl flex items-center justify-between border transition-all duration-500 ${creditDue >= loanDue ? 'bg-success-500/[0.03] dark:bg-success-500/10 border-success-500/20' : 'bg-error-500/[0.03] dark:bg-error-500/10 border-error-500/20'}`}>
                                         <div className="flex items-center gap-2">
@@ -262,11 +261,11 @@ const Header = ({
                                                 variant="glass"
                                                 size="xs"
                                             />
-                                            <span className="text-overline font-black tracking-[0.1em] opacity-80">
+                                            <span className="text-overline opacity-80">
                                                 {creditDue >= loanDue ? 'Net Receivable' : 'Net Due'}
                                             </span>
                                         </div>
-                                        <span className={`text-label font-black tracking-tighter ${creditDue >= loanDue ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
+                                        <span className={`text-label ${creditDue >= loanDue ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
                                             {formatCurrency(Math.abs(creditDue - loanDue), userProfile?.currency || 'BDT')}
                                         </span>
                                     </div>

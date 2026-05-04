@@ -5,7 +5,6 @@ import { calculateBudgetStatus, getCurrentMonthSpending, formatCurrency } from '
 import { AlertTriangle, CheckCircle, Target, TrendingUp } from 'lucide-react';
 import { BudgetSkeleton } from '../UI/SkeletonLoader';
 import { getSalaryPlan } from '../../services/salaryService';
-import { THEME } from '../../config/theme';
 
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
@@ -102,7 +101,7 @@ const BudgetProgress = () => {
         <GlassCard padding="p-4" className="shadow-sm transition-colors duration-500">
             <div className="flex items-start justify-between gap-2 mb-4">
                 <div className="flex items-center gap-4">
-                    <IconBox 
+                    <IconBox
                         icon={colors.icon}
                         variant="soft"
                         color={colors.color}
@@ -110,26 +109,25 @@ const BudgetProgress = () => {
                         className="transition-all duration-500 group-hover:scale-110"
                     />
                     <div>
-                        <div className="text-overline text-ink-400 dark:text-paper-700 mb-1 leading-none font-black uppercase tracking-widest">
+                        <div className="text-overline text-ink-400 dark:text-paper-700 mb-1">
                             {budgetStatus.status}
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-ink-400 dark:text-paper-700 opacity-40">Limit:</span>
-                            <span className="text-label font-bold text-ink-900 dark:text-paper-50 tracking-tight leading-none">{formatCurrency(budgetLimit, currency)}</span>
+                            <span className="text-nano uppercase text-ink-400 dark:text-paper-700 opacity-40">Limit:</span>
+                            <span className="text-label text-ink-900 dark:text-paper-50">{formatCurrency(budgetLimit, currency)}</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="text-overline font-black text-ink-900 dark:text-paper-50 tracking-widest">{percentage}%</div>
+                <div className="text-overline text-ink-900 dark:text-paper-50">{percentage}%</div>
             </div>
 
             <div className="w-full h-1.5 bg-paper-100/50 dark:bg-white/5 rounded-full overflow-hidden mb-4">
                 <div
-                    className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.05)] ${
-                        colors.color === 'error' ? 'bg-error-500' : 
-                        colors.color === 'warning' ? 'bg-warning-500' : 
-                        colors.color === 'info' ? 'bg-info-500' : 'bg-primary-500'
-                    }`}
+                    className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.05)] ${colors.color === 'error' ? 'bg-error-500' :
+                            colors.color === 'warning' ? 'bg-warning-500' :
+                                colors.color === 'info' ? 'bg-info-500' : 'bg-primary-500'
+                        }`}
                     style={{ width: `${percentage}%` }}
                 />
             </div>
@@ -137,25 +135,24 @@ const BudgetProgress = () => {
             <div className="flex items-end justify-between">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <span className="text-h5 font-black text-ink-900 dark:text-paper-50 tracking-tighter leading-none">{formatCurrency(currentSpending, currency)}</span>
-                        <span className="text-overline text-ink-400 dark:text-paper-700 opacity-40 leading-none">Spent</span>
+                        <span className="text-h5 text-ink-900 dark:text-paper-50">{formatCurrency(currentSpending, currency)}</span>
+                        <span className="text-overline text-ink-400 dark:text-paper-700 opacity-40">Spent</span>
                     </div>
                     {fixedSpending > 0 && (
-                        <div className="text-[9px] font-bold text-ink-400 dark:text-paper-700 tracking-tight leading-none">
-                            Incl. <span className="text-primary-600 dark:text-primary-400 font-black">{formatCurrency(fixedSpending, currency)}</span> fixed ops
+                        <div className="text-nano text-ink-400 dark:text-paper-700">
+                            Incl. <span className="text-primary-600 dark:text-primary-400">{formatCurrency(fixedSpending, currency)}</span> fixed ops
                         </div>
                     )}
                 </div>
-                
+
                 <div className="text-right">
-                    <Badge 
+                    <Badge
                         color={budgetStatus.exceeded ? 'error' : 'success'}
                         variant="soft"
                         size="md"
-                        className="font-black"
                     >
-                        {budgetStatus.exceeded 
-                            ? `${formatCurrency(currentSpending - budgetLimit, currency)} Over` 
+                        {budgetStatus.exceeded
+                            ? `${formatCurrency(currentSpending - budgetLimit, currency)} Over`
                             : `${formatCurrency(remaining, currency)} Left`
                         }
                     </Badge>
@@ -165,4 +162,4 @@ const BudgetProgress = () => {
     );
 };
 
-export default BudgetProgress;
+export default BudgetProgress;

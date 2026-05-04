@@ -238,7 +238,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         {/* Feedback Messages */}
         {lastResponse && (lastResponse.type === 'error' || (lastResponse.type === 'success' && parsedTransactions.length === 0)) && (
           <div className={`p-4 rounded-2xl ${lastResponse.type === 'success' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'} border animate-in fade-in slide-in-from-top-1`}>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center">{lastResponse.message}</p>
+            <p className="text-nano uppercase text-center">{lastResponse.message}</p>
           </div>
         )}
 
@@ -269,7 +269,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         {mode === 'chat' ? (
           <div className="space-y-5">
             <div className="relative group">
-              <label className="block text-overline text-ink-400 dark:text-paper-700 font-black uppercase tracking-widest mb-2.5 px-1 leading-none">
+              <label className="block text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1">
                 Natural Language Description
               </label>
               <textarea
@@ -310,7 +310,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                       onClick={() => setChatMessage(msg)}
                       className="flex items-center justify-between p-3.5 rounded-xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 hover:border-primary-500/30 hover:bg-white dark:hover:bg-white/[0.04] transition-all group"
                     >
-                      <span className="text-[11px] font-medium text-ink-400 dark:text-paper-700 group-hover:text-ink-900 dark:group-hover:text-paper-50 transition-colors">"{msg}"</span>
+                      <span className="text-nano text-ink-400 dark:text-paper-700 group-hover:text-ink-900 dark:group-hover:text-paper-50 transition-colors">"{msg}"</span>
                       <Plus className="w-3 h-3 text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
                   ))}
@@ -367,12 +367,12 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                               {getCategoryEmoji(tx.category)}
                             </div>
                             <div>
-                              <div className="text-label font-bold text-ink-900 dark:text-paper-50 leading-tight tracking-tight">{tx.description}</div>
-                              <div className="text-overline text-ink-400 dark:text-paper-700 font-black uppercase tracking-widest mt-1 leading-none">{humanizeType(tx.type)} • {getCategoryLabel(tx.category)}</div>
+                              <div className="text-label text-ink-900 dark:text-paper-50 truncate leading-tight">{tx.description}</div>
+                              <div className="text-overline text-ink-400 dark:text-paper-700 mt-1">{humanizeType(tx.type)} • {getCategoryLabel(tx.category)}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className={`text-label font-black ${tx.type === 'income' ? 'text-primary-600 dark:text-primary-400' : 'text-ink-900 dark:text-paper-50'} tracking-tighter leading-none`}>
+                            <div className={`text-label ${tx.type === 'income' ? 'text-primary-600 dark:text-primary-400' : 'text-ink-900 dark:text-paper-50'}`}>
                               {tx.type === 'income' ? '+' : ''}{formatCurrency(tx.amount, userCurrency)}
                             </div>
                             <div className="flex items-center gap-1">
@@ -421,7 +421,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
           <form onSubmit={handleManualSubmit} className="space-y-6 px-1">
             {/* Manual Entry Form */}
             <div>
-              <label className="block text-overline text-ink-400 dark:text-paper-700 font-black uppercase tracking-widest mb-2.5 px-1 leading-none">
+              <label className="block text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1">
                 Transaction Type
               </label>
               <Select
@@ -440,7 +440,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
 
             <div className="grid grid-cols-2 gap-5">
               <div>
-                <label className="block text-overline text-ink-400 dark:text-paper-700 font-black uppercase tracking-widest mb-2.5 px-1 leading-none">
+                <label className="block text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1">
                   Amount ({userCurrency})
                 </label>
                 <GlassInput
@@ -455,7 +455,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-overline text-ink-400 dark:text-paper-700 font-black uppercase tracking-widest mb-2.5 px-1 leading-none">
+                <label className="block text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1">
                   Date
                 </label>
                 <GlassInput
@@ -470,7 +470,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-overline text-ink-400 dark:text-paper-700 font-black uppercase tracking-widest mb-2.5 px-1 leading-none">
+              <label className="block text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1">
                 Description
               </label>
               <GlassInput
@@ -485,7 +485,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-overline text-ink-400 dark:text-paper-700 font-black uppercase tracking-widest mb-2.5 px-1 leading-none">
+              <label className="block text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1">
                 Category
               </label>
               <Select

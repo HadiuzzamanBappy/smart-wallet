@@ -66,10 +66,10 @@ const AboutModal = ({ isOpen, onClose }) => {
                     className="group-hover/feature:scale-110 transition-transform duration-500"
                   />
                   <div>
-                    <h4 className="text-label font-bold tracking-wide text-ink-900 dark:text-paper-50">
+                    <h4 className="text-label text-ink-900 dark:text-paper-50">
                       {feature.title}
                     </h4>
-                    <p className="text-body text-ink-500 dark:text-paper-400 mt-1 leading-relaxed font-light">
+                    <p className="text-body text-ink-500 dark:text-paper-400 mt-1">
                       {feature.description}
                     </p>
                   </div>
@@ -104,7 +104,7 @@ const AboutModal = ({ isOpen, onClose }) => {
                   >
                     {type.label}
                   </Badge>
-                  <p className="text-overline text-ink-500 dark:text-paper-500 leading-snug font-light">
+                  <p className="text-overline text-ink-500 dark:text-paper-500">
                     {type.desc}
                   </p>
                 </div>
@@ -133,7 +133,7 @@ const AboutModal = ({ isOpen, onClose }) => {
               ].map((tip, index) => (
                 <div key={index} className="flex items-start gap-2.5">
                   <IconBox icon={Zap} variant="glass" size="xs" color="primary" className="shrink-0 mt-0.5 opacity-40" />
-                  <p className="text-label text-ink-600 dark:text-paper-400 font-medium tracking-tight leading-relaxed">{tip}</p>
+                  <p className="text-label text-ink-600 dark:text-paper-400">{tip}</p>
                 </div>
               ))}
             </div>
@@ -142,7 +142,7 @@ const AboutModal = ({ isOpen, onClose }) => {
 
         <div className="flex items-center justify-center pt-4 border-t border-paper-200 dark:border-paper-900/10 gap-3">
           <Badge color="ink" variant="soft" size="sm">v1.2.0</Badge>
-          <span className="text-overline text-ink-300 dark:text-paper-700 font-bold tracking-[0.2em]">
+          <span className="text-overline text-ink-300 dark:text-paper-700 uppercase">
             Financial Intelligence Guide
           </span>
         </div>

@@ -12,7 +12,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, children, titleSize = 'tex
                 )}
                 <h2 className="flex items-center gap-2">
                     {Icon && <Icon className="w-5 h-5 text-primary-500 opacity-90" />}
-                    <span className={`${titleSize} text-ink-900 dark:text-paper-50 leading-none font-bold tracking-tight`}>
+                    <span className={`${titleSize} text-ink-900 dark:text-paper-50`}>
                         {title}
                     </span>
                 </h2>

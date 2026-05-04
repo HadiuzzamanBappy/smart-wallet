@@ -51,7 +51,7 @@ const UserMenuDropdown = ({
                 <path style="opacity:1" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
               </svg>
             </div>
-            <div style="font-family:inherit;font-size:14px;font-weight:700;letter-spacing:0.1em;color:#fff;text-transform:uppercase">Securing Account...</div>
+            <div style="font-family:inherit;font-size:14px;font-weight:300;letter-spacing:0.1em;color:#fff;text-transform:uppercase">Securing Account...</div>
           </div>
         `;
         document.body.appendChild(overlay);
@@ -122,7 +122,7 @@ const UserMenuDropdown = ({
             referrerPolicy="no-referrer"
           />
         ) : (
-          <span className="text-[13px] font-black uppercase tracking-widest">
+          <span className="text-body uppercase">
             {userProfile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
           </span>
         )}
@@ -138,7 +138,7 @@ const UserMenuDropdown = ({
             <GlassCard variant="flat" padding="p-4" className="border-b border-paper-100 dark:border-paper-900/10 bg-paper-100/30 dark:bg-ink-900/10 rounded-none">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-tr from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center text-white text-lg font-black shadow-lg shadow-primary-500/10 overflow-hidden border-2 border-white dark:border-ink-950">
+                  <div className="w-12 h-12 bg-gradient-to-tr from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center text-white text-lg shadow-lg shadow-primary-500/10 overflow-hidden border-2 border-white dark:border-ink-950">
                     {user?.photoURL ? (
                       <img
                         src={user.photoURL}
@@ -155,10 +155,10 @@ const UserMenuDropdown = ({
                   <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-primary-500 border-2 border-white dark:border-ink-950 rounded-full" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-body font-bold text-ink-900 dark:text-paper-50 truncate">
+                  <p className="text-body text-ink-900 dark:text-paper-50 truncate">
                     {userProfile?.displayName || 'User Account'}
                   </p>
-                  <p className="text-label font-bold text-ink-400 dark:text-paper-600 truncate mt-0.5 tracking-wide opacity-60 font-light">
+                  <p className="text-label text-ink-400 dark:text-paper-600 truncate mt-0.5 opacity-60">
                     {userProfile?.email}
                   </p>
                 </div>
@@ -182,7 +182,7 @@ const UserMenuDropdown = ({
                       }
                     }}
                     disabled={isSignOut && logoutLoading}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-[11px] font-bold transition-all ${isSignOut
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all ${isSignOut
                       ? 'text-error-600 dark:text-error-400 hover:bg-error-500/5'
                       : 'text-ink-600 dark:text-paper-400 hover:bg-paper-100 dark:hover:bg-ink-900/40 hover:text-ink-900 dark:hover:text-paper-50'
                       } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : 'active:scale-[0.98] group'}`}
@@ -194,7 +194,7 @@ const UserMenuDropdown = ({
                       color={isSignOut ? 'error' : 'ink'}
                       className="group-hover:scale-110 transition-transform"
                     />
-                    <span className="flex-1 text-left text-label tracking-wide font-medium">{item.label}</span>
+                    <span className="flex-1 text-left text-label">{item.label}</span>
                     {isSignOut && logoutLoading && (
                       <Loader2 className="w-3 h-3 animate-spin" />
                     )}
@@ -208,7 +208,7 @@ const UserMenuDropdown = ({
                 <Badge variant="glass" color="ink" size="sm" className="opacity-50">
                   v1.2.0 Audited
                 </Badge>
-                <span className="text-overline font-bold text-primary-600 dark:text-primary-500/50 tracking-wide font-light">Vault Secure</span>
+                <span className="text-overline text-primary-600 dark:text-primary-500/50 uppercase">Vault Secure</span>
               </div>
             </GlassCard>
           </div>

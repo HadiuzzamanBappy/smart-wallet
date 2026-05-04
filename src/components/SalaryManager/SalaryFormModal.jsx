@@ -46,8 +46,8 @@ const StepBar = ({ current, total }) => {
         <div className="flex items-center gap-2.5">
           <IconBox icon={steps[current].icon} size="sm" color="teal" variant="glass" />
           <div>
-            <p className="text-overline text-primary-500 tracking-[0.2em]">Step {current + 1}</p>
-            <p className="text-body font-bold text-ink-900 dark:text-paper-50 tracking-tight">{steps[current].label}</p>
+            <p className="text-overline text-primary-500">Step {current + 1}</p>
+            <p className="text-body text-ink-900 dark:text-paper-50">{steps[current].label}</p>
           </div>
         </div>
         <Badge label={`${current + 1} / ${total}`} color="ink" />
@@ -99,7 +99,11 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
   useEffect(() => {
     if (initialData) {
-      setForm(f => ({ ...f, ...initialData }));
+      const data = { ...initialData };
+      if (data.cityTier?.includes('Major')) data.cityTier = 'Major city';
+      if (data.cityTier?.includes('Smaller')) data.cityTier = 'Smaller city';
+      if (data.cityTier?.includes('Rural')) data.cityTier = 'Rural';
+      setForm(f => ({ ...f, ...data }));
     }
   }, [initialData]);
 
@@ -122,7 +126,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
       <div className="space-y-2">
         <label className="flex items-center gap-2 px-1">
           <Briefcase className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
-          <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest">Base Salary (After Tax)</span>
+          <span className="text-overline text-ink-400 dark:text-paper-700">Base Salary (After Tax)</span>
         </label>
         <GlassInput
           type="number"
@@ -136,7 +140,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
       <div className="space-y-2">
         <label className="flex items-center gap-2 px-1">
           <Sparkles className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
-          <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest">Side Revenue</span>
+          <span className="text-overline text-ink-400 dark:text-paper-700">Side Revenue</span>
         </label>
         <GlassInput
           type="number"
@@ -148,7 +152,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
       <div className="grid grid-cols-2 gap-5 pt-2">
         <div className="space-y-2">
-          <label className="block text-overline text-ink-400 dark:text-paper-700 tracking-widest px-1">Age Bracket</label>
+          <label className="block text-overline text-ink-400 dark:text-paper-700 px-1">Age Bracket</label>
           <Select
             value={form.ageBracket}
             onChange={e => update('ageBracket', e.target.value)}
@@ -161,7 +165,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
           />
         </div>
         <div className="space-y-2">
-          <label className="block text-overline text-ink-400 dark:text-paper-700 tracking-widest px-1">Location Tier</label>
+          <label className="block text-overline text-ink-400 dark:text-paper-700 px-1">Location Tier</label>
           <Select
             value={form.cityTier}
             onChange={e => update('cityTier', e.target.value)}
@@ -193,7 +197,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
             }`}
           >
             <item.icon className={`w-4 h-4 ${form[item.key] ? 'text-primary-600 dark:text-primary-400' : 'text-ink-400'}`} />
-            <span className="text-overline tracking-widest">{item.label}</span>
+            <span className="text-overline">{item.label}</span>
           </button>
         ))}
       </div>
@@ -378,13 +382,13 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
               { label: 'Net Gap', val: c(livePlan.remainingGoal), color: 'text-amber-600 dark:text-amber-400' }
             ].map(item => (
               <div key={item.label} className="flex justify-between items-center">
-                <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest opacity-70">{item.label}</span>
-                <span className={`text-label font-mono font-black ${item.color}`}>{item.val}</span>
+                <span className="text-overline text-ink-400 dark:text-paper-700 opacity-70">{item.label}</span>
+                <span className={`text-label font-mono ${item.color}`}>{item.val}</span>
               </div>
             ))}
             <div className="pt-4 border-t border-paper-100 dark:border-white/5 flex justify-between items-center">
-              <span className="text-overline text-primary-600 dark:text-primary-500 tracking-widest">Required / mo</span>
-              <span className="text-h4 font-mono font-black text-ink-900 dark:text-paper-50 tracking-tighter">{c(livePlan.monthlyForGoal)}</span>
+              <span className="text-overline text-primary-600 dark:text-primary-500">Required / mo</span>
+              <span className="text-h4 font-mono text-ink-900 dark:text-paper-50">{c(livePlan.monthlyForGoal)}</span>
             </div>
           </div>
         </GlassCard>
@@ -441,8 +445,8 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
               { label: 'Surplus', val: `${livePlan.isDeficit ? '-' : '+'}${c(Math.abs(livePlan.netBalance))}`, color: livePlan.isDeficit ? 'text-error-600 dark:text-error-500' : 'text-sky-600 dark:text-sky-400' }
             ].map((metric, i) => (
               <div key={metric.label} className={`flex flex-col items-center text-center px-1 ${i < 5 ? 'md:border-r border-paper-200 dark:border-white/5' : ''}`}>
-                <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest mb-2 opacity-70">{metric.label}</span>
-                <span className={`text-label font-mono font-black truncate max-w-full ${metric.color}`}>{metric.val}</span>
+                <span className="text-overline text-ink-400 dark:text-paper-700 mb-2 opacity-70">{metric.label}</span>
+                <span className={`text-label font-mono truncate max-w-full ${metric.color}`}>{metric.val}</span>
               </div>
             ))}
           </div>

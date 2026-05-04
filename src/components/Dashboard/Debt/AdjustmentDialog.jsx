@@ -35,12 +35,12 @@ const AdjustmentDialog = ({
         >
             <div className="space-y-6">
                 <div className="bg-paper-100/30 dark:bg-white/[0.02] p-4 rounded-2xl border border-paper-100 dark:border-white/5">
-                    <div className="text-overline text-ink-400 dark:text-paper-700 font-black mb-1 opacity-60">Net Principal</div>
-                    <div className="text-h4 font-black text-ink-900 dark:text-paper-50 tracking-tighter leading-none">{formatCurrencyWithUser(item.amount, userProfile)}</div>
+                    <div className="text-overline text-ink-400 dark:text-paper-700 mb-1 opacity-60">Net Principal</div>
+                    <div className="text-h4 text-ink-900 dark:text-paper-50">{formatCurrencyWithUser(item.amount, userProfile)}</div>
                 </div>
 
                 <div className="space-y-2">
-                    <label className="block text-overline text-ink-400 dark:text-paper-700 font-black uppercase tracking-widest px-1 leading-none">Adjustment Delta</label>
+                    <label className="block text-overline text-ink-400 dark:text-paper-700 px-1">Adjustment Delta</label>
                     <GlassInput
                         type="number"
                         placeholder="+/- 0.00"
@@ -49,11 +49,11 @@ const AdjustmentDialog = ({
                         icon={Settings2}
                         className="!rounded-2xl"
                     />
-                    <p className="text-[9px] font-black uppercase tracking-tight text-ink-400 dark:text-paper-700 px-1 mt-1 opacity-50">+ Increase / - Decrease</p>
+                    <p className="text-nano uppercase text-ink-400 dark:text-paper-700 px-1 mt-1 opacity-50">+ Increase / - Decrease</p>
                 </div>
 
                 <div className="space-y-2">
-                    <label className="block text-overline text-ink-400 dark:text-paper-700 font-black uppercase tracking-widest px-1 leading-none">Adjustment Reason</label>
+                    <label className="block text-overline text-ink-400 dark:text-paper-700 px-1">Adjustment Reason</label>
                     <GlassInput
                         placeholder="Audit log correction..."
                         value={reason}

@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Database
 } from 'lucide-react';
-import { THEME } from '../../config/theme';
 import Modal from '../UI/base/Modal';
 import ConfirmDialog from '../UI/base/ConfirmDialog';
 import Button from '../UI/base/Button';
@@ -294,7 +293,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                       variant={isActive ? 'primary' : 'glass'}
                       color={isActive ? 'primary' : 'ink'}
                     />
-                    <span className={`text-label font-bold tracking-wide ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-ink-400 dark:text-paper-600'}`}>
+                    <span className={`text-label ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-ink-400 dark:text-paper-600'}`}>
                       {t.label}
                     </span>
                   </button>
@@ -323,7 +322,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                   { key: 'notifications', label: 'Executive Insights' }
                 ].map(item => (
                   <label key={item.key} className="flex items-center justify-between cursor-pointer group">
-                    <span className="text-label font-bold text-ink-900 dark:text-paper-50 tracking-tight group-hover:text-primary-500 transition-colors">{item.label}</span>
+                    <span className="text-label text-ink-900 dark:text-paper-50 group-hover:text-primary-500 transition-colors">{item.label}</span>
                     <div className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
@@ -348,8 +347,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                 className="w-full flex items-center justify-between p-4 rounded-2xl bg-paper-100/50 dark:bg-ink-950/20 border border-paper-200 dark:border-paper-900/10 hover:border-primary-500/30 transition-all group shadow-sm"
               >
                 <div className="text-left">
-                  <p className="text-label font-bold text-ink-900 dark:text-paper-50 tracking-wide">Vault Export</p>
-                  <p className="text-overline text-ink-400 dark:text-paper-700 font-medium tracking-wide mt-1 opacity-60">JSON Snapshot</p>
+                  <p className="text-label text-ink-900 dark:text-paper-50">Vault Export</p>
+                  <p className="text-overline text-ink-400 dark:text-paper-700 mt-1 opacity-60 uppercase">JSON Snapshot</p>
                 </div>
                 <IconBox icon={Download} size="sm" variant="glass" color="ink" className="group-hover:text-primary-500" />
               </button>
@@ -358,8 +357,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                 className="w-full flex items-center justify-between p-4 rounded-2xl bg-paper-100/50 dark:bg-ink-950/20 border border-paper-200 dark:border-paper-900/10 hover:border-success-500/30 transition-all group shadow-sm"
               >
                 <div className="text-left">
-                  <p className="text-label font-bold text-ink-900 dark:text-paper-50 tracking-wide">Import Vault</p>
-                  <p className="text-overline text-ink-400 dark:text-paper-700 font-medium tracking-wide mt-1 opacity-60">Restore Data</p>
+                  <p className="text-label text-ink-900 dark:text-paper-50">Import Vault</p>
+                  <p className="text-overline text-ink-400 dark:text-paper-700 mt-1 opacity-60 uppercase">Restore Data</p>
                 </div>
                 <IconBox icon={Plus} size="sm" variant="glass" color="ink" className="group-hover:text-success-500" />
               </button>
@@ -368,18 +367,18 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
             {/* Import Status Feedback */}
             {importResult && (
-              <GlassCard 
-                variant="flat" 
-                padding="p-4" 
+              <GlassCard
+                variant="flat"
+                padding="p-4"
                 className={`mt-3 ${importResult.success ? 'bg-success-500/[0.03] border-success-500/10' : 'bg-error-500/[0.03] border-error-500/10'} animate-in slide-in-from-top-2 duration-500`}
               >
                 <div className="flex items-center gap-3">
                   <IconBox icon={importResult.success ? CheckCircle : AlertCircle} size="sm" variant="glass" color={importResult.success ? 'success' : 'error'} />
                   <div className="flex-1">
-                    <p className={`text-overline font-bold tracking-wide ${importResult.success ? 'text-success-600' : 'text-error-600'}`}>
+                    <p className={`text-overline ${importResult.success ? 'text-success-600' : 'text-error-600'}`}>
                       {importResult.success ? 'Vault Integrated' : 'Integration Failed'}
                     </p>
-                    <p className="text-overline font-medium mt-1 opacity-60 leading-relaxed font-light">
+                    <p className="text-overline mt-1 opacity-60">
                       {importResult.success
                         ? `Audit complete: ${importResult.imported} of ${importResult.total} entries synchronized.`
                         : importResult.error || 'Identity verification mismatch.'}
@@ -394,8 +393,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               className="w-full flex items-center justify-between p-4 rounded-2xl bg-error-500/[0.03] dark:bg-error-500/[0.01] border border-error-500/10 hover:bg-error-500/10 transition-all group mt-3 shadow-sm"
             >
               <div className="text-left">
-                <p className="text-label font-bold text-error-600 dark:text-error-400 tracking-wide">Purge Protocol</p>
-                <p className="text-overline text-error-500/40 font-bold tracking-wide mt-1">Total Vault Erasure</p>
+                <p className="text-label text-error-600 dark:text-error-400">Purge Protocol</p>
+                <p className="text-overline text-error-500/40 mt-1 uppercase">Total Vault Erasure</p>
               </div>
               <IconBox icon={Trash2} size="sm" variant="glass" color="error" className="group-hover:scale-110 transition-transform" />
             </button>
@@ -422,8 +421,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               <div className="flex items-center gap-4">
                 <IconBox icon={Database} size="lg" variant="glass" color="success" />
                 <div>
-                  <p className="text-body font-bold text-ink-900 dark:text-paper-50 tracking-tight">{importPreview?.totalTransactions} Audit Entries</p>
-                  <p className="text-overline text-success-600 dark:text-success-500 mt-1">Integrity Verified</p>
+                  <p className="text-body text-ink-900 dark:text-paper-50">{importPreview?.totalTransactions} Audit Entries</p>
+                  <p className="text-overline text-success-600 dark:text-success-500 mt-1 uppercase">Integrity Verified</p>
                 </div>
               </div>
             </div>
@@ -435,8 +434,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               ].map(item => (
                 <label key={item.key} className="flex items-center justify-between cursor-pointer group">
                   <div className="flex-1 pr-4">
-                    <p className="text-label font-bold text-ink-900 dark:text-paper-50 tracking-wide group-hover:text-primary-500 transition-colors">{item.label}</p>
-                    <p className="text-overline text-ink-400 dark:text-paper-600 font-medium mt-1 leading-none font-light">{item.desc}</p>
+                    <p className="text-label text-ink-900 dark:text-paper-50 group-hover:text-primary-500 transition-colors">{item.label}</p>
+                    <p className="text-overline text-ink-400 dark:text-paper-600 mt-1 uppercase">{item.desc}</p>
                   </div>
                   <div className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={item.state} onChange={(e) => item.setState(e.target.checked)} className="sr-only peer" />
@@ -477,8 +476,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
             <div className="flex items-start gap-4">
               <IconBox icon={AlertCircle} size="sm" variant="glass" color="error" className="shrink-0 mt-0.5" />
               <div>
-                <p className="text-overline text-error-600 dark:text-error-400 mb-2">High-Risk Operation</p>
-                <p className="text-label text-error-700/60 dark:text-error-500/40 font-medium leading-relaxed font-light">
+                <p className="text-overline text-error-600 dark:text-error-400 mb-2 uppercase">High-Risk Operation</p>
+                <p className="text-label text-error-700/60 dark:text-error-500/40 leading-relaxed">
                   Verification required to initiate total vault erasure protocol.
                 </p>
               </div>
@@ -517,8 +516,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         <div className="flex flex-col items-center gap-6 py-10 px-4">
           <IconBox icon={CheckCircle} size="xl" variant="glass" color="success" className="w-20 h-20 rounded-[2.5rem]" />
           <div className="text-center space-y-2">
-            <p className="text-h4 font-bold text-ink-900 dark:text-paper-50 tracking-tight">Vault Purged</p>
-            <p className="text-label text-ink-500 dark:text-paper-500 px-8 leading-relaxed font-light">
+            <p className="text-h4 text-ink-900 dark:text-paper-50">Vault Purged</p>
+            <p className="text-label text-ink-500 dark:text-paper-500 px-8">
               Operational logs and ledger entries have been permanently decommissioned.
             </p>
           </div>

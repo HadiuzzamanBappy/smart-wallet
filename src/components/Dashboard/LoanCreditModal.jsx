@@ -243,12 +243,12 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                     <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-paper-100 dark:border-white/5">
                         <div className="flex items-center gap-3">
                             <div className="px-4 py-3 rounded-2xl bg-surface-card dark:bg-surface-card-dark border border-paper-100 dark:border-white/5 shadow-sm">
-                                <div className="text-overline text-ink-400 dark:text-paper-700 font-black mb-1 opacity-60 leading-none">Capital Principal</div>
-                                <div className="text-label font-bold text-ink-900 dark:text-paper-50 leading-none tracking-tight">{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</div>
+                                <div className="text-overline text-ink-400 dark:text-paper-700 mb-1 opacity-60">Capital Principal</div>
+                                <div className="text-label text-ink-900 dark:text-paper-50">{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</div>
                             </div>
                             <div className="px-4 py-3 rounded-2xl bg-warning-500/5 border border-warning-500/20 shadow-sm">
-                                <div className="text-overline text-warning-500 font-black mb-1 leading-none">Outstanding Due</div>
-                                <div className="text-h5 font-black text-warning-600 dark:text-warning-400 tracking-tighter leading-none">{formatCurrencyWithUser(totalRemaining, userProfile)}</div>
+                                <div className="text-overline text-warning-500 mb-1">Outstanding Due</div>
+                                <div className="text-h5 text-warning-600 dark:text-warning-400">{formatCurrencyWithUser(totalRemaining, userProfile)}</div>
                             </div>
                         </div>
 
@@ -262,7 +262,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                             >
                                 <User className={`w-3 h-3 ${!showAllItems ? 'text-white' : ''}`} />
                                 <span className={!showAllItems ? 'text-white' : ''}>Unpaid</span>
-                                <span className={`px-1.5 py-0.5 rounded-md text-[9px] ml-1 font-black ${!showAllItems ? 'bg-white/20 text-white' : 'bg-paper-100 dark:bg-white/10 text-ink-400'}`}>{unpaidCount}</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-nano ml-1 ${!showAllItems ? 'bg-white/20 text-white' : 'bg-paper-100 dark:bg-white/10 text-ink-400'}`}>{unpaidCount}</span>
                             </button>
                             <button
                                 onClick={() => setShowAllItems(true)}
@@ -272,7 +272,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                             >
                                 <CheckCircle className={`w-3 h-3 ${showAllItems ? 'text-white' : ''}`} />
                                 <span className={showAllItems ? 'text-white' : ''}>Paid</span>
-                                <span className={`px-1.5 py-0.5 rounded-md text-[9px] ml-1 font-black ${showAllItems ? 'bg-white/20 text-white' : 'bg-paper-100 dark:bg-white/10 text-ink-400'}`}>{paidCount}</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-nano ml-1 ${showAllItems ? 'bg-white/20 text-white' : 'bg-paper-100 dark:bg-white/10 text-ink-400'}`}>{paidCount}</span>
                             </button>
                         </div>
                     </div>
@@ -284,7 +284,7 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                             <div className="w-16 h-16 rounded-3xl bg-paper-100 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-center mb-5 opacity-40">
                                 <AlertCircle className="w-8 h-8 text-ink-400" />
                             </div>
-                            <p className="text-overline text-ink-400 dark:text-paper-700 font-black tracking-widest">{showAllItems ? emptyMessage : `No active ${isLoans ? 'loans' : 'credits'}`}</p>
+                            <p className="text-overline text-ink-400 dark:text-paper-700">{showAllItems ? emptyMessage : `No active ${isLoans ? 'loans' : 'credits'}`}</p>
                         </div>
                     ) : (
                         <div className="flex-1 overflow-y-auto p-5 space-y-3 custom-scrollbar">

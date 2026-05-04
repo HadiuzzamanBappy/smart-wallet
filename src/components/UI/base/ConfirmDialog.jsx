@@ -66,10 +66,10 @@ const ConfirmDialog = ({
           />
 
           <div className="space-y-2">
-            <h3 className="text-h5 font-bold text-ink-900 dark:text-paper-50 tracking-tight">
+            <h3 className="text-h5 text-ink-900 dark:text-paper-50">
               {title}
             </h3>
-            <p className="text-body text-ink-500 dark:text-paper-400 leading-relaxed px-1">
+            <p className="text-body text-ink-500 dark:text-paper-400 px-1">
               {message}
             </p>
           </div>

@@ -110,7 +110,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         <div className="p-4 rounded-3xl bg-paper-100/50 dark:bg-ink-950/20 border border-paper-200 dark:border-paper-900/10 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="w-14 h-14 bg-gradient-to-tr from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-xl shadow-primary-500/10 overflow-hidden border-2 border-white dark:border-ink-950">
+              <div className="w-14 h-14 bg-gradient-to-tr from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-xl shadow-primary-500/10 overflow-hidden border-2 border-white dark:border-ink-950">
                 {user?.photoURL ? (
                   <img 
                     src={user.photoURL} 
@@ -131,11 +131,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex items-center gap-2.5">
                 <IconBox icon={Mail} size="xs" variant="glass" color="ink" className="opacity-40" />
-                <span className="text-label font-bold tracking-wide truncate text-ink-400 dark:text-paper-600">{user?.email}</span>
+                <span className="text-label truncate text-ink-400 dark:text-paper-600">{user?.email}</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <IconBox icon={Calendar} size="xs" variant="glass" color="ink" className="opacity-40" />
-                <span className="text-label font-bold tracking-wide text-ink-300 dark:text-paper-700">
+                <span className="text-label text-ink-300 dark:text-paper-700">
                   Active since {new Date(user?.metadata?.creationTime).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
                 </span>
               </div>
@@ -178,7 +178,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         </div>
 
         <GlassCard variant="flat" padding="p-4" className="bg-primary-500/[0.03] dark:bg-primary-500/[0.01] border-primary-500/10">
-          <p className="text-overline text-primary-600/60 dark:text-primary-400/40 font-bold tracking-wide leading-relaxed text-center opacity-80 font-light">
+          <p className="text-overline text-primary-600/60 dark:text-primary-400/40 text-center opacity-80 uppercase">
             Currency modifications propagate through all analytics and historical logs.
           </p>
         </GlassCard>

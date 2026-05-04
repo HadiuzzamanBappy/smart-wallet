@@ -64,7 +64,7 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000, po
             {getIcon()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-body font-medium text-ink-900 dark:text-paper-50 leading-snug">
+            <p className="text-body text-ink-900 dark:text-paper-50">
               {message}
             </p>
           </div>

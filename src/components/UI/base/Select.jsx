@@ -26,7 +26,7 @@ const Select = ({
                     {label}
                 </label>
             )}
-            
+
             <div className="relative group">
                 <select
                     value={value}
@@ -46,8 +46,8 @@ const Select = ({
                     {...props}
                 >
                     {options.map((opt) => (
-                        <option 
-                            key={opt.value} 
+                        <option
+                            key={opt.value}
                             value={opt.value}
                             className="bg-surface-card dark:bg-surface-card-dark text-ink-900 dark:text-paper-50"
                         >

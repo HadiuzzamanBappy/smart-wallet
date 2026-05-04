@@ -29,7 +29,7 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableS
       >
         {title && (
           <div className="flex items-center justify-between px-5 py-4 border-b border-paper-200 dark:border-paper-900/10 flex-shrink-0">
-            <h3 className="text-h5 font-bold text-ink-900 dark:text-paper-50 tracking-tight">
+            <h3 className="text-h5 text-ink-900 dark:text-paper-50">
               {title}
             </h3>
             <button

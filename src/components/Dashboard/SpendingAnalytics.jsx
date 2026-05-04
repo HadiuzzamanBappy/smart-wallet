@@ -259,14 +259,14 @@ const SpendingAnalytics = () => {
           usePointStyle: true,
           padding: 12,
           boxWidth: 8,
-          font: { size: 10, weight: 'bold' },
+          font: { size: 10 },
           color: 'rgba(115, 126, 154, 0.8)'
         }
       },
       tooltip: {
         backgroundColor: 'rgba(15, 23, 42, 0.9)',
-        titleFont: { size: 11, weight: 'bold' },
-        bodyFont: { size: 12, weight: 'black' },
+        titleFont: { size: 11 },
+        bodyFont: { size: 12 },
         padding: 10,
         cornerRadius: 12,
         displayColors: true,
@@ -285,7 +285,7 @@ const SpendingAnalytics = () => {
           maxRotation: 0,
           autoSkip: true,
           maxTicksLimit: 7,
-          font: { size: 9, weight: 'bold' },
+          font: { size: 9 },
           color: 'rgba(115, 126, 154, 0.5)'
         }
       },
@@ -299,7 +299,7 @@ const SpendingAnalytics = () => {
           callback: function (value) {
             return formatCurrency(value);
           },
-          font: { size: 9, weight: 'bold' },
+          font: { size: 9 },
           color: 'rgba(115, 126, 154, 0.5)',
           maxTicksLimit: 5
         }
@@ -335,7 +335,7 @@ const SpendingAnalytics = () => {
           boxWidth: 8,
           padding: 12,
           usePointStyle: true,
-          font: { size: 10, weight: 'bold' },
+          font: { size: 10 },
           color: 'rgba(115, 126, 154, 0.8)'
         }
       },
@@ -343,8 +343,8 @@ const SpendingAnalytics = () => {
         backgroundColor: 'rgba(15, 23, 42, 0.9)',
         padding: 10,
         cornerRadius: 12,
-        titleFont: { size: 11, weight: 'bold' },
-        bodyFont: { size: 12, weight: 'black' },
+        titleFont: { size: 11 },
+        bodyFont: { size: 12 },
         callbacks: {
           label: function (context) {
             const total = context.dataset.data.reduce((a, b) => a + b, 0) || 0;
@@ -365,8 +365,8 @@ const SpendingAnalytics = () => {
         <div className="w-16 h-16 rounded-3xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
           <BarChart3 className="w-8 h-8 text-ink-400" />
         </div>
-        <h3 className="text-overline text-ink-400 dark:text-paper-700 tracking-[0.3em] mb-2">No Insights Ready</h3>
-        <p className="text-overline text-ink-400/60 dark:text-paper-700/60 max-w-[200px] leading-relaxed">
+        <h3 className="text-overline text-ink-400 dark:text-paper-700 mb-2">No Insights Ready</h3>
+        <p className="text-overline text-ink-400/60 dark:text-paper-700/60 max-w-[200px]">
           Add transactions to activate your visual intelligence suite.
         </p>
       </div>
@@ -385,7 +385,7 @@ const SpendingAnalytics = () => {
           <button
             key={chart.id}
             onClick={() => setActiveChart(chart.id)}
-            className={`flex-1 sm:flex-none px-3 py-1.5 rounded-[14px] text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${activeChart === chart.id
+            className={`flex-1 sm:flex-none px-3 py-1.5 rounded-[14px] text-nano uppercase transition-all duration-300 ${activeChart === chart.id
               ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
               : 'text-ink-400 dark:text-paper-700 hover:text-ink-900 dark:hover:text-paper-50'}`}
           >
@@ -476,10 +476,10 @@ const SpendingAnalytics = () => {
               variant="soft"
               className="mb-2 opacity-40 group-hover:opacity-100"
             />
-            <span className="text-[8px] text-ink-400 dark:text-paper-700 font-black uppercase tracking-[0.1em] mb-1 leading-none">
+            <span className="text-nano text-ink-400 dark:text-paper-700 uppercase mb-1">
               {stat.label}
             </span>
-            <div className={`text-overline font-black tracking-tight ${stat.color} leading-none`}>
+            <div className={`text-overline ${stat.color}`}>
               {stat.value}
             </div>
           </GlassCard>

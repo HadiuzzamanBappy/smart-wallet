@@ -4,7 +4,6 @@ import { TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import { formatCurrencyWithUser } from '../../utils/helpers';
-import { THEME } from '../../config/theme';
 import LoadingSpinner from '../UI/LoadingSpinner';
 
 // Base UI Components
@@ -86,7 +85,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
         ) : monthlyData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <IconBox icon={Calendar} size="lg" color="ink" variant="soft" className="mb-6 opacity-40" />
-            <h3 className="text-overline mb-2 tracking-[0.3em] font-black">No Reports Available</h3>
+            <h3 className="text-overline mb-2 uppercase">No Reports Available</h3>
             <p className="text-overline text-ink-400 dark:text-paper-700 max-w-[200px] leading-relaxed">
               Generate transactions to activate your intelligence suite.
             </p>
@@ -95,7 +94,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
           <>
             {/* Month Selector */}
             <div className="px-1">
-              <label className="text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1 block font-black uppercase tracking-widest leading-none">Select Reporting Period</label>
+              <label className="text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1 block uppercase">Select Reporting Period</label>
               <Select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
@@ -110,7 +109,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
             {!selectedData ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <IconBox icon={Calendar} size="lg" color="ink" variant="soft" className="mb-6 opacity-40" />
-                <h3 className="text-overline font-black uppercase tracking-widest">No Records Found</h3>
+                <h3 className="text-overline uppercase">No Records Found</h3>
               </div>
             ) : (
               <div className="space-y-5">
@@ -120,9 +119,9 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                   <GlassCard padding="p-4" className="!bg-primary-500/5 dark:!bg-primary-500/[0.02] !border-primary-500/10">
                     <div className="flex items-center gap-2.5 mb-3">
                       <IconBox icon={TrendingUp} size="xs" color="primary" variant="soft" />
-                      <span className="text-overline text-primary-600 dark:text-primary-400 font-black uppercase tracking-widest leading-none">Inflow</span>
+                      <span className="text-overline text-primary-600 dark:text-primary-400 uppercase">Inflow</span>
                     </div>
-                    <div className="text-h4 font-black text-ink-900 dark:text-paper-50 tracking-tighter leading-none mb-2">
+                    <div className="text-h4 text-ink-900 dark:text-paper-50 mb-2">
                       {formatCurrencyWithUser(selectedData.income, userProfile)}
                     </div>
                     <div className="text-overline text-ink-400 dark:text-paper-700 opacity-60 leading-none">
@@ -133,9 +132,9 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                   <GlassCard padding="p-4" className="!bg-error-500/5 dark:!bg-error-500/[0.02] !border-error-500/10">
                     <div className="flex items-center gap-2.5 mb-3">
                       <IconBox icon={TrendingDown} size="xs" color="error" variant="soft" />
-                      <span className="text-overline text-error-600 dark:text-error-400 font-black uppercase tracking-widest leading-none">Outflow</span>
+                      <span className="text-overline text-error-600 dark:text-error-400 uppercase">Outflow</span>
                     </div>
-                    <div className="text-h4 font-black text-ink-900 dark:text-paper-50 tracking-tighter leading-none mb-2">
+                    <div className="text-h4 text-ink-900 dark:text-paper-50 mb-2">
                       {formatCurrencyWithUser(selectedData.expense, userProfile)}
                     </div>
                     <div className="text-overline text-ink-400 dark:text-paper-700 opacity-60 leading-none">
@@ -147,12 +146,11 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                 {/* Net Change */}
                 {/* Net Change */}
                 <div className="p-4 rounded-3xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-between">
-                  <span className="text-overline text-ink-400 dark:text-paper-700 font-black uppercase tracking-widest">Net Surplus / Deficit</span>
-                  <Badge 
+                  <span className="text-overline text-ink-400 dark:text-paper-700 uppercase">Net Surplus / Deficit</span>
+                  <Badge
                     color={selectedData.income - selectedData.expense >= 0 ? 'success' : 'error'}
                     variant="soft"
                     size="md"
-                    className="font-black"
                   >
                     {selectedData.income - selectedData.expense >= 0 ? '+' : ''}
                     {formatCurrencyWithUser(selectedData.income - selectedData.expense, userProfile)}
@@ -161,7 +159,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
 
                 {/* Transaction Details */}
                 <div className="space-y-4">
-                  <h4 className="text-overline text-ink-400 dark:text-paper-700 px-1 font-black uppercase tracking-[0.2em] leading-none">Detailed Ledger ({selectedData.transactions.length})</h4>
+                  <h4 className="text-overline text-ink-400 dark:text-paper-700 px-1 uppercase">Detailed Ledger ({selectedData.transactions.length})</h4>
                   <div className="space-y-2 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
                     {selectedData.transactions
                       .filter(tx => tx.type === 'income' || tx.type === 'expense')
@@ -170,7 +168,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                         <div key={tx.id} className="p-4 rounded-2xl bg-surface-card dark:bg-surface-card-dark border border-paper-100 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.04] transition-all group">
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex-1 min-w-0">
-                              <div className="text-label font-bold text-ink-900 dark:text-paper-50 truncate tracking-tight mb-1">
+                              <div className="text-label text-ink-900 dark:text-paper-50 truncate mb-1">
                                 {tx.description}
                               </div>
                               <div className="flex items-center gap-3">
@@ -183,7 +181,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                                 </span>
                               </div>
                             </div>
-                            <div className={`text-label font-black tracking-tight whitespace-nowrap ${tx.type === 'income' ? 'text-primary-600 dark:text-primary-400' : 'text-ink-900 dark:text-paper-50'}`}>
+                            <div className={`text-label whitespace-nowrap ${tx.type === 'income' ? 'text-primary-600 dark:text-primary-400' : 'text-ink-900 dark:text-paper-50'}`}>
                               {tx.type === 'income' ? '+' : '-'}{formatCurrencyWithUser(tx.amount, userProfile)}
                             </div>
                           </div>

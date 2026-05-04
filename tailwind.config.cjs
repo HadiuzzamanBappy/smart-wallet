@@ -104,6 +104,8 @@ module.exports = {
         'body': ['14px', { lineHeight: '1.2rem', letterSpacing: '-0.01em', fontWeight: '300' }],
         'label': ['11px', { lineHeight: '1rem', letterSpacing: '0.025em', fontWeight: '500' }],
         'overline': ['10px', { lineHeight: '1rem', letterSpacing: '0.2em', fontWeight: '500' }],
+        'button': ['15px', { lineHeight: '1rem', letterSpacing: '0.025em', fontWeight: '600' }],
+        'nano': ['9px', { lineHeight: '0.75rem', letterSpacing: '0.05em', fontWeight: '500' }],
 
         // Data Values
         'value': ['14px', { lineHeight: '1.25rem', letterSpacing: '-0.02em', fontWeight: '300' }],

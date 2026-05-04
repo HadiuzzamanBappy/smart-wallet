@@ -30,16 +30,16 @@ const DebtItem = ({
                         size="sm"
                     />
                     <div className="min-w-0">
-                        <h4 className="text-label font-bold text-ink-900 dark:text-paper-50 truncate leading-tight tracking-tight">{item.description}</h4>
+                        <h4 className="text-label text-ink-900 dark:text-paper-50 truncate">{item.description}</h4>
                         <div className="flex items-center gap-3 mt-1.5">
                             <div className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3 text-ink-400 dark:text-paper-700 opacity-40" />
-                                <span className="text-overline text-ink-400 dark:text-paper-700 font-black leading-none">{formatDate(item.date)}</span>
+                                <span className="text-overline text-ink-400 dark:text-paper-700">{formatDate(item.date)}</span>
                             </div>
                             {item.category && (
                                 <div className="flex items-center gap-1.5">
                                     <div className="w-1 h-1 rounded-full bg-primary-500" />
-                                    <span className="text-overline text-ink-400 dark:text-paper-700 font-black leading-none">{item.category}</span>
+                                    <span className="text-overline text-ink-400 dark:text-paper-700">{item.category}</span>
                                 </div>
                             )}
                         </div>
@@ -69,23 +69,23 @@ const DebtItem = ({
 
             <div className="grid grid-cols-2 gap-4 mb-4 bg-paper-100/30 dark:bg-white/[0.02] p-3 rounded-2xl border border-paper-100 dark:border-white/5">
                 <div className="space-y-1">
-                    <div className="text-overline text-ink-400 dark:text-paper-700 font-black leading-none">Principal</div>
-                    <div className="text-label font-bold text-ink-900 dark:text-paper-50 tracking-tight leading-none opacity-40">{formatCurrencyWithUser(item.amount, userProfile)}</div>
+                    <div className="text-overline text-ink-400 dark:text-paper-700">Principal</div>
+                    <div className="text-label text-ink-900 dark:text-paper-50 opacity-40">{formatCurrencyWithUser(item.amount, userProfile)}</div>
                 </div>
                 <div className="space-y-1">
-                    <div className="text-overline text-warning-500 font-black leading-none">Remaining</div>
-                    <div className="text-h5 font-black text-warning-600 dark:text-warning-400 tracking-tighter leading-none">{formatCurrencyWithUser(item.remainingAmount, userProfile)}</div>
+                    <div className="text-overline text-warning-500">Remaining</div>
+                    <div className="text-h5 text-warning-600 dark:text-warning-400">{formatCurrencyWithUser(item.remainingAmount, userProfile)}</div>
                 </div>
             </div>
 
             {item.adjustmentHistory?.length > 0 && (
                 <div className="mb-4 p-3 bg-primary-500/[0.03] dark:bg-primary-500/[0.01] rounded-2xl border border-primary-500/10">
-                    <div className="text-overline text-primary-600 dark:text-primary-400 font-black mb-2 opacity-60 leading-none">Adjustment History</div>
+                    <div className="text-overline text-primary-600 dark:text-primary-400 mb-2 opacity-60">Adjustment History</div>
                     <div className="space-y-1.5">
                         {item.adjustmentHistory.slice(-2).map((adj, idx) => (
-                            <div key={idx} className="flex justify-between items-center text-[10px]">
-                                <span className="text-ink-400 dark:text-paper-700 truncate mr-3 font-bold opacity-70 leading-none">{adj.reason || 'Correction'}</span>
-                                <span className={`font-black tracking-widest leading-none ${adj.amount > 0 ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
+                            <div key={idx} className="flex justify-between items-center text-nano">
+                                <span className="text-ink-400 dark:text-paper-700 truncate mr-3 opacity-70">{adj.reason || 'Correction'}</span>
+                                <span className={`${adj.amount > 0 ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
                                     {adj.amount > 0 ? '+' : ''}{formatCurrencyWithUser(adj.amount, userProfile)}
                                 </span>
                             </div>
@@ -105,7 +105,7 @@ const DebtItem = ({
                     icon={!hasRemainingAmount ? CheckCircle : Plus}
                     className="flex-1 h-10"
                 >
-                    <span className="text-overline font-black tracking-widest">
+                    <span className="text-overline">
                         {!hasRemainingAmount ? `Settled` : `Record ${isLoans ? 'Repayment' : 'Collection'}`}
                     </span>
                 </Button>

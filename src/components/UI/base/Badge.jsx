@@ -27,8 +27,8 @@ const Badge = ({
     };
 
     const sizes = {
-        sm: 'px-2 py-0.5 text-overline tracking-wide',
-        md: 'px-2.5 py-1 text-label tracking-tight',
+        sm: 'px-2 py-0.5 text-overline',
+        md: 'px-2.5 py-1 text-label',
         lg: 'px-3.5 py-1.5 text-body'
     };
 

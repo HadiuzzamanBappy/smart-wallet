@@ -3,7 +3,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { useSummaryStats } from '../../hooks/useSummaryStats';
 import { Wallet, TrendingUp, TrendingDown, DollarSign, RefreshCw, Eye, BarChart3 } from 'lucide-react';
 import { formatCurrencyWithUser } from '../../utils/helpers';
-import { THEME } from '../../config/theme';
 import AddTransactionModal from './AddTransactionModal';
 import LoanCreditModal from './LoanCreditModal';
 import MonthlyBreakdownModal from './MonthlyBreakdownModal';
@@ -102,23 +101,23 @@ const CompactSummary = () => {
                 padding="p-4"
               >
                 <div className="flex items-center gap-3.5 relative z-10">
-                  <IconBox 
-                    icon={card.icon} 
-                    size="sm" 
-                    color={card.color} 
+                  <IconBox
+                    icon={card.icon}
+                    size="sm"
+                    color={card.color}
                     variant="soft"
-                    className="group-hover:scale-110 transition-transform" 
+                    className="group-hover:scale-110 transition-transform"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="text-overline text-ink-400 dark:text-paper-700 tracking-widest mb-1 leading-none">
+                    <div className="text-overline text-ink-400 dark:text-paper-700 mb-1">
                       {card.label}
                     </div>
                     <div className="flex items-baseline gap-2 flex-wrap min-w-0">
-                      <span className="text-h5 font-black text-ink-900 dark:text-paper-50 tracking-tighter truncate leading-none">
+                      <span className="text-h5 text-ink-900 dark:text-paper-50 truncate">
                         {card.value}
                       </span>
                       {card.total && (
-                        <span className="text-overline text-ink-400 dark:text-paper-700 opacity-60 truncate tracking-tight">
+                        <span className="text-overline text-ink-400 dark:text-paper-700 opacity-60 truncate">
                           / {card.total}
                         </span>
                       )}
@@ -153,4 +152,4 @@ const CompactSummary = () => {
   );
 };
 
-export default CompactSummary;
+export default CompactSummary;

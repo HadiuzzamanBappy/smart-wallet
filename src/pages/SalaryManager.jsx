@@ -6,7 +6,7 @@ import SalaryResult from '../components/SalaryManager/SalaryResult';
 import { RefreshCw } from 'lucide-react';
 
 export default function SalaryManager({ userId, onClose, initialView }) {
-  const [view, setView] = useState(initialView || 'loading'); // Start with initialView if possible
+  const [view, setView] = useState('loading'); // Always start with loading to fetch data first
   const [currentForm, setCurrentForm] = useState(null);
   const [currentPlan, setCurrentPlan] = useState(null);
   const [currentAdvice, setCurrentAdvice] = useState(null);
@@ -24,7 +24,7 @@ export default function SalaryManager({ userId, onClose, initialView }) {
           };
           setCurrentPlan(recalculated);
           setCurrentAdvice(plan.aiAdvice);
-          
+
           // Only change view if it was still loading
           if (view === 'loading') {
             setView(initialView || 'result');

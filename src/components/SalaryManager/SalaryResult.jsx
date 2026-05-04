@@ -115,12 +115,12 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <GlassCard padding="p-4" className="group relative flex flex-col justify-between overflow-hidden">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest">Health Index</span>
+              <span className="text-overline text-ink-400 dark:text-paper-700">Health Index</span>
               <div className={`w-2 h-2 rounded-full ${status.color === 'teal' ? 'bg-primary-500 shadow-[0_0_8px_rgba(20,184,166,0.5)]' : status.color === 'blue' ? 'bg-info-500' : 'bg-warning-500'}`} />
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-h2 font-black text-ink-900 dark:text-paper-50 tracking-tighter">{healthScore}</span>
-              <span className="text-overline text-ink-400 dark:text-paper-700 tracking-tighter">/ 100</span>
+              <span className="text-h2 text-ink-900 dark:text-paper-50">{healthScore}</span>
+              <span className="text-overline text-ink-400 dark:text-paper-700">/ 100</span>
             </div>
             <div className="absolute -bottom-2 -right-2 opacity-[0.03] dark:opacity-[0.07]">
               <Activity size={48} />
@@ -128,23 +128,23 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
           </GlassCard>
 
           <GlassCard padding="p-4" className="group relative flex flex-col justify-between overflow-hidden">
-            <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest mb-2">Net Surplus</span>
-            <div className={`text-h3 font-black tracking-tighter ${isDeficit ? 'text-error-600 dark:text-error-400' : 'text-primary-600 dark:text-primary-400'}`}>
+            <span className="text-overline text-ink-400 dark:text-paper-700 mb-2">Net Surplus</span>
+            <div className={`text-h3 ${isDeficit ? 'text-error-600 dark:text-error-400' : 'text-primary-600 dark:text-primary-400'}`}>
               {isDeficit ? '-' : '+'}{c(Math.abs(net))}
             </div>
             <div className="flex items-center gap-1.5 mt-1">
               <Zap className="w-2.5 h-2.5 text-warning-500" />
-              <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest">Daily Limit: {c(dailyLimit)}</span>
+              <span className="text-overline text-ink-400 dark:text-paper-700">Daily Limit: {c(dailyLimit)}</span>
             </div>
           </GlassCard>
 
           <GlassCard padding="p-4" className="group relative flex flex-col justify-between overflow-hidden">
-            <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest mb-2">Liquidity Runway</span>
+            <span className="text-overline text-ink-400 dark:text-paper-700 mb-2">Liquidity Runway</span>
             <div className="flex items-baseline gap-1">
-              <span className="text-h2 font-black text-ink-900 dark:text-paper-50 tracking-tighter">
+              <span className="text-h2 text-ink-900 dark:text-paper-50">
                 {planData.runwayMonths > 500 ? '∞' : planData.runwayMonths.toFixed(1)}
               </span>
-              <span className="text-overline text-ink-400 dark:text-paper-700 tracking-tighter">Months</span>
+              <span className="text-overline text-ink-400 dark:text-paper-700">Months</span>
             </div>
             <div className="mt-2 w-full h-1 bg-paper-200 dark:bg-white/5 rounded-full overflow-hidden">
               <div className="h-full bg-success-500/60" style={{ width: `${Math.min(planData.efProgress * 100, 100)}%` }} />
@@ -152,9 +152,9 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
           </GlassCard>
 
           <GlassCard padding="p-4" className="group relative flex flex-col justify-between overflow-hidden">
-            <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest mb-2">Retention Rate</span>
+            <span className="text-overline text-ink-400 dark:text-paper-700 mb-2">Retention Rate</span>
             <div className="flex items-baseline gap-1">
-              <span className="text-h2 font-black text-info-600 dark:text-info-400 tracking-tighter">{savingsPctActual}%</span>
+              <span className="text-h2 text-info-600 dark:text-info-400">{savingsPctActual}%</span>
             </div>
             <div className="mt-2 w-full h-1 bg-paper-200 dark:bg-white/5 rounded-full overflow-hidden">
               <div className="h-full bg-info-500/60" style={{ width: `${Math.min(savingsPctActual * 5, 100)}%` }} />
@@ -169,7 +169,7 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
             <GlassCard padding="p-5" className="relative overflow-hidden">
               <div className="flex items-center gap-2.5 mb-6">
                 <IconBox icon={BarChart3} size="xs" color="primary" variant="soft" />
-                <h3 className="text-overline text-ink-400 dark:text-paper-700 tracking-widest leading-none">Allocation Matrix</h3>
+                <h3 className="text-overline text-ink-400 dark:text-paper-700 leading-none">Allocation Matrix</h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -180,13 +180,13 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
                 ].map(item => (
                   <div key={item.label} className="space-y-3">
                     <div className="flex justify-between items-end">
-                      <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest">{item.label}</span>
-                      <span className="text-h5 font-black text-ink-900 dark:text-paper-50 leading-none tracking-tighter">{item.val}%</span>
+                      <span className="text-overline text-ink-400 dark:text-paper-700">{item.label}</span>
+                      <span className="text-h5 text-ink-900 dark:text-paper-50 leading-none">{item.val}%</span>
                     </div>
                     <div className="h-1.5 bg-paper-100 dark:bg-white/5 rounded-full overflow-hidden">
                       <div className={`h-full bg-${item.color}-500/80 transition-all duration-1000`} style={{ width: `${item.val}%` }} />
                     </div>
-                    <div className="flex justify-between text-overline text-ink-400 dark:text-paper-700 tracking-widest">
+                    <div className="flex justify-between text-overline text-ink-400 dark:text-paper-700">
                       <span>{item.amount}</span>
                       <span>{item.limit}</span>
                     </div>
@@ -205,19 +205,19 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                   <div className="space-y-4">
                     <div>
-                      <p className="text-overline text-ink-400 dark:text-paper-700 tracking-widest mb-1">Goal: {c(planData.goal)}</p>
-                      <div className="text-h2 font-black text-ink-900 dark:text-paper-50 tracking-tighter">
-                        {c(planData.monthlyForGoal)}<span className="text-overline text-ink-400 dark:text-paper-700 ml-1.5 tracking-widest">/ Month</span>
+                      <p className="text-overline text-ink-400 dark:text-paper-700 mb-1">Goal: {c(planData.goal)}</p>
+                      <div className="text-h2 text-ink-900 dark:text-paper-50">
+                        {c(planData.monthlyForGoal)}<span className="text-overline text-ink-400 dark:text-paper-700 ml-1.5">/ Month</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="flex flex-col">
-                        <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest mb-0.5">Projection</span>
-                        <span className="text-label font-black text-primary-600 dark:text-primary-400">{c(planData.projectedAssets)}</span>
+                        <span className="text-overline text-ink-400 dark:text-paper-700 mb-0.5">Projection</span>
+                        <span className="text-label text-primary-600 dark:text-primary-400">{c(planData.projectedAssets)}</span>
                       </div>
                       <div className="flex flex-col border-l border-paper-200 dark:border-white/10 pl-6">
-                        <span className="text-overline text-ink-400 dark:text-paper-700 tracking-widest mb-0.5">Timeline</span>
-                        <span className="text-label font-black text-ink-900 dark:text-paper-50 tracking-widest">{planData.goalMonths} Months</span>
+                        <span className="text-overline text-ink-400 dark:text-paper-700 mb-0.5">Timeline</span>
+                        <span className="text-label text-ink-900 dark:text-paper-50">{planData.goalMonths} Months</span>
                       </div>
                     </div>
                   </div>
@@ -274,16 +274,16 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
         <GlassCard padding="p-5" className="bg-gradient-to-br from-primary-500/[0.03] to-transparent dark:from-primary-500/[0.07] border-primary-500/10 relative overflow-hidden">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
-            <span className="text-overline text-primary-600 dark:text-primary-400 tracking-[0.4em]">Strategic Advisory</span>
+            <span className="text-overline text-primary-600 dark:text-primary-400">Strategic Advisory</span>
           </div>
           {loading ? (
             <div className="py-6 flex flex-col items-center justify-center gap-3">
               <RefreshCw className="w-5 h-5 text-primary-500 animate-spin" />
-              <p className="text-overline text-primary-500/40 tracking-widest animate-pulse">Neural Synthesis Active...</p>
+              <p className="text-overline text-primary-500/40 animate-pulse">Neural Synthesis Active...</p>
             </div>
           ) : (
             <div className="relative z-10">
-              <p className="text-body text-ink-600 dark:text-paper-400 leading-relaxed font-bold tracking-[0.05em] opacity-80 whitespace-pre-line italic">
+              <p className="text-body text-ink-600 dark:text-paper-400 opacity-80 whitespace-pre-line italic">
                 {currentAdvice || "Neural synthesis offline."}
               </p>
             </div>

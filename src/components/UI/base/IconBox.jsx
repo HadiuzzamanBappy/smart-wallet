@@ -7,7 +7,8 @@ const IconBox = ({
     bgClass = '',
     size = 'md',
     variant = 'soft',
-    className = ''
+    className = '',
+    ...props
 }) => {
     if (!Icon) return null;
 
@@ -83,6 +84,7 @@ const IconBox = ({
 
     return (
         <div
+            {...props}
             className={`
                 shrink-0 flex items-center justify-center 
                 transition-all duration-300

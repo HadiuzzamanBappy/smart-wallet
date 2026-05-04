@@ -17,7 +17,7 @@ const Button = ({
     type = 'button'
 }) => {
 
-    const baseStyles = "inline-flex items-center justify-center gap-2 font-bold transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed";
+    const baseStyles = "inline-flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed";
 
     // Semantic color configurations
     const colorConfigs = {
@@ -86,7 +86,7 @@ const Button = ({
     const sizes = {
         xsm: "px-2.5 py-1 text-overline rounded-xl",
         sm: "px-3.5 py-2 text-label rounded-xl",
-        md: "px-5 py-3 text-body rounded-2xl",
+        md: "px-5 py-3 text-button rounded-2xl",
         lg: "px-7 py-3.5 text-h6 rounded-2xl",
         icon: "p-2.5 rounded-xl aspect-square"
     };

@@ -69,7 +69,7 @@ export const LoadingOverlay = ({ loading, children, text = 'Processing...' }) =>
         <div className="absolute inset-0 bg-white/40 dark:bg-black/60 flex items-center justify-center backdrop-blur-[4px] z-10 animate-in fade-in duration-300">
           <div className="flex flex-col items-center">
             <LoadingSpinner size="lg" />
-            {text && <p className="mt-4 text-overline font-black tracking-[0.2em] text-ink-500 dark:text-paper-500 animate-pulse">{text}</p>}
+            {text && <p className="mt-4 text-overline text-ink-500 dark:text-paper-500 animate-pulse">{text}</p>}
           </div>
         </div>
       )}

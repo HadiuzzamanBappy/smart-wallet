@@ -19,7 +19,6 @@ import Modal from '../UI/base/Modal';
 import { TransactionListSkeleton } from '../UI/SkeletonLoader';
 
 // Base UI Components
-import { THEME } from '../../config/theme';
 import Button from '../UI/base/Button';
 import GlassInput from '../UI/base/GlassInput';
 import Select from '../UI/base/Select';
@@ -185,23 +184,20 @@ const TransactionList = ({ onTransactionChange }) => {
         <div className="px-4 py-4 space-y-3 border-b border-paper-100 dark:border-white/5 bg-paper-100/10 dark:bg-white/[0.01]">
           {/* Filters Bar - Executive Style Compact */}
           <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-ink-400" />
-              <input
-                type="text"
-                placeholder="Audit search..."
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="w-full pl-8 pr-4 h-8 rounded-2xl bg-paper-100/50 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 text-[9px] font-black uppercase tracking-widest text-ink-900 dark:text-paper-50 placeholder:text-ink-400 dark:placeholder:text-paper-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
-              />
-            </div>
+            <GlassInput
+              size="sm"
+              icon={Search}
+              placeholder="Audit search..."
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              className="flex-1"
+            />
 
             <div className="grid grid-cols-3 gap-2">
               <Select
                 value={filters.type}
                 onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
                 size="sm"
-                className="!h-8 !text-[9px] !rounded-xl"
                 options={[
                   { label: 'All Types', value: 'all' },
                   { label: 'Income', value: 'income' },
@@ -217,7 +213,6 @@ const TransactionList = ({ onTransactionChange }) => {
                 value={filters.category}
                 onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
                 size="sm"
-                className="!h-8 !text-[9px] !rounded-xl"
                 options={[
                   { label: 'All Cats', value: 'all' },
                   ...getUniqueCategories().map(c => ({ label: c, value: c }))
@@ -228,7 +223,6 @@ const TransactionList = ({ onTransactionChange }) => {
                 value={filters.dateRange}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
                 size="sm"
-                className="!h-8 !text-[9px] !rounded-xl"
                 options={[
                   { label: 'All Time', value: 'all' },
                   { label: '7 days', value: '7' },
@@ -270,12 +264,12 @@ const TransactionList = ({ onTransactionChange }) => {
 
                     {/* Middle: Executive Typography */}
                     <div className="min-w-0">
-                      <p className="text-label font-bold text-ink-900 dark:text-paper-50 truncate mb-1 tracking-tight">{transaction.description}</p>
+                      <p className="text-label text-ink-900 dark:text-paper-50 truncate mb-1">{transaction.description}</p>
                       <div className="flex items-center gap-3">
                         <Badge color="primary" variant="soft" size="sm" className="bg-paper-100/50 dark:bg-white/5 h-4 !px-1.5">
-                          <span className="text-[8px] font-black uppercase tracking-widest text-ink-400 dark:text-paper-700">{dc}</span>
+                          <span className="text-nano uppercase text-ink-400 dark:text-paper-700">{dc}</span>
                         </Badge>
-                        <span className="text-[9px] font-bold text-ink-400 dark:text-paper-700">
+                        <span className="text-nano">
                           {formatDate(transaction.createdAt)}
                         </span>
                       </div>
@@ -283,7 +277,7 @@ const TransactionList = ({ onTransactionChange }) => {
 
                     {/* Right: Premium Currency & Quick Actions */}
                     <div className="flex flex-col items-end gap-1.5">
-                      <div className={`text-label font-black whitespace-nowrap tracking-tight ${isPositive ? 'text-success-600 dark:text-success-400' : 'text-ink-900 dark:text-paper-50'}`}>
+                      <div className={`text-label whitespace-nowrap ${isPositive ? 'text-success-600 dark:text-success-400' : 'text-ink-900 dark:text-paper-50'}`}>
                         {isPositive ? '+' : '-'}{formatCurrency(transaction.amount, currency)}
                       </div>
                       <div className="flex gap-1 transition-all">
@@ -375,7 +369,7 @@ const TransactionList = ({ onTransactionChange }) => {
             <GlassCard padding="p-5" className="flex items-center justify-between gap-4 !bg-paper-100/30 dark:!bg-white/[0.02]">
               <div>
                 <div className="text-overline text-ink-400 dark:text-paper-700 mb-2">Net Adjustment</div>
-                <div className={`text-h2 font-black tracking-tighter ${adjustmentDetail.type === 'collection' ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
+                <div className={`text-h2 tracking-tighter ${adjustmentDetail.type === 'collection' ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
                   {adjustmentDetail.type === 'collection' ? '+' : '-'}{formatCurrency(adjustmentDetail.amount, currency)}
                 </div>
               </div>
@@ -393,22 +387,22 @@ const TransactionList = ({ onTransactionChange }) => {
               {adjustmentDetail.originalAmount !== undefined && (
                 <GlassCard padding="p-4" className="!bg-paper-100/30 dark:!bg-white/[0.02]">
                   <div className="text-overline text-ink-400 dark:text-paper-700 mb-2">Original Principal</div>
-                  <div className="text-body font-black text-ink-900 dark:text-paper-50 tracking-tight">{formatCurrency(adjustmentDetail.originalAmount, currency)}</div>
+                  <div className="text-body text-ink-900 dark:text-paper-50">{formatCurrency(adjustmentDetail.originalAmount, currency)}</div>
                 </GlassCard>
               )}
               <GlassCard padding="p-4" className="!bg-paper-100/30 dark:!bg-white/[0.02]">
                 <div className="text-overline text-ink-400 dark:text-paper-700 mb-2">Audit Timestamp</div>
-                <div className="text-body font-black text-ink-900 dark:text-paper-50 tracking-tight">{formatDate(adjustmentDetail.createdAt)}</div>
+                <div className="text-body text-ink-900 dark:text-paper-50">{formatDate(adjustmentDetail.createdAt)}</div>
               </GlassCard>
               <GlassCard padding="p-4" className="!bg-paper-100/30 dark:!bg-white/[0.02] col-span-2">
                 <div className="text-overline text-ink-400 dark:text-paper-700 mb-2">Reference Entity</div>
-                <div className="text-body font-black text-ink-900 dark:text-paper-50 tracking-tight truncate">{adjustmentDetail.originalDescription || 'No Reference Found'}</div>
+                <div className="text-body text-ink-900 dark:text-paper-50 truncate">{adjustmentDetail.originalDescription || 'No Reference Found'}</div>
               </GlassCard>
             </div>
 
             <div>
               <div className="text-overline text-ink-400 dark:text-paper-700 mb-2.5 px-1">Internal Audit Notes</div>
-              <GlassCard padding="p-5" className="!bg-paper-100/30 dark:!bg-black/20 text-body font-bold text-ink-900 dark:text-paper-50 leading-relaxed">
+              <GlassCard padding="p-5" className="!bg-paper-100/30 dark:!bg-black/20 text-body text-ink-900 dark:text-paper-50 leading-relaxed">
                 {adjustmentDetail.description || 'No manual notes recorded for this operation.'}
               </GlassCard>
             </div>
@@ -416,7 +410,7 @@ const TransactionList = ({ onTransactionChange }) => {
             <Button fullWidth onClick={() => setAdjustmentModalOpen(false)} color="ink" variant="soft">Close Audit</Button>
           </div>
         ) : (
-          <div className="py-12 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">Audit Data Unavailable</div>
+          <div className="py-12 text-center text-nano uppercase text-gray-400">Audit Data Unavailable</div>
         )}
       </Modal>
 
