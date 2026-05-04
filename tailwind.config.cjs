@@ -93,19 +93,19 @@ module.exports = {
       },
       fontSize: {
         // Executive Typographic Scale (Ultra-Thin)
-        'h1': ['2.25rem', { lineHeight: '2.5rem', letterSpacing: '-0.05em', fontWeight: '300' }],
-        'h2': ['1.875rem', { lineHeight: '2.25rem', letterSpacing: '-0.04em', fontWeight: '300' }],
-        'h3': ['1.5rem', { lineHeight: '2rem', letterSpacing: '-0.03em', fontWeight: '200' }],
-        'h4': ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '-0.02em', fontWeight: '200' }],
-        'h5': ['1.125rem', { lineHeight: '1.5rem', letterSpacing: '-0.01em', fontWeight: '200' }],
-        'h6': ['1rem', { lineHeight: '1.5rem', letterSpacing: '0', fontWeight: '200' }],
+        'h1': ['2.25rem', { lineHeight: '2.5rem', letterSpacing: '-0.05em', fontWeight: '400' }],
+        'h2': ['1.875rem', { lineHeight: '2.25rem', letterSpacing: '-0.04em', fontWeight: '400' }],
+        'h3': ['1.5rem', { lineHeight: '2rem', letterSpacing: '-0.03em', fontWeight: '500' }],
+        'h4': ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '-0.02em', fontWeight: '500' }],
+        'h5': ['1.125rem', { lineHeight: '1.5rem', letterSpacing: '-0.01em', fontWeight: '500' }],
+        'h6': ['1rem', { lineHeight: '1.5rem', letterSpacing: '0', fontWeight: '500' }],
 
         // UI & Content
         'body': ['14px', { lineHeight: '1.2rem', letterSpacing: '-0.01em', fontWeight: '300' }],
-        'label': ['11px', { lineHeight: '1rem', letterSpacing: '0.025em', fontWeight: '500' }],
-        'overline': ['10px', { lineHeight: '1rem', letterSpacing: '0.2em', fontWeight: '500' }],
-        'button': ['15px', { lineHeight: '1rem', letterSpacing: '0.025em', fontWeight: '600' }],
-        'nano': ['9px', { lineHeight: '0.75rem', letterSpacing: '0.05em', fontWeight: '500' }],
+        'label': ['11px', { lineHeight: '1rem', letterSpacing: '0.1em', fontWeight: '500' }],
+        'overline': ['10px', { lineHeight: '1rem', letterSpacing: '0.1em', fontWeight: '500' }],
+        'button': ['15px', { lineHeight: '1rem', letterSpacing: '0.1em', fontWeight: '500' }],
+        'nano': ['9px', { lineHeight: '0.75rem', letterSpacing: '0.1em', fontWeight: '500' }],
 
         // Data Values
         'value': ['14px', { lineHeight: '1.25rem', letterSpacing: '-0.02em', fontWeight: '300' }],

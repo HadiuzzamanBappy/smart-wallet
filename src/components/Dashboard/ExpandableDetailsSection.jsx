@@ -149,9 +149,9 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
                 }`}>
                   {section.title}
                 </h3>
-                <p className={`text-nano ${isActive
-                    ? 'text-primary-600 dark:text-primary-400'
-                    : 'text-ink-400 dark:text-paper-700'
+                <p className={`text-nano opacity-30 ${isActive
+                    ? 'text-primary-600 dark:text-primary-400 font-bold'
+                    : 'text-ink-300 dark:text-paper-900'
                   }`}>
                   {section.description}
                 </p>

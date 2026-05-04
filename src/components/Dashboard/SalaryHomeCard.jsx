@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit3, BarChart2 } from 'lucide-react';
+import { Edit3, BarChart2, ArrowUp, ArrowDown } from 'lucide-react';
 import { getSalaryPlan } from '../../services/salaryService';
 import { BudgetSkeleton } from '../UI/SkeletonLoader';
 import { APP_EVENTS } from '../../config/constants';
@@ -129,9 +129,6 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
                 <div className="text-h5 text-ink-900 dark:text-paper-50">
                   {planData.currencySymbol}{Math.round(totalAssets).toLocaleString()}
                 </div>
-                <Badge color="primary" variant="soft" size="sm" className="opacity-40">
-                  <span className="text-nano uppercase">Assets</span>
-                </Badge>
                 {runway > 0 && (
                   <Badge color="warning" variant="soft" size="sm">
                     {runway.toFixed(1)}m Runway
@@ -144,14 +141,39 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
 
         <div className="grid grid-cols-3 gap-2.5 mb-4">
           {[
-            { label: 'Needs', pct: needsPct, val: totalNeeds, color: 'text-ink-400' },
-            { label: 'Wants', pct: wantsPct, val: totalWants, color: 'text-ink-400' },
-            { label: 'Saving', pct: savePct, val: totalSavings, color: 'text-primary-500' },
+            {
+              label: 'Needs',
+              pct: needsPct,
+              target: 50,
+              val: totalNeeds,
+              color: needsPct > 50 ? 'text-error-600 dark:text-error-400' : 'text-info-600 dark:text-info-400'
+            },
+            {
+              label: 'Wants',
+              pct: wantsPct,
+              target: 30,
+              val: totalWants,
+              color: wantsPct > 30 ? 'text-error-600 dark:text-error-400' : 'text-warning-600 dark:text-warning-400'
+            },
+            {
+              label: 'Saving',
+              pct: savePct,
+              target: 20,
+              val: totalSavings,
+              color: savePct < 20 ? 'text-error-600 dark:text-error-400' : 'text-primary-600 dark:text-primary-400'
+            },
           ].map((item, i) => (
-            <div key={i} className="bg-paper-100/30 dark:bg-white/[0.01] py-2.5 px-2 rounded-2xl border border-paper-100 dark:border-white/5 flex flex-col items-center justify-center text-center">
-              <span className="text-nano text-ink-400 dark:text-paper-700 uppercase mb-1">{item.label}</span>
-              <div className={`text-nano ${item.color} mb-1.5`}>{item.pct}%</div>
-              <span className="text-nano text-ink-900 dark:text-paper-50">
+            <div key={i} className={`bg-paper-100/30 dark:bg-white/[0.01] py-2.5 px-2 rounded-2xl border transition-all duration-500 flex flex-col items-center justify-center text-center ${item.color.includes('error') ? 'border-error-500/20 bg-error-500/5' : 'border-paper-100 dark:border-white/5'
+              }`}>
+              <span className={`text-nano uppercase mb-1 ${item.color.includes('error') ? 'text-error-600/60 dark:text-error-400/60' : 'text-ink-400 dark:text-paper-700'}`}>{item.label}</span>
+              <div className="flex items-center justify-center gap-1 mb-1.5 min-w-0">
+                <div className={`text-nano font-bold ${item.color} shrink-0`}>{item.pct}%</div>
+                <div className="flex items-center gap-0.5 opacity-30 text-[8px] font-black uppercase tracking-tighter shrink-0">
+                  {item.pct > item.target ? <ArrowUp size={7} strokeWidth={3} /> : <ArrowDown size={7} strokeWidth={3} />}
+                  <span>{item.target}%</span>
+                </div>
+              </div>
+              <span className="text-nano text-ink-900 dark:text-paper-50 font-medium">
                 {planData.currencySymbol}{Math.round(item.val).toLocaleString()}
               </span>
             </div>
@@ -159,13 +181,21 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
         </div>
 
         <div className="flex gap-2.5">
-          <div className="flex-[2] bg-primary-500/5 dark:bg-primary-500/[0.02] rounded-2xl py-2.5 px-3 flex flex-col items-center justify-center text-primary-600 dark:text-primary-400 border border-primary-500/10 hover:bg-primary-500/10 transition-colors">
+          <div className={`flex-[2] rounded-2xl py-2.5 px-3 flex flex-col items-center justify-center border transition-colors ${totalSurplus >= 0
+            ? 'bg-primary-500/5 dark:bg-primary-500/[0.02] text-primary-600 dark:text-primary-400 border-primary-500/10 hover:bg-primary-500/10'
+            : 'bg-error-500/5 dark:bg-error-500/[0.02] text-error-600 dark:text-error-400 border-error-500/10 hover:bg-error-500/10'
+            }`}>
             <span className="text-nano uppercase opacity-60 mb-1">Net Surplus</span>
-            <span className="text-nano">{planData.currencySymbol}{Math.round(totalSurplus).toLocaleString()}</span>
+            <span className="text-nano font-bold">{planData.currencySymbol}{Math.round(totalSurplus).toLocaleString()}</span>
           </div>
-          <div className="flex-[3] bg-paper-100/30 dark:bg-white/[0.01] rounded-2xl py-2.5 px-4 border border-paper-100 dark:border-white/5 flex justify-between items-center group/limit hover:bg-white dark:hover:bg-white/[0.04] transition-colors">
-            <span className="text-nano text-ink-400 dark:text-paper-700 uppercase">Daily Ops</span>
-            <span className="text-nano text-ink-900 dark:text-paper-50">{planData.currencySymbol}{Math.round(dailyLimit).toLocaleString()}</span>
+          <div className={`flex-[3] rounded-2xl py-2.5 px-4 border flex justify-between items-center group/limit transition-colors ${totalSurplus >= 0
+            ? 'bg-paper-100/30 dark:bg-white/[0.01] border-ink-100/50 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.04]'
+            : 'bg-error-500/5 dark:bg-error-500/[0.02] border-error-500/10 hover:bg-error-500/10'
+            }`}>
+            <span className={`text-nano uppercase ${totalSurplus >= 0 ? 'text-ink-400 dark:text-paper-700' : 'text-error-600/60 dark:text-error-400/60'}`}>Daily Ops</span>
+            <span className={`text-nano font-bold ${totalSurplus >= 0 ? 'text-ink-900 dark:text-paper-50' : 'text-error-600 dark:text-error-400'}`}>
+              {planData.currencySymbol}{Math.round(dailyLimit).toLocaleString()}
+            </span>
           </div>
         </div>
       </GlassCard>

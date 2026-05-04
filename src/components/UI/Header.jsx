@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Wallet, Plus, RefreshCw, DollarSign, X, ChevronDown, ChevronUp, TrendingUp, TrendingDown } from 'lucide-react';
+import { Wallet, Plus, RefreshCw, DollarSign, X, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Info } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import useLocalRefresh from '../../hooks/useLocalRefresh';
@@ -14,6 +14,7 @@ import Button from './base/Button';
 import Badge from './base/Badge';
 import IconBox from './base/IconBox';
 import GlassCard from './base/GlassCard';
+import Tooltip from './base/Tooltip';
 
 const Header = ({
     onAddTransaction,
@@ -211,44 +212,83 @@ const Header = ({
                         <GlassCard
                             variant="flat"
                             padding="p-5"
-                            className={`relative !bg-surface-card dark:!bg-surface-card-dark backdrop-blur-2xl text-ink-900 dark:text-paper-50 shadow-2xl border-paper-200 dark:border-white/10 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-3' : 'opacity-0 translate-y-0'}`}
+                            className={`relative !overflow-visible !bg-surface-card dark:!bg-surface-card-dark backdrop-blur-2xl text-ink-900 dark:text-paper-50 shadow-2xl border-paper-200 dark:border-white/10 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-3' : 'opacity-0 translate-y-0'}`}
                         >
                             <Button
                                 variant="icon"
                                 size="sm"
                                 onClick={handleFloatingClose}
-                                className="absolute -top-2 -right-2 bg-paper-50 dark:bg-ink-900 shadow-xl !rounded-xl border border-paper-100 dark:border-white/10"
+                                className="absolute -top-7 -right-7 z-10 w-8 h-8 !rounded-full bg-white dark:bg-ink-950 shadow-xl border border-paper-200 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-transform text-ink-400 hover:text-ink-900 dark:text-paper-700 dark:hover:text-paper-50"
                             >
-                                <X className="w-3 h-3" />
+                                <X className="w-4 h-4" />
                             </Button>
 
                             <div className="flex flex-col gap-6 select-none">
                                 <div className="flex items-center justify-between px-1">
                                     <div className="space-y-0.5">
-                                        <p className="text-overline opacity-30">Vault Total</p>
+                                        <Tooltip content="Your total comprehensive wealth across all tracked liquid assets and accounts." position="right">
+                                            <div className="flex items-center gap-1.5 cursor-help group/vault">
+                                                <p className="text-overline opacity-30">Vault Total</p>
+                                                <Info size={10} className="opacity-0 group-hover/vault:opacity-40 transition-opacity" />
+                                            </div>
+                                        </Tooltip>
                                         <h2 className="text-h4 text-ink-900 dark:text-paper-50">
                                             {formatCurrency(totalWealth, userProfile?.currency || 'BDT')}
                                         </h2>
                                     </div>
                                     <div className="text-right flex flex-col items-end gap-1.5">
                                         <Badge label="Goal Target" value={formatCurrency(salaryPlan?.plan?.goal || 0, userProfile?.currency || 'BDT')} color="primary" variant="glass" size="sm" />
-                                        <Badge label="Monthly Surplus" value={formatCurrency(monthlySurplus, userProfile?.currency || 'BDT')} color="success" variant="glass" size="sm" />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
                                     {[
-                                        { label: 'Month Margin', val: formatCurrency(salaryPlan?.plan?.disposable || 0, userProfile?.currency || 'BDT'), color: 'text-primary-500' },
-                                        { label: 'Cash In Hand', val: formatCurrency(cashInHand, userProfile?.currency || 'BDT'), color: 'text-amber-500' },
-                                        { label: 'Monthly Savings', val: formatCurrency(salaryPlan?.plan?.actualSavings || 0, userProfile?.currency || 'BDT'), color: 'text-teal-600' },
-                                        { label: 'Goal Saving', val: formatCurrency(salaryPlan?.plan?.monthlyForGoal || 0, userProfile?.currency || 'BDT'), color: 'text-secondary-500' },
-                                        { label: 'Net Flow', val: `${monthlyNetFlowTransactions >= 0 ? '+' : ''}${formatCurrency(monthlyNetFlowTransactions, userProfile?.currency || 'BDT')}`, color: monthlyNetFlowTransactions >= 0 ? 'text-teal-500' : 'text-rose-500' },
-                                        { label: 'Total Assets', val: formatCurrency(totalWealth, userProfile?.currency || 'BDT'), color: 'text-ink-900 dark:text-paper-50' }
+                                        { 
+                                            label: 'Month Margin', 
+                                            val: formatCurrency(salaryPlan?.plan?.disposable || 0, userProfile?.currency || 'BDT'), 
+                                            color: 'text-primary-500',
+                                            tip: `Available after bills: ${formatCurrency(salaryPlan?.plan?.totalIncome || 0, userProfile?.currency || 'BDT')} (Income) - ${formatCurrency(salaryPlan?.plan?.totalFixed || 0, userProfile?.currency || 'BDT')} (Fixed)`
+                                        },
+                                        { 
+                                            label: 'Cash In Hand', 
+                                            val: formatCurrency(cashInHand, userProfile?.currency || 'BDT'), 
+                                            color: 'text-amber-500',
+                                            tip: "Your immediate liquid balance including physical cash and accessible bank funds."
+                                        },
+                                        { 
+                                            label: 'Monthly Savings', 
+                                            val: formatCurrency(salaryPlan?.plan?.actualSavings || 0, userProfile?.currency || 'BDT'), 
+                                            color: 'text-teal-600',
+                                            tip: "Actual amount successfully allocated to your savings accounts this month."
+                                        },
+                                        { 
+                                            label: 'Goal Saving', 
+                                            val: formatCurrency(salaryPlan?.plan?.monthlyForGoal || 0, userProfile?.currency || 'BDT'), 
+                                            color: 'text-secondary-500',
+                                            tip: `Required monthly to reach your ${formatCurrency(salaryPlan?.plan?.goal || 0, userProfile?.currency || 'BDT')} goal target.`
+                                        },
+                                        { 
+                                            label: 'Net Flow', 
+                                            val: `${monthlyNetFlowTransactions >= 0 ? '+' : ''}${formatCurrency(monthlyNetFlowTransactions, userProfile?.currency || 'BDT')}`, 
+                                            color: monthlyNetFlowTransactions >= 0 ? 'text-teal-500' : 'text-rose-500',
+                                            tip: "Real-time calculation: Total Actual Income - Total Actual Expenses (Transactions)."
+                                        },
+                                        { 
+                                            label: 'Monthly Surplus', 
+                                            val: formatCurrency(monthlySurplus, userProfile?.currency || 'BDT'), 
+                                            color: 'text-teal-500 font-bold',
+                                            tip: "Remaining disposable income after all planned expenses and savings targets."
+                                        }
                                     ].map(item => (
-                                        <div key={item.label} className="p-2 rounded-xl bg-paper-100/50 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5">
-                                            <p className="text-nano text-ink-400 dark:text-paper-700 mb-0.5">{item.label}</p>
-                                            <p className={`text-label ${item.color}`}>{item.val}</p>
-                                        </div>
+                                        <Tooltip key={item.label} content={item.tip} position="top" className="w-full">
+                                            <div className="p-2.5 rounded-xl bg-paper-100/50 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 w-full cursor-help hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-300 group/item">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <p className="text-nano text-ink-400 dark:text-paper-700 uppercase tracking-wider">{item.label}</p>
+                                                    <Info size={10} className="text-ink-400 dark:text-paper-700 opacity-20 group-hover/item:opacity-60 transition-opacity" />
+                                                </div>
+                                                <p className={`text-label ${item.color}`}>{item.val}</p>
+                                            </div>
+                                        </Tooltip>
                                     ))}
                                 </div>
 
