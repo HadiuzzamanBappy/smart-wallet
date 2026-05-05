@@ -5,6 +5,7 @@ import GlassCard from '../UI/base/GlassCard';
 import Badge from '../UI/base/Badge';
 import SectionHeader from '../UI/base/SectionHeader';
 import IconBox from '../UI/base/IconBox';
+import { APP_VERSION } from '../../config/constants';
 
 const AboutModal = ({ isOpen, onClose }) => {
   const features = [
@@ -141,7 +142,7 @@ const AboutModal = ({ isOpen, onClose }) => {
         </section>
 
         <div className="flex items-center justify-center pt-4 border-t border-paper-200 dark:border-paper-900/10 gap-3">
-          <Badge color="ink" variant="soft" size="sm">v1.2.0</Badge>
+          <Badge color="ink" variant="soft" size="sm">v{APP_VERSION}</Badge>
           <span className="text-overline text-ink-300 dark:text-paper-700 uppercase">
             Financial Intelligence Guide
           </span>

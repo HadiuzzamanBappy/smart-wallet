@@ -192,3 +192,10 @@ export const DATE_RANGES = {
   QUARTER: '90',
   YEAR: '365'
 };
+
+/* global __APP_VERSION__ */
+
+/**
+ * Application version (injected by Vite)
+ */
+export const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0';

@@ -207,14 +207,6 @@ const UserMenuDropdown = ({
                   );
                 })}
               </div>
-
-              {/* Minimal Footer */}
-              <div className="px-3 py-2 bg-paper-100/30 dark:bg-ink-900/10 border-t border-paper-100 dark:border-paper-900/10 flex items-center justify-between">
-                <span className="text-overline text-ink-300 dark:text-paper-700 uppercase font-bold tracking-tighter">v1.2.0 Audited</span>
-                <Badge variant="soft" color="primary" size="sm" className="!px-1.5 !py-0 opacity-40 uppercase">
-                  Secure
-                </Badge>
-              </div>
             </GlassCard>
           </div>
         </>
