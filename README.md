@@ -56,23 +56,27 @@ Notes:
 
 ## ✨ Features
 
-- Add, edit, and delete transactions (income, expense, loans, credits).
-- Natural-language (AI) transaction parsing via OpenRouter (optional).
-- Budgets and spending progress indicators.
-- Analytics and monthly summaries.
-- Client-side AES encryption for privacy (data encrypted before sending to Firestore).
-- Sync across devices using Firebase Auth + Firestore.
+- **🔒 Zero-Knowledge Security (Client-Side AES Encryption)**: Sensitive financial records (descriptions, categories, amounts, dates) are encrypted in the browser using AES-GCM before syncing to Google Firestore, ensuring absolute user privacy.
+- **🧠 Multilingual AI Natural-Language Parser (Financial Assistant)**: Enter transactions using voice-to-text or typing in English, Bengali (বাংলা), Banglish, or mixed formats. Leverages OpenRouter API to automatically map transactions, categorize, and parse amounts (supporting abbreviations like 'k' or words like 'lakh/crore'). Includes a dynamic verification/editing queue.
+- **📊 Executive Spending Analytics Suite**: Rich visual dashboards using `chart.js` featuring dynamic Trend line charts (income vs. expense vs. loans vs. credits), Activity breakdown doughnut charts, and 6-month historical comparisons, alongside instant KPI stats (Avg/Day, Outflow, Top category).
+- **💼 Phased Salary & Financial Planner (Salary Manager)**: High-fidelity financial modeling wizard automating 50/30/20 splits (Needs/Wants/Savings), calculating U.S. HUD 30% rent safety overages, stress-testing Debt-to-Income (DTI) EMI limits (36%), and determining a 6-month Emergency Fund reserve runway with an AI advisor.
+- **🤝 Advanced Debt, Loans, & Credit Tracker**: Standalone ledger for money borrowed (Loans) and money lent out (Credits), featuring partial repayments/collections with real-time principal deductions, principal adjustment histories with audit trails, and atomic transactional resets.
+- **🌐 Dynamic Real-Time Multi-Language Translation**: Automatically translates the entire web page to Bengali (বাংলা) dynamically using LibreTranslate and MyMemory APIs. Uses a DOM `MutationObserver` to translate newly rendered dynamic components and input placeholders on the fly.
+- **🎨 Custom Premium Design System & Playground**: Full design system using glassmorphic UI components, dark/light modes, premium typography, and an interactive UI showcase page reachable at `#components`.
+- **🔄 Sync Across Devices**: Seamless cross-device data synchronization using Firebase Authentication + Firestore.
 
 ---
 
 ## 🛠️ Tech stack
 
-- Frontend: React + Vite
-- Styling: Tailwind CSS
-- Icons: Lucide React
-- Backend: Firebase Auth + Firestore
-- Encryption: client-side AES helpers
-- AI parsing: OpenRouter (optional)
+- **Frontend**: React + Vite
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **Charts**: Chart.js (`react-chartjs-2`)
+- **Backend**: Firebase Auth + Firestore
+- **Encryption**: Client-side AES helpers (crypto-js)
+- **AI Parsing**: OpenRouter (optional)
+- **Dynamic Translation**: LibreTranslate API + MyMemory API (with DOM MutationObserver)
 
 ---
 
