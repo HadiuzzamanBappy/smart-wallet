@@ -15,12 +15,10 @@ export async function saveSalaryPlan(userId, planData, formData, aiAdvice) {
   const aiAdvice_encrypted = await encryptData(aiAdvice || "");
 
   await updateDoc(ref, {
-    salary: {
-      plan_encrypted,
-      form_encrypted,
-      aiAdvice_encrypted,
-      updatedAt: new Date().toISOString()
-    }
+    'salary.plan_encrypted': plan_encrypted,
+    'salary.form_encrypted': form_encrypted,
+    'salary.aiAdvice_encrypted': aiAdvice_encrypted,
+    'salary.updatedAt': new Date().toISOString()
   });
 }
 
@@ -44,7 +42,8 @@ export async function getSalaryPlan(userId) {
         plan: JSON.parse(planStr),
         form: JSON.parse(formStr),
         aiAdvice: aiAdvice,
-        savedAt: docData.salary.updatedAt
+        savedAt: docData.salary.updatedAt,
+        lastGeneratedMonth: docData.salary.lastGeneratedMonth || null
       };
     } catch (e) {
       console.error("Failed to decrypt granular salary plan", e);

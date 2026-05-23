@@ -87,40 +87,12 @@ export const addTransaction = async (userId, transactionData) => {
  * @param {number} [maybeAmount] - Amount (only used if txOrType is a string)
  * @returns {Promise<Object>} Success/error result
  */
-export const updateUserBalance = async (userId, txOrType, maybeAmount) => {
+export const updateUserBalance = async (userId) => {
   try {
-    const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
-
-    if (!userDoc.exists()) {
-      throw new Error('User not found');
+    const recon = await reconcileUserTotals(userId);
+    if (!recon.success) {
+      throw new Error(recon.error || 'Failed to reconcile user totals');
     }
-
-    // Backwards compatible invocation: updateUserBalance(userId, type, amount)
-    let tx = null;
-    if (typeof txOrType === 'string') {
-      tx = { type: txOrType, amount: maybeAmount };
-    } else {
-      tx = txOrType || {};
-    }
-
-    // Basic validation
-    const type = tx.type;
-    const amount = Number(tx.amount || 0);
-
-    if (!type || isNaN(amount) || amount <= 0) {
-      throw new Error('Invalid type or amount for updateUserBalance');
-    }
-
-    // Prepare encrypted update (excluding redundant calculated fields)
-    const updatedData = {
-      // We no longer save balance/income/expense as they are calculated on the fly
-      updatedAt: Timestamp.now()
-    };
-
-    const encryptedUpdatedData = await encryptUserProfile(updatedData);
-    await updateDoc(userRef, encryptedUpdatedData);
-
     return { success: true };
   } catch (error) {
     console.error('Error updating balance:', error);
@@ -284,6 +256,13 @@ export const deleteTransaction = async (userId, transactionId, transactionData) 
       };
     });
 
+    // After successful deletion, reconcile user totals
+    try {
+      await reconcileUserTotals(userId);
+    } catch (err) {
+      console.warn('Reconciliation after deletion failed:', err?.message || err);
+    }
+
     // Emit event after commit
     const event = new CustomEvent(APP_EVENTS.TRANSACTION_DELETED, {
       detail: deletedTransactionInfo
@@ -431,6 +410,13 @@ export const updateTransaction = async (transactionId, updates) => {
       tx.update(transactionRef, encryptedUpdates);
       tx.update(userRef, encryptedUpdatedProfile);
     });
+
+    // After successful update, reconcile user totals
+    try {
+      await reconcileUserTotals(userId);
+    } catch (err) {
+      console.warn('Reconciliation after update failed:', err?.message || err);
+    }
 
     // Emit event for UI refresh
     const event = new CustomEvent(APP_EVENTS.TRANSACTION_EDITED, { detail: { transactionId, updates: rest } });

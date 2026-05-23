@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableScroll = false, fullMobile = false }) => {
+const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableScroll = false, fullMobile = false, preventClose = false }) => {
   if (!isOpen) return null;
 
   const sizes = {
@@ -13,7 +13,7 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableS
   };
 
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !preventClose) {
       onClose();
     }
   };
@@ -34,12 +34,14 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md', disableS
             <h3 className="text-h5 text-ink-900 dark:text-paper-50">
               {title}
             </h3>
-            <button
-              onClick={onClose}
-              className="p-1.5 text-ink-400 hover:text-ink-900 dark:text-paper-600 dark:hover:text-paper-50 hover:bg-paper-100 dark:hover:bg-ink-800 rounded-lg transition-all active:scale-95"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {!preventClose && (
+              <button
+                onClick={onClose}
+                className="p-1.5 text-ink-400 hover:text-ink-900 dark:text-paper-600 dark:hover:text-paper-50 hover:bg-paper-100 dark:hover:bg-ink-800 rounded-lg transition-all active:scale-95"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
 

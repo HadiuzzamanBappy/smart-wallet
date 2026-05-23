@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import {
-    getAllLoans,
-    getAllCredits,
     markLoanAsRepaid,
     markCreditAsCollected,
     adjustLoanCreditAmount,
     resetLoanCreditPayments
 } from '../../services/debtService';
+import { normalizeLoanCreditNumbers } from '../../utils/transactionHelpers';
 import { formatCurrencyWithUser } from '../../utils/helpers';
 import Modal from '../UI/base/Modal';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -32,9 +31,7 @@ import AdjustmentDialog from './Debt/AdjustmentDialog';
 
 const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
     const { user, userProfile } = useAuth();
-    const { refreshTransactions } = useTransactions();
-    const [items, setItems] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { transactions, refreshTransactions, loading: contextLoading } = useTransactions();
     const [processing, setProcessing] = useState({});
     const [resetConfirmItem, setResetConfirmItem] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(null);
@@ -53,6 +50,15 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
     const title = isLoans ? 'All Loans' : 'All Credits';
     const emptyMessage = isLoans ? 'No loans found' : 'No credits found';
 
+    const items = useMemo(() => {
+        const targetType = isLoans ? 'loan' : 'credit';
+        return transactions
+            .filter(tx => tx.type === targetType)
+            .map(tx => normalizeLoanCreditNumbers(tx));
+    }, [transactions, isLoans]);
+
+    const loading = contextLoading;
+
     const displayedItems = showAllItems
         ? items.filter(it => (Number(it.remainingAmount) || 0) <= 0)
         : items.filter(it => (Number(it.remainingAmount) || 0) > 0);
@@ -62,21 +68,6 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
 
     const totalOriginalAmount = displayedItems.reduce((s, it) => s + (Number(it.amount) || 0), 0);
     const totalRemaining = displayedItems.reduce((s, it) => s + (Number(it.remainingAmount) || 0), 0);
-
-    const loadData = useCallback(async (silent = false) => {
-        if (!user?.uid) return;
-        if (!silent) setLoading(true);
-        try {
-            const result = isLoans ? await getAllLoans(user.uid) : await getAllCredits(user.uid);
-            if (result.success) setItems(result.data || []);
-            else showToast(result.error || 'Audit failure', 'error');
-        } catch (error) {
-            console.error('Error loading data:', error);
-            showToast('Audit failure', 'error');
-        } finally {
-            if (!silent) setLoading(false);
-        }
-    }, [user?.uid, isLoans]);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -116,15 +107,12 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_ADDED, {
                     detail: { type: isLoans ? 'expense' : 'income', amount, isRepayment: true }
                 }));
-                loadData(true);
                 refreshTransactions(true);
             } else {
                 showToast(result.error || 'Record failure', 'error');
-                loadData(true);
             }
         } catch {
             showToast('Record failure', 'error');
-            loadData(true);
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
         }
@@ -155,15 +143,12 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_EDITED, {
                     detail: { transactionId: itemId, adjustment }
                 }));
-                loadData(true);
                 refreshTransactions(true);
             } else {
                 showToast(result.error || 'Adjustment failure', 'error');
-                loadData(true);
             }
         } catch {
             showToast('Adjustment failure', 'error');
-            loadData(true);
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
         }
@@ -186,15 +171,12 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                 window.dispatchEvent(new CustomEvent(APP_EVENTS.TRANSACTION_ADDED, {
                     detail: { type: isLoans ? 'expense' : 'income', amount, isRepayment: true }
                 }));
-                loadData(true);
                 refreshTransactions(true);
             } else {
                 showToast(result.error || 'Record failure', 'error');
-                loadData(true);
             }
         } catch {
             showToast('Record failure', 'error');
-            loadData(true);
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
         }
@@ -217,23 +199,16 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
             const result = await resetLoanCreditPayments(user.uid, itemId);
             if (result.success) {
                 showToast('Payment history reset successfully');
-                loadData(true);
                 refreshTransactions(true);
             } else {
                 showToast(result.error || 'Reset failure', 'error');
-                loadData(true);
             }
         } catch {
             showToast('Reset failure', 'error');
-            loadData(true);
         } finally {
             setProcessing(prev => ({ ...prev, [itemId]: false }));
         }
     };
-
-    useEffect(() => {
-        if (open && user?.uid) loadData();
-    }, [open, user?.uid, type, loadData]);
 
     return (
         <>

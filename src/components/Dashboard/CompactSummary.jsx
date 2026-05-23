@@ -125,9 +125,9 @@ const CompactSummary = () => {
                     </div>
                     <div className="flex items-baseline gap-1.5 flex-wrap min-w-0">
                       <span className={`text-h5 font-bold tracking-tight ${card.color === 'primary' ? 'text-primary-600 dark:text-primary-400' :
-                        card.color === 'error' ? 'text-red-600 dark:text-red-400' :
-                          card.color === 'info' ? 'text-blue-600 dark:text-blue-400' :
-                            'text-amber-600 dark:text-amber-400'
+                        card.color === 'error' ? 'text-error-600 dark:text-error-400' :
+                          card.color === 'info' ? 'text-info-600 dark:text-info-400' :
+                            'text-warning-600 dark:text-warning-400'
                         }`}>
                         {card.value}
                       </span>

@@ -25,10 +25,8 @@ export default function SalaryManager({ userId, onClose, initialView }) {
           setCurrentPlan(recalculated);
           setCurrentAdvice(plan.aiAdvice);
 
-          // Only change view if it was still loading
-          if (view === 'loading') {
-            setView(initialView || 'result');
-          }
+          // Safe state transition using functional update to avoid 'view' ESLint dependency
+          setView(prev => prev === 'loading' ? (initialView || 'result') : prev);
         } else {
           setView('wizard');
         }

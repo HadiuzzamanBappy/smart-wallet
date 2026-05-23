@@ -21,20 +21,28 @@ const getEnv = (name, fallback) => {
 };
 
 const getEncryptionKey = async () => {
-  const secret = String(getEnv('VITE_ENC_SECRET', DEFAULT_SECRET));
-  const saltStr = String(getEnv('VITE_ENC_SALT', DEFAULT_SALT));
+  const isProd = import.meta && import.meta.env && import.meta.env.PROD;
+  const secret = getEnv('VITE_ENC_SECRET', isProd ? undefined : DEFAULT_SECRET);
+  const saltStr = getEnv('VITE_ENC_SALT', isProd ? undefined : DEFAULT_SALT);
   const iterationsRaw = getEnv('VITE_ENC_ITERATIONS', DEFAULT_ITERATIONS);
   const iterations = Number.isFinite(Number(iterationsRaw)) ? Number(iterationsRaw) : DEFAULT_ITERATIONS;
 
+  if (isProd && (!secret || !saltStr)) {
+    throw new Error('CRITICAL SECURITY ERROR: VITE_ENC_SECRET or VITE_ENC_SALT is missing in the production environment. Client-side encryption cannot proceed.');
+  }
+
+  const finalSecret = secret || DEFAULT_SECRET;
+  const finalSalt = saltStr || DEFAULT_SALT;
+
   const keyMaterial = await window.crypto.subtle.importKey(
     'raw',
-    new TextEncoder().encode(secret),
+    new TextEncoder().encode(finalSecret),
     'PBKDF2',
     false,
     ['deriveBits', 'deriveKey']
   );
 
-  const salt = new TextEncoder().encode(saltStr);
+  const salt = new TextEncoder().encode(finalSalt);
 
   return await window.crypto.subtle.deriveKey(
     {
@@ -233,7 +241,8 @@ export const decryptTransactionData = async (transactionData) => {
     const val = await decryptData(decrypted.isFullyPaid_encrypted);
     decrypted.isFullyPaid = val === 'true';
   } else if (decrypted.isFullyPaid === undefined) {
-    decrypted.isFullyPaid = transactionData.isFullyPaid !== undefined ? transactionData.isFullyPaid : true;
+    const isDebt = ['loan', 'credit'].includes(decrypted.type);
+    decrypted.isFullyPaid = transactionData.isFullyPaid !== undefined ? transactionData.isFullyPaid : !isDebt;
   }
   
   // 4. Complex Fields Decryption

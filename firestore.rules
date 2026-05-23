@@ -35,11 +35,6 @@ service cloud.firestore {
       }
     }
 
-    // Salary Plans root: only authenticated user can read/write their own plan
-    match /salaryPlans/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
     // Helper functions (rule-language compatible)
     function isValidUserWrite() {
       // Disallow known plaintext-sensitive fields in the incoming write
@@ -54,10 +49,21 @@ service cloud.firestore {
     function hasPlaintextSensitiveFields() {
       // Check keys present in the incoming object for forbidden plaintext names.
       // request.resource.data.keys() returns a list-like object supporting hasAny().
-      let forbidden = ['amount', 'description', 'message', 'originalMessage', 'originalMessage_encrypted'];
-      let numericForbidden = ['balance', 'totalIncome', 'totalExpense', 'monthlyBudget', 'totalCreditGiven', 'totalLoanTaken'];
+      let forbidden = [
+        'amount', 'description', 'message', 'originalMessage', 'originalMessage_encrypted',
+        'paidAmount', 'originalAmount', 'originalDescription', 'category', 'type',
+        'isFullyPaid', 'adjustmentHistory'
+      ];
+      let numericForbidden = [
+        'balance', 'totalIncome', 'totalExpense', 'monthlyBudget', 'totalCreditGiven', 'totalLoanTaken'
+      ];
+      let personalForbidden = [
+        'email', 'displayName', 'currency', 'theme', 'language', 'notifications', 'budgetAlerts'
+      ];
 
-      return request.resource.data.keys().hasAny(forbidden) || request.resource.data.keys().hasAny(numericForbidden);
+      return request.resource.data.keys().hasAny(forbidden) || 
+             request.resource.data.keys().hasAny(numericForbidden) ||
+             request.resource.data.keys().hasAny(personalForbidden);
     }
   }
 }

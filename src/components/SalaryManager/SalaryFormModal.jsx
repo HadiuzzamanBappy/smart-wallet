@@ -297,7 +297,14 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
               <div className="flex gap-4">
                 <Select
                   value={dep.type}
-                  onChange={e => { const nd = [...form.deposits]; nd[idx].type = e.target.value; update('deposits', nd); }}
+                  onChange={e => {
+                    const nd = [...form.deposits];
+                    nd[idx].type = e.target.value;
+                    if (e.target.value !== 'Deposit') {
+                      nd[idx].monthly = '';
+                    }
+                    update('deposits', nd);
+                  }}
                   options={[
                     { value: 'FDR', label: 'FDR' },
                     { value: 'Deposit', label: 'Savings Deposit' },
@@ -319,20 +326,31 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <GlassInput
-                  type="number"
-                  value={dep.monthly}
-                  onChange={e => { const nd = [...form.deposits]; nd[idx].monthly = e.target.value; update('deposits', nd); }}
-                  placeholder="Monthly Contrib"
-                />
-                <GlassInput
-                  type="number"
-                  value={dep.balance}
-                  onChange={e => { const nd = [...form.deposits]; nd[idx].balance = e.target.value; update('deposits', nd); }}
-                  placeholder="Current Balance"
-                />
-              </div>
+              {dep.type === 'Deposit' ? (
+                <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <GlassInput
+                    type="number"
+                    value={dep.monthly}
+                    onChange={e => { const nd = [...form.deposits]; nd[idx].monthly = e.target.value; update('deposits', nd); }}
+                    placeholder="Monthly Contrib"
+                  />
+                  <GlassInput
+                    type="number"
+                    value={dep.balance}
+                    onChange={e => { const nd = [...form.deposits]; nd[idx].balance = e.target.value; update('deposits', nd); }}
+                    placeholder="Current Balance"
+                  />
+                </div>
+              ) : (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                  <GlassInput
+                    type="number"
+                    value={dep.balance}
+                    onChange={e => { const nd = [...form.deposits]; nd[idx].balance = e.target.value; update('deposits', nd); }}
+                    placeholder="Current Balance"
+                  />
+                </div>
+              )}
             </div>
           </GlassCard>
         ))}

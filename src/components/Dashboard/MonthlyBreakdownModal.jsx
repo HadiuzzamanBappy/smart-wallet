@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import { formatCurrencyWithUser } from '../../utils/helpers';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import { computeTransactionEffects } from '../../utils/transactionHelpers';
 
 // Base UI Components
 import GlassCard from '../UI/base/GlassCard';
@@ -14,17 +15,30 @@ import IconBox from '../UI/base/IconBox';
 
 const MonthlyBreakdownModal = ({ open, onClose }) => {
   const { userProfile } = useAuth();
-  const { transactions, loading } = useTransactions();
+  const { transactions, salaryPlan, loading } = useTransactions();
   const [selectedMonth, setSelectedMonth] = useState('');
 
   // Group transactions by month (YYYY-MM) and calculate totals
   const monthlyData = useMemo(() => {
     const grouped = {};
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // Ensure the current month always exists in the grouped map if we have a salary plan
+    if (salaryPlan?.plan) {
+      grouped[currentMonthKey] = {
+        month: currentMonthKey,
+        income: 0,
+        expense: 0,
+        incomeCount: 0,
+        expenseCount: 0,
+        transactions: []
+      };
+    }
 
     transactions.forEach(tx => {
-      // Only include pure income/expense transactions in the monthly breakdown.
-      // Repayments/collections have their own types and should not affect income/expense totals.
-      if (!tx || (tx.type !== 'income' && tx.type !== 'expense')) return;
+      // Inflow includes income, loans, and collections. Outflow includes expenses, credits, and repayments.
+      if (!tx || !['income', 'expense', 'loan', 'credit', 'repayment', 'collection'].includes(tx.type)) return;
 
       // Use transaction.date for monthly grouping
       const txDate = new Date(tx.date || tx.createdAt);
@@ -43,10 +57,10 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
 
       const amount = parseFloat(tx.amount) || 0;
 
-      if (tx.type === 'income') {
+      if (['income', 'loan', 'collection'].includes(tx.type)) {
         grouped[monthKey].income += amount;
         grouped[monthKey].incomeCount++;
-      } else if (tx.type === 'expense') {
+      } else if (['expense', 'credit', 'repayment'].includes(tx.type)) {
         grouped[monthKey].expense += amount;
         grouped[monthKey].expenseCount++;
       }
@@ -54,9 +68,74 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
       grouped[monthKey].transactions.push(tx);
     });
 
+    // Check if baseline has already been logged to the database for the current month
+    const hasBaselineBeenWritten = transactions.some(tx => {
+      if (tx.source !== 'salary-plan-baseline') return false;
+      const txDate = new Date(tx.date || tx.createdAt);
+      return txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+    });
+
+    // Inject in-memory baseline plan for the current month if not yet written
+    if (!hasBaselineBeenWritten && salaryPlan?.plan) {
+      const fixedIncome = salaryPlan.plan.totalIncome || 0;
+      const fixedExpense = salaryPlan.plan.totalFixedCosts || 0;
+
+      if (!grouped[currentMonthKey]) {
+        grouped[currentMonthKey] = {
+          month: currentMonthKey,
+          income: 0,
+          expense: 0,
+          incomeCount: 0,
+          expenseCount: 0,
+          transactions: []
+        };
+      }
+
+      grouped[currentMonthKey].income += fixedIncome;
+      grouped[currentMonthKey].expense += fixedExpense;
+    }
+
+    const getBalanceEffect = (tx) => {
+      try {
+        const eff = computeTransactionEffects(tx);
+        return eff.balance || 0;
+      } catch {
+        const amount = parseFloat(tx.amount) || 0;
+        if (tx.type === 'income') return amount;
+        if (tx.type === 'expense') return -amount;
+        if (tx.type === 'credit') return -amount;
+        if (tx.type === 'loan') return amount;
+        if (tx.type === 'repayment') return -amount;
+        if (tx.type === 'collection') return amount;
+        return -amount;
+      }
+    };
+
+    // Calculate cash in hand at the end of each month
+    const initialCashInHand = parseFloat(salaryPlan?.plan?.cashInHand) || 0;
+
+    Object.keys(grouped).forEach(monthKey => {
+      const [yearStr, monthStr] = monthKey.split('-');
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10); // 1-indexed
+      // End of this month (23:59:59.999)
+      const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+
+      // Sum balance effects of all transactions up to the end of this month
+      let cumulativeBalance = 0;
+      transactions.forEach(tx => {
+        const txDate = new Date(tx.date || tx.createdAt);
+        if (txDate <= endOfMonth) {
+          cumulativeBalance += getBalanceEffect(tx);
+        }
+      });
+
+      grouped[monthKey].cashInHandAtEnd = initialCashInHand + cumulativeBalance;
+    });
+
     // Convert to array and sort by month descending
     return Object.values(grouped).sort((a, b) => b.month.localeCompare(a.month));
-  }, [transactions]);
+  }, [transactions, salaryPlan]);
 
   // Set current month as default selection when modal opens
   useEffect(() => {
@@ -143,18 +222,30 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                   </GlassCard>
                 </div>
 
-                {/* Net Change */}
-                {/* Net Change */}
-                <div className="p-4 rounded-3xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-between">
-                  <span className="text-overline text-ink-400 dark:text-paper-700 uppercase">Net Surplus / Deficit</span>
-                  <Badge
-                    color={selectedData.income - selectedData.expense >= 0 ? 'success' : 'error'}
-                    variant="soft"
-                    size="md"
-                  >
-                    {selectedData.income - selectedData.expense >= 0 ? '+' : ''}
-                    {formatCurrencyWithUser(selectedData.income - selectedData.expense, userProfile)}
-                  </Badge>
+                {/* Net Change & Month End Cash in Hand */}
+                <div className="space-y-3">
+                  <div className="p-4 rounded-3xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-between">
+                    <span className="text-overline text-ink-400 dark:text-paper-700 uppercase">Net Surplus / Deficit</span>
+                    <Badge
+                      color={selectedData.income - selectedData.expense >= 0 ? 'success' : 'error'}
+                      variant="soft"
+                      size="md"
+                    >
+                      {selectedData.income - selectedData.expense >= 0 ? '+' : ''}
+                      {formatCurrencyWithUser(selectedData.income - selectedData.expense, userProfile)}
+                    </Badge>
+                  </div>
+
+                  <div className="p-4 rounded-3xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-between">
+                    <span className="text-overline text-ink-400 dark:text-paper-700 uppercase">Cash in Hand (Month End)</span>
+                    <Badge
+                      color={selectedData.cashInHandAtEnd >= 0 ? 'primary' : 'error'}
+                      variant="filled"
+                      size="md"
+                    >
+                      {formatCurrencyWithUser(selectedData.cashInHandAtEnd, userProfile)}
+                    </Badge>
+                  </div>
                 </div>
 
                 {/* Transaction Details */}
@@ -162,31 +253,34 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                   <h4 className="text-overline text-ink-400 dark:text-paper-700 px-1 uppercase">Detailed Ledger ({selectedData.transactions.length})</h4>
                   <div className="space-y-2 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
                     {selectedData.transactions
-                      .filter(tx => tx.type === 'income' || tx.type === 'expense')
+                      .filter(tx => ['income', 'expense', 'loan', 'credit', 'repayment', 'collection'].includes(tx.type))
                       .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
-                      .map(tx => (
-                        <div key={tx.id} className="p-4 rounded-2xl bg-surface-card dark:bg-surface-card-dark border border-paper-100 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.04] transition-all group">
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="text-label text-ink-900 dark:text-paper-50 truncate mb-1">
-                                {tx.description}
+                      .map(tx => {
+                        const isInflow = ['income', 'loan', 'collection'].includes(tx.type);
+                        return (
+                          <div key={tx.id} className="p-4 rounded-2xl bg-surface-card dark:bg-surface-card-dark border border-paper-100 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.04] transition-all group">
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-label text-ink-900 dark:text-paper-50 truncate mb-1">
+                                  {tx.description}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-overline text-ink-400 dark:text-paper-700 opacity-60">
+                                    {new Date(tx.date || tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                  </span>
+                                  <div className="w-1 h-1 rounded-full bg-paper-200 dark:bg-white/10" />
+                                  <span className="text-overline text-ink-400 dark:text-paper-700 opacity-60">
+                                    {tx.category}
+                                  </span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                <span className="text-overline text-ink-400 dark:text-paper-700 opacity-60">
-                                  {new Date(tx.date || tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                </span>
-                                <div className="w-1 h-1 rounded-full bg-paper-200 dark:bg-white/10" />
-                                <span className="text-overline text-ink-400 dark:text-paper-700 opacity-60">
-                                  {tx.category}
-                                </span>
+                              <div className={`text-label whitespace-nowrap ${isInflow ? 'text-primary-600 dark:text-primary-400' : 'text-ink-900 dark:text-paper-50'}`}>
+                                {isInflow ? '+' : '-'}{formatCurrencyWithUser(tx.amount, userProfile)}
                               </div>
-                            </div>
-                            <div className={`text-label whitespace-nowrap ${tx.type === 'income' ? 'text-primary-600 dark:text-primary-400' : 'text-ink-900 dark:text-paper-50'}`}>
-                              {tx.type === 'income' ? '+' : '-'}{formatCurrencyWithUser(tx.amount, userProfile)}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                   </div>
                 </div>
               </div>

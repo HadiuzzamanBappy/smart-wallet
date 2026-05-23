@@ -17,8 +17,8 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
   React.useEffect(() => {
     const checkScreenSize = () => {
       const isLargeScreen = window.innerWidth >= 768; // md breakpoint
-      if (isLargeScreen && activeSection === null && !hasUserInteracted) {
-        setActiveSection('transactions'); // Set first tab as active
+      if (isLargeScreen && activeSection === null) {
+        setActiveSection('transactions'); // Force first tab as active on desktop
         if (onSectionChange) onSectionChange('transactions');
       } else if (!isLargeScreen && activeSection === 'transactions' && !hasUserInteracted) {
         setActiveSection(null); // Clear active state on mobile
@@ -39,6 +39,9 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
 
     // Basic toggle: clicking an already-active section hides it, otherwise show the clicked section
     if (activeSection === section) {
+      const isLargeScreen = window.innerWidth >= 768;
+      if (isLargeScreen) return; // Prevent complete collapsing on desktop view
+      
       setActiveSection(null);
       if (onSectionChange) onSectionChange(null);
       return;

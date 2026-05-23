@@ -5,7 +5,7 @@ import { addTransaction } from '../../services/transactionService';
 import { parseTransaction } from '../../services/aiService';
 import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency } from '../../utils/helpers';
-import { APP_EVENTS } from '../../config/constants';
+import { APP_EVENTS, TRANSACTION_CATEGORIES } from '../../config/constants';
 
 // Base UI Components
 import Button from '../UI/base/Button';
@@ -14,6 +14,13 @@ import Select from '../UI/base/Select';
 import IconBox from '../UI/base/IconBox';
 import GlassCard from '../UI/base/GlassCard';
 import Badge from '../UI/base/Badge';
+
+const getLocalDateString = (d = new Date()) => {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
 
 const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -38,22 +45,14 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
     amount: '',
     description: '',
     category: 'other',
-    date: new Date().toISOString().split('T')[0]
+    date: getLocalDateString()
   });
 
-  const categories = [
-    { value: 'food', label: 'Food & Dining', emoji: '🍔' },
-    { value: 'transport', label: 'Transportation', emoji: '🚗' },
-    { value: 'entertainment', label: 'Entertainment', emoji: '🎬' },
-    { value: 'shopping', label: 'Shopping', emoji: '🛍️' },
-    { value: 'bills', label: 'Bills & Utilities', emoji: '📄' },
-    { value: 'health', label: 'Healthcare', emoji: '🏥' },
-    { value: 'education', label: 'Education', emoji: '📚' },
-    { value: 'salary', label: 'Salary', emoji: '💼' },
-    { value: 'freelance', label: 'Freelance', emoji: '💻' },
-    { value: 'investment', label: 'Investment', emoji: '📈' },
-    { value: 'other', label: 'Other', emoji: '📦' }
-  ];
+  const categories = Object.entries(TRANSACTION_CATEGORIES).map(([value, config]) => ({
+    value,
+    label: config.label,
+    emoji: config.emoji
+  }));
 
   const handleChatParse = async () => {
     if (!chatMessage.trim()) return;
@@ -125,7 +124,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         const result = await addTransaction(user.uid, {
           ...transaction,
           amount: Number(transaction.amount),
-          date: transaction.date ? new Date(transaction.date) : new Date(),
+          date: transaction.date || getLocalDateString(),
           source: 'chat'
         });
 
@@ -166,10 +165,12 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
 
     setLoading(true);
     try {
+      const category = manualData.type === 'loan' ? 'loan' : manualData.type === 'credit' ? 'credit' : manualData.category;
       const result = await addTransaction(user.uid, {
         ...manualData,
+        category,
         amount: Number(manualData.amount),
-        date: new Date(manualData.date), // Ensure date is properly formatted
+        date: manualData.date, // Pass raw local date string to prevent timezone shifts
         source: 'manual'
       });
 
@@ -215,7 +216,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
       amount: '',
       description: '',
       category: 'other',
-      date: new Date().toISOString().split('T')[0]
+      date: getLocalDateString()
     });
   };
 
@@ -329,93 +330,96 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                 </div>
 
                 <div className="space-y-2 max-h-[300px] overflow-auto px-1 custom-scrollbar">
-                  {parsedTransactions.map((tx, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 rounded-2xl bg-surface-card dark:bg-surface-card-dark border border-paper-100 dark:border-white/10 hover:bg-white dark:hover:bg-white/[0.03] transition-all"
-                    >
-                      {editingIndex === idx ? (
-                        <div className="space-y-4">
-                          <GlassInput
-                            value={tx.description}
-                            onChange={(e) => updateParsedTransaction(idx, { description: e.target.value })}
-                            placeholder="Description"
-                          />
-                          <div className="grid grid-cols-2 gap-3">
+                  {parsedTransactions.map((tx, idx) => {
+                    const isPositive = ['income', 'loan', 'collection'].includes(tx.type);
+                    return (
+                      <div
+                        key={idx}
+                        className="p-3 rounded-2xl bg-surface-card dark:bg-surface-card-dark border border-paper-100 dark:border-white/10 hover:bg-white dark:hover:bg-white/[0.03] transition-all"
+                      >
+                        {editingIndex === idx ? (
+                          <div className="space-y-4">
                             <GlassInput
-                              type="number"
-                              value={tx.amount}
-                              onChange={(e) => updateParsedTransaction(idx, { amount: e.target.value })}
-                              placeholder="Amount"
+                              value={tx.description}
+                              onChange={(e) => updateParsedTransaction(idx, { description: e.target.value })}
+                              placeholder="Description"
                             />
-                            <Select
-                              value={tx.category}
-                              onChange={(e) => updateParsedTransaction(idx, { category: e.target.value })}
-                              options={categories.map(c => ({ value: c.value, label: `${c.emoji} ${c.label}` }))}
-                            />
-                          </div>
-                          <div className="flex gap-2 pt-1">
-                            <Button size="sm" color="primary" fullWidth onClick={saveRowEdit} icon={Check}>
-                              Done
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between group">
-                          <div className="flex items-center gap-3">
-                            <IconBox
-                              icon={() => <span>{getCategoryEmoji(tx.category)}</span>}
-                              size="xs"
-                              color={tx.type === 'income' ? 'primary' : 'ink'}
-                              variant="soft"
-                              className="!rounded-xl"
-                            />
-                            <div>
-                              <div className="text-label font-bold text-ink-900 dark:text-paper-50 truncate leading-tight">{tx.description}</div>
-                              <div className="text-overline opacity-40 mt-0.5">{humanizeType(tx.type)} • {getCategoryLabel(tx.category)}</div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <GlassInput
+                                type="number"
+                                value={tx.amount}
+                                onChange={(e) => updateParsedTransaction(idx, { amount: e.target.value })}
+                                placeholder="Amount"
+                              />
+                              <Select
+                                value={tx.category}
+                                onChange={(e) => updateParsedTransaction(idx, { category: e.target.value })}
+                                options={categories.map(c => ({ value: c.value, label: `${c.emoji} ${c.label}` }))}
+                              />
+                            </div>
+                            <div className="flex gap-2 pt-1">
+                              <Button size="sm" color="primary" fullWidth onClick={saveRowEdit} icon={Check}>
+                                Done
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className={`text-label font-bold tracking-tight ${tx.type === 'income' ? 'text-primary-600 dark:text-primary-400' : 'text-ink-900 dark:text-paper-50'}`}>
-                              {tx.type === 'income' ? '+' : ''}{formatCurrency(tx.amount, userCurrency)}
+                        ) : (
+                          <div className="flex items-center justify-between group">
+                            <div className="flex items-center gap-3">
+                              <IconBox
+                                icon={() => <span>{getCategoryEmoji(tx.category)}</span>}
+                                size="xs"
+                                color={isPositive ? 'primary' : 'ink'}
+                                variant="soft"
+                                className="!rounded-xl"
+                              />
+                              <div>
+                                <div className="text-label font-bold text-ink-900 dark:text-paper-50 truncate leading-tight">{tx.description}</div>
+                                <div className="text-overline opacity-40 mt-0.5">{humanizeType(tx.type)} • {getCategoryLabel(tx.category)}</div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                              <button onClick={() => setEditingIndex(idx)} className="p-1.5 hover:bg-paper-100 dark:hover:bg-white/10 rounded-xl text-ink-400 hover:text-ink-900 dark:hover:text-white transition-all">
-                                <Edit className="w-3.5 h-3.5" />
-                              </button>
-                              <button onClick={() => removeParsedTransaction(idx)} className="p-1.5 hover:bg-rose-500/10 rounded-xl text-ink-400 hover:text-rose-600 transition-all">
-                                <Trash className="w-3.5 h-3.5" />
-                              </button>
+                            <div className="flex items-center gap-4">
+                              <div className={`text-label font-bold tracking-tight ${isPositive ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
+                                {isPositive ? '+' : '-'}{formatCurrency(tx.amount, userCurrency)}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <button onClick={() => setEditingIndex(idx)} className="p-1.5 hover:bg-paper-100 dark:hover:bg-white/10 rounded-xl text-ink-400 hover:text-ink-900 dark:hover:text-white transition-all">
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => removeParsedTransaction(idx)} className="p-1.5 hover:bg-rose-500/10 rounded-xl text-ink-400 hover:text-rose-600 transition-all">
+                                  <Trash className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="pt-4 border-t border-paper-100 dark:border-white/5">
-                  <Button
-                    color="primary"
-                    fullWidth
-                    size="lg"
-                    onClick={saveChatTransactions}
-                    loading={loading}
-                    icon={Check}
-                  >
-                    Confirm & Save All
-                  </Button>
+                <div className="pt-4 border-t border-paper-100 dark:border-white/5 flex gap-3">
                   <Button
                     variant="ghost"
                     color="ink"
-                    fullWidth
-                    className="mt-2 text-overline"
+                    className="flex-1 text-overline"
+                    size="lg"
                     onClick={() => {
                       setParsedTransactions([]);
                       setIsPreviewOpen(false);
                     }}
                   >
                     Discard Changes
+                  </Button>
+                  <Button
+                    color="primary"
+                    className="flex-[2]"
+                    size="lg"
+                    onClick={saveChatTransactions}
+                    loading={loading}
+                    icon={Check}
+                  >
+                    Confirm & Save All
                   </Button>
                 </div>
               </div>
@@ -438,7 +442,13 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                   <button
                     key={type.value}
                     type="button"
-                    onClick={() => setManualData(prev => ({ ...prev, type: type.value }))}
+                    onClick={() => setManualData(prev => {
+                      const updates = { type: type.value };
+                      if (type.value === 'loan') updates.category = 'loan';
+                      else if (type.value === 'credit') updates.category = 'credit';
+                      else if (prev.category === 'loan' || prev.category === 'credit') updates.category = 'other';
+                      return { ...prev, ...updates };
+                    })}
                     className={`px-4 py-1.5 rounded-xl text-overline transition-all duration-300 ${manualData.type === type.value
                       ? type.color === 'primary' ? 'bg-primary-500 text-white' :
                         type.color === 'error' ? 'bg-rose-500 text-white' :

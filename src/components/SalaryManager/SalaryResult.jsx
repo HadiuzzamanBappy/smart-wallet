@@ -25,10 +25,21 @@ import GlassCard from '../UI/base/GlassCard';
 import Badge from '../UI/base/Badge';
 import IconBox from '../UI/base/IconBox';
 import Button from '../UI/base/Button';
+import ConfirmDialog from '../UI/base/ConfirmDialog';
 
 export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onSave, onRecalculate, onClose }) {
   const { advice, loading, error, generate } = useAIAdvice();
   const [currentAdvice, setCurrentAdvice] = useState(aiAdvice || '');
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
+  const handleAttemptClose = () => {
+    if (loading) return; // Prevent closing entirely while AI is working
+    if (aiAdvice) {
+      onClose(); // Already saved, ok to close immediately
+    } else {
+      setShowConfirmClose(true); // Unsaved newly generated plan, prompt confirmation
+    }
+  };
 
   useEffect(() => {
     if (isOpen && !aiAdvice && !advice && !loading && !error) {
@@ -72,20 +83,21 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleAttemptClose}
       title="Strategic Intelligence"
       size="xl"
       fullMobile
+      preventClose={loading}
       footer={
         <div className="flex items-center gap-2 w-full print:hidden">
-          <Button variant="ghost" color="ink" size="sm" icon={RefreshCw} onClick={onRecalculate}>
+          <Button variant="ghost" color="ink" size="sm" icon={RefreshCw} onClick={onRecalculate} disabled={loading}>
             Update
           </Button>
-          <Button variant="ghost" color="ink" size="sm" icon={Printer} onClick={() => window.print()}>
+          <Button variant="ghost" color="ink" size="sm" icon={Printer} onClick={() => window.print()} disabled={loading}>
             Print
           </Button>
           <div className="flex-1" />
-          <Button color="primary" size="sm" icon={Save} onClick={() => onSave(planData, formData, currentAdvice)}>
+          <Button color="primary" size="sm" icon={Save} onClick={() => onSave(planData, formData, currentAdvice)} disabled={loading || !!aiAdvice}>
             Confirm Report
           </Button>
         </div>
@@ -94,20 +106,216 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
       <style dangerouslySetInnerHTML={{
         __html: `
         @media print {
-          html, body { height: 100vh !important; max-height: 100vh !important; overflow: hidden !important; }
-          body * { visibility: hidden; }
-          #salary-dashboard-print, #salary-dashboard-print * { visibility: visible; }
+          @page {
+            size: A4 portrait;
+            margin: 4mm 5mm 4mm 5mm;
+          }
+          html, body {
+            height: auto !important;
+            overflow: visible !important;
+            background-color: white !important;
+            color: #111827 !important;
+          }
+          body * {
+            visibility: hidden !important;
+          }
+          #salary-dashboard-print, #salary-dashboard-print * {
+            visibility: visible !important;
+          }
+          
+          /* Override all parent overlay and card container structures to be plain static block flows */
+          body > div,
+          div[class*="fixed"],
+          div[class*="backdrop-blur"],
+          div[class*="bg-surface-card"] {
+            display: block !important;
+            position: static !important;
+            width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            transform: none !important;
+            filter: none !important;
+            backdrop-filter: none !important;
+            animation: none !important;
+          }
+
+          /* Strip all layout, height, transform, filter, and animation constraints from ALL ancestors */
+          * {
+            overflow: visible !important;
+            max-height: none !important;
+            max-width: none !important;
+            transform: none !important;
+            filter: none !important;
+            backdrop-filter: none !important;
+            box-shadow: none !important;
+            animation: none !important;
+            transition: none !important;
+          }
+          
+          /* Print container setup: Absolute placement on top of document */
           #salary-dashboard-print {
             visibility: visible !important;
             position: absolute !important;
+            z-index: 999999 !important;
             left: 0 !important; top: 0 !important;
-            width: 100% !important; padding: 10mm !important; margin: 0 !important;
-            background-color: white !important; zoom: 0.85;
-            filter: grayscale(100%) contrast(1.2);
+            width: 100% !important; padding: 0 !important; margin: 0 !important;
+            background-color: white !important; zoom: 1.38;
             -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          #salary-dashboard-print div, #salary-dashboard-print span, #salary-dashboard-print p {
-            background-color: white !important; color: black !important; border-color: #ddd !important;
+          
+          /* Force Tablet Responsive Grid and Column Layouts in Print */
+          #salary-dashboard-print .grid {
+            display: grid !important;
+          }
+          /* Executive Strip: Force exactly 2 Columns (2x2 grid) */
+          #salary-dashboard-print .grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+          /* Main Layout: Force exactly 1 Column (vertical stack of Main Content & Audit Panel) */
+          #salary-dashboard-print .grid-cols-1.lg\\:grid-cols-12 {
+            grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+          }
+          #salary-dashboard-print .lg\\:col-span-8,
+          #salary-dashboard-print .lg\\:col-span-4 {
+            grid-column: span 1 / span 1 !important;
+          }
+          /* Allocation Matrix: Force exactly 3 Columns */
+          #salary-dashboard-print .grid-cols-1.sm\\:grid-cols-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          }
+          /* Capital Objective: Force exactly 2 Columns */
+          #salary-dashboard-print .grid-cols-1.md\\:grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+
+          /* Optimize Card Backgrounds and Borders for Clean Paper Print */
+          #salary-dashboard-print .bg-surface-card,
+          #salary-dashboard-print .dark\\:bg-surface-card-dark,
+          #salary-dashboard-print .bg-paper-100\\/30,
+          #salary-dashboard-print .dark\\:bg-white\\/\\[0\\.02\\] {
+            background-color: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 24px !important;
+            box-shadow: none !important;
+          }
+
+          /* Ensure Bold Text Stays Crisp and Dark */
+          #salary-dashboard-print .text-ink-900,
+          #salary-dashboard-print .dark\\:text-paper-50 {
+            color: #111827 !important;
+          }
+          #salary-dashboard-print .text-ink-400,
+          #salary-dashboard-print .dark\\:text-paper-700 {
+            color: #4b5563 !important;
+          }
+
+          /* Solid Hex Fill Overrides for Progress Bars and indicators */
+          #salary-dashboard-print .bg-paper-100,
+          #salary-dashboard-print .dark\\:bg-white\\/5 {
+            background-color: #f3f4f6 !important;
+          }
+          #salary-dashboard-print .bg-primary-500,
+          #salary-dashboard-print .bg-primary-500\\/80 {
+            background-color: #0d9488 !important;
+          }
+          #salary-dashboard-print .bg-warning-500,
+          #salary-dashboard-print .bg-warning-500\\/80 {
+            background-color: #d97706 !important;
+          }
+          #salary-dashboard-print .bg-error-500,
+          #salary-dashboard-print .bg-error-500\\/80 {
+            background-color: #dc2626 !important;
+          }
+          #salary-dashboard-print .bg-info-500,
+          #salary-dashboard-print .bg-info-500\\/80 {
+            background-color: #2563eb !important;
+          }
+          #salary-dashboard-print .bg-success-500\\/60 {
+            background-color: #16a34a !important;
+          }
+          #salary-dashboard-print .bg-info-500\\/60 {
+            background-color: #2563eb !important;
+          }
+
+          /* Text Highlights Colors */
+          #salary-dashboard-print .text-primary-600,
+          #salary-dashboard-print .dark\\:text-primary-400 {
+            color: #0d9488 !important;
+          }
+          #salary-dashboard-print .text-info-600,
+          #salary-dashboard-print .dark\\:text-info-400 {
+            color: #2563eb !important;
+          }
+          #salary-dashboard-print .text-error-600,
+          #salary-dashboard-print .dark\\:text-error-400 {
+            color: #dc2626 !important;
+          }
+
+          /* Audit Dot indicators */
+          #salary-dashboard-print .bg-success-500 {
+            background-color: #16a34a !important;
+          }
+          #salary-dashboard-print .bg-primary-500 {
+            background-color: #0d9488 !important;
+          }
+
+          /* Luxurious Spacing for Bold Portrait Presentation */
+          #salary-dashboard-print.space-y-5 > * + * {
+            margin-top: 1.25rem !important;
+          }
+          #salary-dashboard-print .lg\\:col-span-8.space-y-5 > * + * {
+            margin-top: 1.25rem !important;
+          }
+          #salary-dashboard-print .gap-5 {
+            gap: 1.5rem !important;
+          }
+          #salary-dashboard-print .gap-6 {
+            gap: 1.5rem !important;
+          }
+          #salary-dashboard-print .gap-3 {
+            gap: 1rem !important;
+          }
+          #salary-dashboard-print .p-5 {
+            padding: 1.6rem !important;
+          }
+          #salary-dashboard-print .p-4 {
+            padding: 1.35rem !important;
+          }
+          #salary-dashboard-print .mb-6 {
+            margin-bottom: 1.25rem !important;
+          }
+
+          /* Explicit Typographic Scaling */
+          #salary-dashboard-print .text-overline {
+            font-size: 13px !important;
+            line-height: 1.25rem !important;
+            letter-spacing: 0.12em !important;
+          }
+          #salary-dashboard-print .text-label {
+            font-size: 14px !important;
+            line-height: 1.25rem !important;
+          }
+          #salary-dashboard-print .text-body {
+            font-size: 17px !important;
+            line-height: 1.6rem !important;
+          }
+          #salary-dashboard-print .text-h2 {
+            font-size: 2.3rem !important;
+            line-height: 2.75rem !important;
+          }
+          #salary-dashboard-print .text-h3 {
+            font-size: 1.95rem !important;
+            line-height: 2.35rem !important;
+          }
+          #salary-dashboard-print .text-h5 {
+            font-size: 1.45rem !important;
+            line-height: 1.85rem !important;
           }
           .print-hide { display: none !important; }
         }
@@ -178,21 +386,27 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
                   { label: 'Fixed Ops', val: needsPct, color: needsPct > 50 ? 'error' : 'primary', amount: c(totalNeeds), limit: 'MAX 50%' },
                   { label: 'Lifestyle', val: wantsPctActual, color: wantsPctActual > 30 ? 'warning' : 'info', amount: c(totalWants), limit: 'MAX 30%' },
                   { label: 'Retention', val: savingsPctActual, color: savingsPctActual >= 20 ? 'primary' : 'warning', amount: c(totalSavings), limit: 'MIN 20%' }
-                ].map(item => (
-                  <div key={item.label} className="space-y-3">
-                    <div className="flex justify-between items-end">
-                      <span className="text-overline text-ink-400 dark:text-paper-700">{item.label}</span>
-                      <span className="text-h5 text-ink-900 dark:text-paper-50 leading-none">{item.val}%</span>
+                ].map(item => {
+                  const colorClass = item.color === 'error' ? 'bg-error-500/80'
+                    : item.color === 'warning' ? 'bg-warning-500/80'
+                    : item.color === 'info' ? 'bg-info-500/80'
+                    : 'bg-primary-500/80';
+                  return (
+                    <div key={item.label} className="space-y-3">
+                      <div className="flex justify-between items-end">
+                        <span className="text-overline text-ink-400 dark:text-paper-700">{item.label}</span>
+                        <span className="text-h5 text-ink-900 dark:text-paper-50 leading-none">{item.val}%</span>
+                      </div>
+                      <div className="h-1.5 bg-paper-100 dark:bg-white/5 rounded-full overflow-hidden">
+                        <div className={`h-full ${colorClass} transition-all duration-1000`} style={{ width: `${item.val}%` }} />
+                      </div>
+                      <div className="flex justify-between text-overline text-ink-400 dark:text-paper-700">
+                        <span>{item.amount}</span>
+                        <span>{item.limit}</span>
+                      </div>
                     </div>
-                    <div className="h-1.5 bg-paper-100 dark:bg-white/5 rounded-full overflow-hidden">
-                      <div className={`h-full bg-${item.color}-500/80 transition-all duration-1000`} style={{ width: `${item.val}%` }} />
-                    </div>
-                    <div className="flex justify-between text-overline text-ink-400 dark:text-paper-700">
-                      <span>{item.amount}</span>
-                      <span>{item.limit}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </GlassCard>
 
@@ -296,6 +510,17 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
           <p className="text-overline text-ink-400 dark:text-paper-700 tracking-[0.6em]">Intel Ledger · Version 2.0</p>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showConfirmClose}
+        onClose={() => setShowConfirmClose(false)}
+        onConfirm={onClose}
+        title="Unsaved Changes"
+        message="Are you sure you want to close? Your new strategic plan has not been saved yet."
+        confirmText="Close Without Saving"
+        cancelText="Keep Plan Open"
+        type="warning"
+      />
     </Modal>
   );
 }

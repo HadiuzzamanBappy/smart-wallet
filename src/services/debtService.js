@@ -28,6 +28,13 @@ import {
 import { addTransaction } from './transactionService';
 import { APP_EVENTS } from '../config/constants';
 
+const getLocalDateString = (d = new Date()) => {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 /**
  * Get outstanding (unpaid) loans for a user
  */
@@ -157,7 +164,7 @@ export const markLoanAsRepaid = async (userId, loanId, repaymentAmount, descript
       amount: numRepaymentAmount,
       description: description || `Loan repayment - ${decryptedLoan.description}`,
       category: decryptedLoan.category || 'loan',
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
       linkedTransactionId: loanId,
       originalAmount: totalAmount,
       originalDescription: decryptedLoan.description || ''
@@ -216,7 +223,7 @@ export const markCreditAsCollected = async (userId, creditId, collectionAmount, 
       amount: numCollectionAmount,
       description: description || `Credit collected - ${decryptedCredit.description}`,
       category: decryptedCredit.category || 'credit',
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
       linkedTransactionId: creditId,
       originalAmount: totalAmount,
       originalDescription: decryptedCredit.description || ''

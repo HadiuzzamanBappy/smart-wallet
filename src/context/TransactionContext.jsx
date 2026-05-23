@@ -4,6 +4,9 @@ import { getTransactions } from '../services/transactionService';
 import { getSalaryPlan } from '../services/salaryService';
 import { computeTransactionEffects } from '../utils/transactionHelpers';
 import { TransactionContext } from './createTransactionContext';
+import { generateMonthlyBaselineTransactions } from '../services/rolloverService';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 export const TransactionProvider = ({ children }) => {
   const { user } = useAuth();
@@ -35,15 +38,54 @@ export const TransactionProvider = ({ children }) => {
         getSalaryPlan(user.uid)
       ]);
 
-      if (txResult.success) {
-        setTransactions(txResult.data);
-      } else {
-        setError(txResult.error || 'Failed to load transactions');
-        setTransactions([]);
+      let finalTxs = txResult.success ? txResult.data : [];
+      let finalPlan = planResult;
+
+      // Detect month-start rollover silently
+      if (planResult && planResult.plan && planResult.form) {
+        const now = new Date();
+        const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+        // Double check: check if baseline transactions have ALREADY been written to Firestore for this month
+        const hasBaselineInDb = finalTxs.some(tx => {
+          if (tx.source !== 'salary-plan-baseline') return false;
+          const txDate = new Date(tx.date || tx.createdAt);
+          const mStr = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`;
+          return mStr === currentMonthStr;
+        });
+
+        if (planResult.lastGeneratedMonth !== currentMonthStr && !hasBaselineInDb) {
+          console.debug(`[ROLLOVER] Rollover detected. Generating baseline transactions for ${currentMonthStr}...`);
+          const rolloverRes = await generateMonthlyBaselineTransactions(user.uid, planResult, currentMonthStr);
+          if (rolloverRes && rolloverRes.success && !rolloverRes.alreadyGenerated) {
+            // Re-fetch transactions and updated salary plan containing the new lastGeneratedMonth
+            const [updatedTxResult, updatedPlanResult] = await Promise.all([
+              getTransactions(user.uid),
+              getSalaryPlan(user.uid)
+            ]);
+            if (updatedTxResult.success) {
+              finalTxs = updatedTxResult.data;
+            }
+            if (updatedPlanResult) {
+              finalPlan = updatedPlanResult;
+            }
+          }
+        } else if (planResult.lastGeneratedMonth !== currentMonthStr && hasBaselineInDb) {
+          // Silent self-healing: if baseline is already in database, silently sync lastGeneratedMonth field
+          console.debug(`[ROLLOVER] Baselines already present in DB for ${currentMonthStr}. Syncing profile lastGeneratedMonth.`);
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, { 'salary.lastGeneratedMonth': currentMonthStr });
+          if (finalPlan) {
+            finalPlan.lastGeneratedMonth = currentMonthStr;
+          }
+        }
       }
 
-      if (planResult) {
-        setSalaryPlan(planResult);
+      setTransactions(finalTxs);
+      if (finalPlan) {
+        setSalaryPlan(finalPlan);
+      } else {
+        setSalaryPlan(null);
       }
     } catch (err) {
       setError(err.message);
@@ -93,7 +135,7 @@ export const TransactionProvider = ({ children }) => {
     const currentYear = now.getFullYear();
 
     return transactions.filter(tx => {
-      const txDate = new Date(tx.createdAt);
+      const txDate = new Date(tx.date || tx.createdAt);
       return txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear;
     });
   }, [transactions]);
@@ -123,18 +165,33 @@ export const TransactionProvider = ({ children }) => {
     }, 0);
   }, [currentMonthTransactions]);
 
+  // Check if baseline transactions have already been logged to the database for the current month
+  const hasBaselineBeenWritten = React.useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    return transactions.some(tx => {
+      if (tx.source !== 'salary-plan-baseline') return false;
+      const txDate = new Date(tx.date || tx.createdAt);
+      return txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear;
+    });
+  }, [transactions]);
+
   // Fixed Monthly Values from Plan
   const monthlyFixedIncome = React.useMemo(() => {
-    if (!salaryPlan?.plan) return 0;
+    // If baseline has already been logged to the database, do NOT inject it in memory (prevent double-counting)
+    if (hasBaselineBeenWritten || !salaryPlan?.plan) return 0;
     return salaryPlan.plan.totalIncome || 0;
-  }, [salaryPlan]);
+  }, [salaryPlan, hasBaselineBeenWritten]);
 
   const monthlyFixedExpense = React.useMemo(() => {
-    if (!salaryPlan?.plan) return 0;
+    // If baseline has already been logged to the database, do NOT inject it in memory (prevent double-counting)
+    if (hasBaselineBeenWritten || !salaryPlan?.plan) return 0;
     // For display (the 'Expended' card), we only count actual living costs (Rent, Bills, etc.)
     // We EXCLUDE Loans (EMI), Savings, and Goals as they are transfers/investments, not lifestyle costs.
     return (salaryPlan.plan.totalFixedCosts || 0);
-  }, [salaryPlan]);
+  }, [salaryPlan, hasBaselineBeenWritten]);
 
   const cashInHand = React.useMemo(() => {
     if (!salaryPlan?.plan) return 0;

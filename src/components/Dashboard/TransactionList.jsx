@@ -146,7 +146,7 @@ const TransactionList = ({ onTransactionChange }) => {
       const daysAgo = parseInt(filters.dateRange);
       const filterDate = new Date();
       filterDate.setDate(filterDate.getDate() - daysAgo);
-      const createdDate = new Date(transaction.createdAt);
+      const createdDate = new Date(transaction.date || transaction.createdAt);
       if (createdDate < filterDate) {
         return false;
       }
@@ -269,10 +269,11 @@ const TransactionList = ({ onTransactionChange }) => {
                       <p className="text-label font-bold text-ink-900 dark:text-paper-50 truncate mb-1">{transaction.description}</p>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-paper-100 dark:bg-white/5 border border-paper-200/50 dark:border-white/5">
+                          <span className="text-xs">{getCategoryEmoji(dc)}</span>
                           <span className="text-overline opacity-60 uppercase tracking-widest">{dc}</span>
                         </div>
                         <span className="text-overline opacity-40">
-                          {formatDate(transaction.createdAt)}
+                          {formatDate(transaction.date || transaction.createdAt)}
                         </span>
                       </div>
                     </div>
@@ -401,7 +402,7 @@ const TransactionList = ({ onTransactionChange }) => {
               )}
               <div className="space-y-1.5 px-1">
                 <label className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest opacity-50">Timestamp</label>
-                <div className="text-label font-bold text-ink-900 dark:text-white">{formatDate(adjustmentDetail.createdAt)}</div>
+                <div className="text-label font-bold text-ink-900 dark:text-white">{formatDate(adjustmentDetail.date || adjustmentDetail.createdAt)}</div>
               </div>
               <div className="space-y-1.5 px-1 col-span-2 pt-2 border-t border-paper-100 dark:border-white/5">
                 <label className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest opacity-50">Reference Entity</label>

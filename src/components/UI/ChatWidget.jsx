@@ -3,7 +3,7 @@ import { MessageSquare, Plus, Loader2, Edit, Trash, Check, X, AlertTriangle } fr
 import { parseTransaction } from '../../services/aiService';
 import { addTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
-import { formatCurrency } from '../../utils/helpers';
+import { formatCurrency, getCategoryEmoji } from '../../utils/helpers';
 
 // Base UI Components
 import Button from './base/Button';
@@ -11,6 +11,13 @@ import SectionHeader from './base/SectionHeader';
 import GlassCard from './base/GlassCard';
 import Badge from './base/Badge';
 import IconBox from './base/IconBox';
+
+const getLocalDateString = (d = new Date()) => {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
 
 const ChatWidget = ({ onTransactionAdded, className = '' }) => {
   const { user, userProfile, refreshUserProfile } = useAuth();
@@ -120,8 +127,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
       for (const transaction of toSave) {
         const addResult = await addTransaction(user.uid, {
           ...transaction,
-          // Ensure date is properly formatted as Date object
-          date: transaction.date ? new Date(transaction.date) : new Date(),
+          date: transaction.date || getLocalDateString(),
           source: 'chat'
         });
 
@@ -161,22 +167,6 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
     }
   };
 
-  const getCategoryEmoji = (category) => {
-    const emojiMap = {
-      food: '🍔',
-      transport: '🚗',
-      entertainment: '🎬',
-      shopping: '🛍️',
-      bills: '📄',
-      health: '🏥',
-      education: '📚',
-      salary: '💼',
-      freelance: '💻',
-      investment: '📈',
-      other: '📦'
-    };
-    return emojiMap[category] || '📦';
-  };
 
   const humanizeType = (type) => {
     if (!type) return 'Other';
@@ -266,10 +256,10 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                           </div>
                           <Badge
                             variant="soft"
-                            color={transaction.type === 'income' || transaction.type === 'loan' ? 'primary' : 'error'}
+                            color={['income', 'loan', 'collection'].includes(transaction.type) ? 'primary' : 'error'}
                             size="sm"
                           >
-                            {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
+                            {['income', 'loan', 'collection'].includes(transaction.type) ? '+' : '-'}
                             {formatCurrency(transaction.amount, userCurrency)}
                           </Badge>
                         </div>
@@ -342,8 +332,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p className={`text-label font-bold ${transaction.type === 'income' || transaction.type === 'loan' ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
-                                  {transaction.type === 'income' || transaction.type === 'loan' ? '+' : '-'}
+                                <p className={`text-label font-bold ${['income', 'loan', 'collection'].includes(transaction.type) ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
+                                  {['income', 'loan', 'collection'].includes(transaction.type) ? '+' : '-'}
                                   {formatCurrency(transaction.amount, userCurrency)}
                                 </p>
                               </div>

@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Wallet, Plus, RefreshCw, X, TrendingUp, TrendingDown, Info } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import useLocalRefresh from '../../hooks/useLocalRefresh';
 import { formatCurrency } from '../../utils/helpers';
 import UserMenuDropdown from '../User/UserMenuDropdown';
-import { getOutstandingCredits, getOutstandingLoans } from '../../services/debtService';
 import Skeleton, { HeaderSkeleton } from './SkeletonLoader';
 import { APP_EVENTS } from '../../config/constants';
 
@@ -24,8 +23,8 @@ const Header = ({
     onLanguageToggle,
     isRefreshing = false
 }) => {
-    const { userProfile, user } = useAuth();
-    const { salaryPlan, loading: globalLoading, netBalance, currentMonthIncome, currentMonthExpense } = useTransactions();
+    const { userProfile } = useAuth();
+    const { salaryPlan, loading: globalLoading, netBalance, currentMonthIncome, currentMonthExpense, transactions, refreshTransactions } = useTransactions();
     const cashInHand = salaryPlan?.plan?.cashInHand || 0;
     const goalSaving = salaryPlan?.plan?.monthlyForGoal || 0;
     const netBalanceAmount = netBalance || 0;
@@ -45,52 +44,43 @@ const Header = ({
     const [isClosing, setIsClosing] = useState(false);
     const hideTimerRef = useRef(null);
     const closeTimerRef = useRef(null);
-    const [creditDue, setCreditDue] = useState(0);
-    const [loanDue, setLoanDue] = useState(0);
     const { isRefreshing: isLocalRefreshing, run: runLocalRefresh } = useLocalRefresh(350);
 
-    const refreshDues = useCallback(async () => {
-        try {
-            if (!user?.uid) return;
-            const [creditsResult, loansResult] = await Promise.all([
-                getOutstandingCredits(user.uid),
-                getOutstandingLoans(user.uid)
-            ]);
-
-            let cDue = 0;
-            let lDue = 0;
-
-            if (salaryPlan?.plan?.loanDetails) {
-                salaryPlan.plan.loanDetails.forEach(loan => {
-                    lDue += Number(loan.totalLeft || 0);
-                });
+    const creditDue = useMemo(() => {
+        let cDue = 0;
+        transactions.forEach(tx => {
+            if (tx.type === 'credit' && !tx.isFullyPaid) {
+                const amount = Number(tx.amount || 0);
+                const paidAmount = Number(tx.paidAmount || 0);
+                cDue += Math.max(0, amount - paidAmount);
             }
+        });
+        return cDue;
+    }, [transactions]);
 
-            if (creditsResult.success && Array.isArray(creditsResult.data)) {
-                creditsResult.data.forEach(c => {
-                    cDue += Number(c.remainingAmount || 0);
-                });
-            }
-
-            if (loansResult.success && Array.isArray(loansResult.data)) {
-                loansResult.data.forEach(l => {
-                    lDue += Number(l.remainingAmount || 0);
-                });
-            }
-
-            setCreditDue(cDue);
-            setLoanDue(lDue);
-        } catch (err) {
-            console.warn('Header: failed to refresh dues', err);
+    const loanDue = useMemo(() => {
+        let lDue = 0;
+        if (salaryPlan?.plan?.loanDetails) {
+            salaryPlan.plan.loanDetails.forEach(loan => {
+                lDue += Number(loan.totalLeft || 0);
+            });
         }
-    }, [user?.uid, salaryPlan]);
+        transactions.forEach(tx => {
+            if (tx.type === 'loan' && !tx.isFullyPaid) {
+                const amount = Number(tx.amount || 0);
+                const paidAmount = Number(tx.paidAmount || 0);
+                lDue += Math.max(0, amount - paidAmount);
+            }
+        });
+        return lDue;
+    }, [transactions, salaryPlan]);
 
     const handleBalanceClick = async () => {
         await runLocalRefresh(async () => {
             try {
-                await refreshDues();
+                await refreshTransactions(true);
             } catch (err) {
-                console.warn('Header: refreshDues failed', err);
+                console.warn('Header: refreshTransactions failed', err);
             }
         });
 
@@ -110,21 +100,6 @@ const Header = ({
             if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
         };
     }, []);
-
-    useEffect(() => {
-        refreshDues();
-        const handleTxUpdate = () => refreshDues();
-        window.addEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTxUpdate);
-        window.addEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTxUpdate);
-        window.addEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTxUpdate);
-        window.addEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTxUpdate);
-        return () => {
-            window.removeEventListener(APP_EVENTS.TRANSACTION_ADDED, handleTxUpdate);
-            window.removeEventListener(APP_EVENTS.TRANSACTION_EDITED, handleTxUpdate);
-            window.removeEventListener(APP_EVENTS.TRANSACTION_DELETED, handleTxUpdate);
-            window.removeEventListener(APP_EVENTS.TRANSACTIONS_UPDATED, handleTxUpdate);
-        };
-    }, [refreshDues]);
 
     const handleFloatingClose = () => {
         if (hideTimerRef.current) {

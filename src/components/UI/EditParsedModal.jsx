@@ -3,12 +3,21 @@ import { Edit3, Save, X, Loader2 } from 'lucide-react';
 import Modal from './base/Modal';
 import { updateTransaction } from '../../services/transactionService';
 import { useAuth } from '../../hooks/useAuth';
+import { TRANSACTION_CATEGORIES } from '../../config/constants';
 
 // Base UI Components
 import Button from './base/Button';
 import GlassInput from './base/GlassInput';
 import Select from './base/Select';
 import IconBox from './base/IconBox';
+
+const getLocalDateString = (d = new Date()) => {
+  const date = d instanceof Date ? d : new Date(d);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
 
 const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
   const { user, refreshUserProfile } = useAuth();
@@ -18,22 +27,14 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
     amount: '',
     description: '',
     category: 'other',
-    date: new Date().toISOString().split('T')[0]
+    date: getLocalDateString()
   });
 
-  const categories = [
-    { value: 'food', label: 'Food & Dining', emoji: '🍔' },
-    { value: 'transport', label: 'Transportation', emoji: '🚗' },
-    { value: 'entertainment', label: 'Entertainment', emoji: '🎬' },
-    { value: 'shopping', label: 'Shopping', emoji: '🛍️' },
-    { value: 'bills', label: 'Bills & Utilities', emoji: '📄' },
-    { value: 'health', label: 'Healthcare', emoji: '🏥' },
-    { value: 'education', label: 'Education', emoji: '📚' },
-    { value: 'salary', label: 'Salary', emoji: '💼' },
-    { value: 'freelance', label: 'Freelance', emoji: '💻' },
-    { value: 'investment', label: 'Investment', emoji: '📈' },
-    { value: 'other', label: 'Other', emoji: '📦' }
-  ];
+  const categories = Object.entries(TRANSACTION_CATEGORIES).map(([value, config]) => ({
+    value,
+    label: config.label,
+    emoji: config.emoji
+  }));
 
   // Update form data when transaction changes
   useEffect(() => {
@@ -43,7 +44,7 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
         amount: transaction.amount?.toString() || '',
         description: transaction.description || '',
         category: transaction.category || 'other',
-        date: transaction.date ? new Date(transaction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        date: transaction.date ? getLocalDateString(transaction.date) : getLocalDateString()
       });
     }
   }, [transaction]);
@@ -55,10 +56,12 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
     setLoading(true);
     try {
       // Create update data with proper date handling
+      const category = editData.type === 'loan' ? 'loan' : editData.type === 'credit' ? 'credit' : editData.category;
       const updateData = {
         ...editData,
+        category,
         amount: Number(editData.amount),
-        date: new Date(editData.date), // Convert string to Date object for Firestore
+        date: editData.date, // Pass raw local date string to prevent timezone shifts
         userId: user.uid,
         updatedAt: new Date() // Add timestamp for when this edit happened
       };
@@ -131,7 +134,16 @@ const EditParsedModal = ({ isOpen, onClose, transaction, onSuccess }) => {
             <Select
               name="type"
               value={editData.type}
-              onChange={(e) => handleInputChange({ target: { name: 'type', value: e.target.value } })}
+              onChange={(e) => {
+                const newType = e.target.value;
+                setEditData(prev => {
+                  const updates = { type: newType };
+                  if (newType === 'loan') updates.category = 'loan';
+                  else if (newType === 'credit') updates.category = 'credit';
+                  else if (prev.category === 'loan' || prev.category === 'credit') updates.category = 'other';
+                  return { ...prev, ...updates };
+                });
+              }}
               options={[
                 { value: 'expense', label: 'Expense' },
                 { value: 'income', label: 'Income' },

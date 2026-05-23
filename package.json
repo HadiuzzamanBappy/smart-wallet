@@ -12,6 +12,8 @@
     "deploy": "firebase deploy",
     "deploy:hosting": "firebase deploy --only hosting",
     "deploy:rules": "firebase deploy --only firestore:rules",
+    "db:reset": "firebase firestore:delete --all-collections -f --project smart-wallet-48d1d",
+    "db:connect": "firebase login --reauth",
     "patch": "npm version patch",
     "minor": "npm version minor",
     "major": "npm version major",
