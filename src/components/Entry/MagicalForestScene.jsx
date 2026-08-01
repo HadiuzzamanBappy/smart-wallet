@@ -23,11 +23,11 @@ const WireTree = ({ position, rotation, depth = 0, maxDepth = 4, length = 2, rad
       {/* Branch/Trunk Mesh */}
       <mesh position={[0, length / 2, 0]}>
         <cylinderGeometry args={[radius * 0.7, radius, length, 8]} />
-        <meshStandardMaterial 
-          color="#34d399" 
+        <meshStandardMaterial
+          color="#34d399"
           emissive="#059669"
           emissiveIntensity={0.2}
-          wireframe={true} 
+          wireframe={true}
           transparent
           opacity={0.3} /* Watermark opacity */
         />
@@ -36,29 +36,29 @@ const WireTree = ({ position, rotation, depth = 0, maxDepth = 4, length = 2, rad
       {/* Child Branches (recursive) */}
       {depth < maxDepth && (
         <>
-          <WireTree 
-            position={[0, length, 0]} 
-            rotation={[0.5, 1, 0.5]} 
-            depth={depth + 1} 
-            maxDepth={maxDepth} 
-            length={length * 0.75} 
-            radius={radius * 0.7} 
+          <WireTree
+            position={[0, length, 0]}
+            rotation={[0.5, 1, 0.5]}
+            depth={depth + 1}
+            maxDepth={maxDepth}
+            length={length * 0.75}
+            radius={radius * 0.7}
           />
-          <WireTree 
-            position={[0, length, 0]} 
-            rotation={[-0.5, -1, -0.5]} 
-            depth={depth + 1} 
-            maxDepth={maxDepth} 
-            length={length * 0.75} 
-            radius={radius * 0.7} 
+          <WireTree
+            position={[0, length, 0]}
+            rotation={[-0.5, -1, -0.5]}
+            depth={depth + 1}
+            maxDepth={maxDepth}
+            length={length * 0.75}
+            radius={radius * 0.7}
           />
-          <WireTree 
-            position={[0, length, 0]} 
-            rotation={[0.5, 0.5, -0.5]} 
-            depth={depth + 1} 
-            maxDepth={maxDepth} 
-            length={length * 0.75} 
-            radius={radius * 0.7} 
+          <WireTree
+            position={[0, length, 0]}
+            rotation={[0.5, 0.5, -0.5]}
+            depth={depth + 1}
+            maxDepth={maxDepth}
+            length={length * 0.75}
+            radius={radius * 0.7}
           />
         </>
       )}
@@ -69,7 +69,33 @@ const WireTree = ({ position, rotation, depth = 0, maxDepth = 4, length = 2, rad
 // 3D Falling Leaves Particle System
 const FallingLeaves = ({ count = 50 }) => {
   const meshRef = useRef();
-  
+
+  // Create a 3D Leaf Mesh for wireframe rendering
+  const leafGeometry = useMemo(() => {
+    const shape = new THREE.Shape();
+    // A natural curved leaf shape
+    shape.moveTo(0, -0.6);
+    // Right curve up to tip
+    shape.bezierCurveTo(0.4, -0.3, 0.4, 0.3, 0, 0.6);
+    // Left curve down to base
+    shape.bezierCurveTo(-0.4, 0.3, -0.4, -0.3, 0, -0.6);
+
+    // Extrude to give the wireframe 3D depth and complex mesh lines
+    const extrudeSettings = {
+      depth: 0.05,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      steps: 1,
+      bevelSize: 0.02,
+      bevelThickness: 0.02
+    };
+
+    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    geometry.center(); // Center for proper rotation axis
+    geometry.scale(0.3, 0.3, 0.3); // Scale down to particle size
+    return geometry;
+  }, []);
+
   // Generate random positions, rotations, and speeds for each leaf
   const particles = useMemo(() => {
     const temp = [];
@@ -98,10 +124,10 @@ const FallingLeaves = ({ count = 50 }) => {
     particles.forEach((particle, i) => {
       // Fall down
       particle.position[1] -= particle.speed;
-      
+
       // Sway side to side (wind effect)
       particle.position[0] += Math.sin(time * particle.swaySpeed + i) * particle.swayAmount;
-      
+
       // Rotate while falling
       particle.rotation[0] += 0.02;
       particle.rotation[1] += 0.02;
@@ -122,16 +148,15 @@ const FallingLeaves = ({ count = 50 }) => {
   });
 
   return (
-    <instancedMesh ref={meshRef} args={[null, null, count]}>
-      <coneGeometry args={[0.2, 0.4, 4]} />
-      <meshStandardMaterial 
-        color="#a7f3d0" 
+    <instancedMesh ref={meshRef} args={[leafGeometry, null, count]}>
+      <meshStandardMaterial
+        color="#059669"
         emissive="#059669"
-        emissiveIntensity={0.2}
-        wireframe={true} 
+        emissiveIntensity={0.4}
+        wireframe={true}
         side={THREE.DoubleSide}
         transparent
-        opacity={0.25} /* Watermark opacity */
+        opacity={0.04}
       />
     </instancedMesh>
   );
@@ -144,7 +169,7 @@ const MagicalForestScene = () => {
         <ambientLight intensity={0.8} />
         <pointLight position={[10, 10, 10]} intensity={2} color="#fbbf24" />
         <pointLight position={[-10, 5, -10]} intensity={1.5} color="#34d399" />
-        
+
         {/* Magical ambient fireflies */}
         <Sparkles count={150} scale={25} size={2} speed={0.8} opacity={0.8} noise={0.2} color="#fcd34d" />
         <Sparkles count={100} scale={20} size={3} speed={0.5} opacity={0.6} noise={0.1} color="#fef08a" />

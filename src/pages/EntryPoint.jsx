@@ -41,6 +41,52 @@ const EntryPoint = () => {
     }
   ];
 
+  const DoorGraphic = () => (
+    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 shadow-[inset_0_0_40px_rgba(0,0,0,0.6)] border-[4px] border-emerald-950 overflow-hidden flex items-center justify-center pointer-events-none">
+      {/* Greenish Forest Vibe / Moss Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-tl from-emerald-900/50 via-green-700/20 to-transparent pointer-events-none mix-blend-overlay" />
+      <div className="absolute inset-0 bg-emerald-900/10 pointer-events-none" />
+
+      {/* Vertical "Wood Planks" styling */}
+      <div className="absolute inset-0 flex justify-between px-[10%] opacity-30 pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="w-px h-full bg-amber-950 shadow-[1px_0_0_rgba(255,255,255,0.1)]" />
+        ))}
+      </div>
+
+      {/* Realistic Central Split Seam Bevels */}
+      {/* Left Door Edge Bevel */}
+      <div className="absolute top-0 right-1/2 w-3 h-full bg-gradient-to-r from-transparent to-black/80 pointer-events-none z-10" />
+      <div className="absolute top-0 right-1/2 w-[1px] h-full bg-amber-400/30 pointer-events-none z-10" />
+      
+      {/* Right Door Edge Bevel */}
+      <div className="absolute top-0 left-1/2 w-3 h-full bg-gradient-to-l from-transparent to-black/80 pointer-events-none z-10" />
+      <div className="absolute top-0 left-1/2 w-[1px] h-full bg-black/90 pointer-events-none z-10" />
+
+      {/* Door Watermark Crest / Sigil */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none mix-blend-multiply z-20">
+        <div className="absolute w-64 h-64 border-[16px] border-amber-950 rounded-full border-dashed" />
+        <div className="absolute w-48 h-48 border-[4px] border-amber-950 rounded-full" />
+        <div className="absolute w-72 h-72 rotate-45 border-x-[8px] border-amber-950" />
+        <div className="absolute w-72 h-72 -rotate-45 border-x-[8px] border-amber-950" />
+        <div className="absolute w-56 h-56 border-[8px] border-amber-950 rounded-full" />
+        <div className="flex gap-4 text-amber-950">
+          <Compass size={120} />
+          <Leaf size={120} />
+        </div>
+      </div>
+
+      {/* Subtle Lighting Hit */}
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,rgba(167,243,208,0.15)_0%,transparent_60%)] pointer-events-none z-30" />
+
+      {/* Left and Right Hinges */}
+      <div className="absolute left-[-5px] top-1/4 w-12 h-3 bg-stone-900 rounded-r shadow-[0_2px_5px_rgba(0,0,0,0.5)] z-40" />
+      <div className="absolute left-[-5px] bottom-1/4 w-12 h-3 bg-stone-900 rounded-r shadow-[0_2px_5px_rgba(0,0,0,0.5)] z-40" />
+      <div className="absolute right-[-5px] top-1/4 w-12 h-3 bg-stone-900 rounded-l shadow-[0_2px_5px_rgba(0,0,0,0.5)] z-40" />
+      <div className="absolute right-[-5px] bottom-1/4 w-12 h-3 bg-stone-900 rounded-l shadow-[0_2px_5px_rgba(0,0,0,0.5)] z-40" />
+    </div>
+  );
+
   return (
     <div className="min-h-screen w-full bg-stone-950 font-sans relative overflow-hidden flex flex-col items-center justify-center p-4 sm:p-8 select-none">
 
@@ -87,72 +133,60 @@ const EntryPoint = () => {
               <div className="absolute inset-[24px] rounded-full shadow-[0_0_30px_rgba(0,0,0,0.8)] pointer-events-none bg-stone-950" />
             </div>
 
-            {/* The Dark Interior of the Vault (Where VaultAuth lives) */}
-            <div className="absolute inset-0 rounded-full bg-stone-950 shadow-[inset_0_0_80px_rgba(0,0,0,1)] flex items-center justify-center z-0 overflow-hidden">
+            {/* The Interior of the Vault */}
+            <div className="absolute inset-0 rounded-full shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] flex items-center justify-center z-0 overflow-hidden">
               
-              {/* Natural Forest Watermark */}
+              {/* Blurred Forest Background */}
               <div 
-                className="absolute inset-0 opacity-30 mix-blend-screen pointer-events-none"
+                className="absolute inset-0 opacity-100 pointer-events-none scale-110"
                 style={{
                   backgroundImage: 'url(/img/forest-bg.png)',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  filter: 'grayscale(50%) contrast(120%)'
+                  filter: 'blur(12px) brightness(0.6)'
                 }}
               />
-              {/* Gradient overlay to ensure text readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/80 to-stone-950/20 pointer-events-none" />
+              
+              {/* Subtle Gradient overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/30 to-transparent pointer-events-none" />
 
               <div className={`w-full h-full flex items-center justify-center transition-all ${doorState !== 'closed' ? 'duration-[2000ms] delay-[1000ms] opacity-100 scale-95 sm:scale-100' : 'duration-300 delay-0 opacity-0 scale-50 pointer-events-none'} relative z-10`}>
                  <VaultAuth onBack={() => setDoorState('closed')} />
               </div>
             </div>
 
-            {/* The Natural Wooden Door Itself (Brown oak/pine) - Slides Left into Pocket */}
+            {/* The Split Wooden Door */}
             <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none z-10">
-              <div className={`absolute inset-0 rounded-full bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 shadow-[inset_0_0_40px_rgba(0,0,0,0.6)] border-[4px] border-emerald-950 overflow-hidden flex items-center justify-center pointer-events-auto transition-transform will-change-transform ease-in-out ${doorState !== 'closed' ? 'duration-[3000ms] -translate-x-full pointer-events-none' : 'duration-[2000ms] translate-x-0'}`}>
-                
-                {/* Greenish Forest Vibe / Moss Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tl from-emerald-900/50 via-green-700/20 to-transparent pointer-events-none mix-blend-overlay" />
-                <div className="absolute inset-0 bg-emerald-900/10 pointer-events-none" />
+              
+              {/* Left Door Half */}
+              <div 
+                className={`absolute inset-0 pointer-events-auto transition-transform will-change-transform ease-[cubic-bezier(0.4,0,0.2,1)] ${doorState !== 'closed' ? 'duration-[3000ms] -translate-x-[95%]' : 'duration-[2000ms] translate-x-0'}`}
+                style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}
+              >
+                <DoorGraphic />
+              </div>
 
-                {/* Vertical "Wood Planks" styling */}
-                <div className="absolute inset-0 flex justify-between px-[10%] opacity-30 pointer-events-none">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="w-px h-full bg-amber-950 shadow-[1px_0_0_rgba(255,255,255,0.1)]" />
-                  ))}
-                </div>
+              {/* Right Door Half */}
+              <div 
+                className={`absolute inset-0 pointer-events-auto transition-transform will-change-transform ease-[cubic-bezier(0.4,0,0.2,1)] ${doorState !== 'closed' ? 'duration-[3000ms] translate-x-[95%]' : 'duration-[2000ms] translate-x-0'}`}
+                style={{ clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)' }}
+              >
+                <DoorGraphic />
+              </div>
 
-                {/* Door Watermark Crest / Sigil */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none mix-blend-multiply">
-                  <div className="absolute w-64 h-64 border-[16px] border-amber-950 rounded-full border-dashed" />
-                  <div className="absolute w-48 h-48 border-[4px] border-amber-950 rounded-full" />
-                  <div className="absolute w-72 h-72 rotate-45 border-x-[8px] border-amber-950" />
-                  <div className="absolute w-72 h-72 -rotate-45 border-x-[8px] border-amber-950" />
-                  <div className="absolute w-56 h-56 border-[8px] border-amber-950 rounded-full" />
-                  <div className="flex gap-4 text-amber-950">
-                    <Compass size={120} />
-                    <Leaf size={120} />
-                  </div>
-                </div>
-
-                {/* Subtle Lighting Hit */}
-                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,rgba(167,243,208,0.15)_0%,transparent_60%)] pointer-events-none" />
-
-                {/* Central Wooden Ring / Knob */}
+              {/* Central Wooden Ring / Knob (Fades out and shrinks just before door slides) */}
+              <div className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${doorState !== 'closed' ? 'opacity-0 scale-50 pointer-events-none' : 'opacity-100 scale-100 pointer-events-auto'}`}>
                 <button
                   onClick={handleAccessVault}
                   disabled={doorState !== 'closed'}
-                  className={`relative z-20 w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-amber-700 via-amber-800 to-amber-950 border-[6px] border-amber-900/80 shadow-[0_8px_20px_rgba(0,0,0,0.6),inset_0_4px_10px_rgba(255,255,255,0.2)] flex items-center justify-center transition-all duration-300 group ${doorState !== 'closed' ? 'opacity-0 scale-90' : 'hover:scale-105 active:scale-95 opacity-100'}`}
+                  className="relative z-30 w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-amber-700 via-amber-800 to-amber-950 border-[6px] border-amber-900/80 shadow-[0_8px_20px_rgba(0,0,0,0.6),inset_0_4px_10px_rgba(255,255,255,0.2)] flex items-center justify-center transition-transform hover:scale-105 active:scale-95 group"
                 >
-                  <div className="absolute inset-2 rounded-full border-4 border-amber-950/40" />
+                  <div className="absolute inset-2 rounded-full border-4 border-amber-950/40 group-hover:border-amber-950/20 transition-colors" />
                   <div className="flex flex-col items-center justify-center text-amber-100">
-                    <Key className="w-8 h-8 sm:w-10 sm:h-10 mb-1 text-amber-200 drop-shadow-sm" />
-                    <span className="text-[10px] sm:text-xs font-bold tracking-widest opacity-80 uppercase">Unlock</span>
+                    <Key className="w-8 h-8 sm:w-10 sm:h-10 mb-1 text-amber-200 drop-shadow-sm group-hover:text-emerald-400 transition-colors" />
+                    <span className="text-[10px] sm:text-xs font-bold tracking-widest opacity-80 uppercase group-hover:opacity-100 transition-opacity">Unlock</span>
                   </div>
                 </button>
-                <div className="absolute left-[-5px] top-1/4 w-12 h-3 bg-stone-900 rounded-r shadow-[0_2px_5px_rgba(0,0,0,0.5)]" />
-                <div className="absolute left-[-5px] bottom-1/4 w-12 h-3 bg-stone-900 rounded-r shadow-[0_2px_5px_rgba(0,0,0,0.5)]" />
               </div>
             </div>
           </div>
