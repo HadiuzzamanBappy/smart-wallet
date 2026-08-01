@@ -32,11 +32,11 @@ const PaymentDialog = ({
                 </div>
             }
         >
-            <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5">
-                    <div>
-                        <div className="text-overline text-ink-400 dark:text-paper-700 mb-1 opacity-60">Principal</div>
-                        <div className="text-label text-ink-900 dark:text-paper-50 opacity-40">{formatCurrencyWithUser(item.amount, userProfile)}</div>
+            <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-stone-900/60 border border-stone-800">
+                    <div className="space-y-1">
+                        <div className="text-overline text-stone-400 mb-1 opacity-60">Principal</div>
+                        <div className="text-label text-stone-200 opacity-40">{formatCurrencyWithUser(item.amount, userProfile)}</div>
                     </div>
                     <div>
                         <div className="text-overline text-warning-500 mb-1">Outstanding</div>
@@ -45,7 +45,7 @@ const PaymentDialog = ({
                 </div>
 
                 <div className="space-y-2">
-                    <label className="block text-overline text-ink-400 dark:text-paper-700 px-1">Repayment Amount</label>
+                    <label className="block text-overline text-stone-400 px-1">Repayment Amount</label>
                     <GlassInput
                         type="number"
                         placeholder="0.00"
@@ -57,7 +57,7 @@ const PaymentDialog = ({
                 </div>
 
                 <div className="space-y-2">
-                    <label className="block text-overline text-ink-400 dark:text-paper-700 px-1">Audit Note (Optional)</label>
+                    <label className="block text-overline text-stone-400 px-1">Audit Note (Optional)</label>
                     <GlassInput
                         placeholder="Internal correction..."
                         value={description}

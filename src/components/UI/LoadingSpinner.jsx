@@ -19,7 +19,7 @@ const LoadingSpinner = ({ size = 'md', color = 'primary', className = '' }) => {
     success: 'text-success-500',
     error: 'text-error-500',
     warning: 'text-warning-500',
-    ink: 'text-ink-600 dark:text-paper-400',
+    ink: 'text-stone-400',
     white: 'text-white'
   };
 
@@ -66,10 +66,10 @@ export const LoadingOverlay = ({ loading, children, text = 'Processing...' }) =>
     <div className="relative">
       {children}
       {loading && (
-        <div className="absolute inset-0 bg-white/40 dark:bg-black/60 flex items-center justify-center backdrop-blur-[4px] z-10 animate-in fade-in duration-300">
+        <div className="absolute inset-0 bg-stone-950/60 flex items-center justify-center backdrop-blur-[4px] z-10 animate-in fade-in duration-300">
           <div className="flex flex-col items-center">
             <LoadingSpinner size="lg" />
-            {text && <p className="mt-4 text-overline text-ink-500 dark:text-paper-500 animate-pulse">{text}</p>}
+            {text && <p className="mt-4 text-overline text-stone-400 animate-pulse">{text}</p>}
           </div>
         </div>
       )}

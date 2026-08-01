@@ -367,11 +367,11 @@ const SpendingAnalytics = () => {
   if (transactions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center px-8">
-        <div className="w-16 h-16 rounded-3xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
-          <BarChart3 className="w-8 h-8 text-ink-400" />
+        <div className="w-16 h-16 rounded-3xl bg-stone-900/40 border border-stone-800 flex items-center justify-center mb-6 opacity-40">
+          <BarChart3 className="w-8 h-8 text-stone-400" />
         </div>
-        <h3 className="text-overline text-ink-400 dark:text-paper-700 mb-2">No Insights Ready</h3>
-        <p className="text-overline text-ink-400/60 dark:text-paper-700/60 max-w-[200px]">
+        <h3 className="text-overline text-stone-400 mb-2">No Insights Ready</h3>
+        <p className="text-overline text-stone-500 max-w-[200px]">
           Add transactions to activate your visual intelligence suite.
         </p>
       </div>
@@ -381,7 +381,7 @@ const SpendingAnalytics = () => {
   return (
     <div className="p-3 space-y-4">
       {/* Chart Selector Compact */}
-      <div className="flex p-0.5 bg-paper-100/30 dark:bg-white/5 border border-paper-100 dark:border-white/5 rounded-2xl w-fit">
+      <div className="flex p-0.5 bg-stone-900/60 border border-stone-800 rounded-2xl w-fit">
         {[
           { id: 'spending-trend', label: 'Trend' },
           { id: 'category-breakdown', label: 'Summary' },
@@ -392,7 +392,7 @@ const SpendingAnalytics = () => {
             onClick={() => setActiveChart(chart.id)}
             className={`px-4 py-1.5 rounded-[14px] text-nano uppercase transition-all duration-300 ${activeChart === chart.id
               ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
-              : 'text-ink-400 dark:text-paper-700 hover:text-ink-900 dark:hover:text-paper-50'}`}
+              : 'text-stone-400 hover:text-stone-200'}`}
           >
             {chart.label}
           </button>
@@ -478,7 +478,7 @@ const SpendingAnalytics = () => {
               padding="p-3.5"
               backgroundIcon={stat.icon}
               iconColor={stat.color}
-              className="flex flex-col items-center text-center group hover:bg-paper-100/50 dark:hover:bg-white/[0.04] transition-all border-paper-200/50 dark:border-white/5"
+              className="flex flex-col items-center text-center group hover:bg-stone-800 transition-all border-stone-800"
             >
               <IconBox
                 icon={stat.icon}
@@ -493,7 +493,7 @@ const SpendingAnalytics = () => {
               <div className={`text-label font-bold tracking-tight ${stat.color === 'primary' ? 'text-primary-600 dark:text-primary-400' :
                 stat.color === 'info' ? 'text-blue-600 dark:text-blue-400' :
                   stat.color === 'warning' ? 'text-amber-600 dark:text-amber-400' :
-                    'text-ink-900 dark:text-white'
+                    'text-stone-200'
                 }`}>
                 {stat.value}
               </div>

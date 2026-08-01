@@ -15,18 +15,18 @@ const GlassCard = ({
     const isClickable = !!onClick;
     
     const glassStyles = {
-        card: "bg-surface-card dark:bg-surface-card-dark backdrop-blur-xl border border-paper-200 dark:border-paper-900/10 shadow-glass dark:shadow-glass-dark",
-        thick: "bg-surface-card dark:bg-surface-card-dark backdrop-blur-2xl border border-paper-200 dark:border-paper-900/20 shadow-xl",
-        flat: "bg-paper-100/50 dark:bg-ink-900/10 border border-paper-200/30 dark:border-paper-900/10",
-        elevated: "bg-surface-card dark:bg-surface-card-dark border border-paper-200 dark:border-paper-900/20 shadow-lg shadow-ink-950/5"
+        card: "bg-stone-900/60 backdrop-blur-xl border border-stone-700/50 shadow-[0_8px_30px_rgba(0,0,0,0.6)]",
+        thick: "bg-stone-900/80 backdrop-blur-2xl border border-stone-600/50 shadow-[0_12px_40px_rgba(0,0,0,0.8)]",
+        flat: "bg-stone-800/40 border border-stone-700/30",
+        elevated: "bg-stone-900/70 border border-stone-700/60 shadow-[0_10px_35px_rgba(0,0,0,0.7)]"
     };
 
     const iconColorClasses = {
-        primary: "text-primary-500",
+        primary: "text-emerald-500",
         error: "text-red-500",
-        info: "text-blue-500",
+        info: "text-cyan-500",
         warning: "text-amber-500",
-        ink: "text-ink-400 dark:text-paper-700"
+        ink: "text-stone-400"
     };
     
     return (

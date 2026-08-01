@@ -112,7 +112,7 @@ const UserMenuDropdown = ({
         variant={isOpen ? 'soft' : 'gray'}
         color={isOpen ? 'primary' : 'ink'}
         size="icon"
-        className={`!w-10 !h-10 !p-0 !rounded-xl overflow-hidden shadow-lg shadow-paper-200 dark:shadow-ink-950/40 transition-all duration-300 ${isOpen ? 'ring-2 ring-primary-500/20' : ''}`}
+        className={`!w-10 !h-10 !p-0 !rounded-xl overflow-hidden shadow-lg shadow-stone-900/40 transition-all duration-300 ${isOpen ? 'ring-2 ring-primary-500/20' : ''}`}
       >
         {user?.photoURL ? (
           <img
@@ -138,13 +138,13 @@ const UserMenuDropdown = ({
             <GlassCard
               variant="thick"
               padding="p-0"
-              className="overflow-hidden shadow-2xl border-paper-200/50 dark:border-paper-900/20"
+              className="overflow-hidden shadow-2xl border-stone-800/50"
             >
               {/* Compact Profile Section */}
-              <GlassCard variant="flat" padding="p-3" className="bg-paper-100/30 dark:bg-ink-900/10 rounded-none border-none">
+              <GlassCard variant="flat" padding="p-3" className="bg-stone-900/40 rounded-none border-none">
                 <div className="flex items-center gap-2.5">
                   <div className="relative">
-                    <div className="w-9 h-9 bg-primary-500 rounded-xl flex items-center justify-center text-white text-base shadow-lg shadow-primary-500/20 overflow-hidden border border-white/50 dark:border-ink-950">
+                    <div className="w-9 h-9 bg-primary-500 rounded-xl flex items-center justify-center text-white text-base shadow-lg shadow-primary-500/20 overflow-hidden border border-stone-800">
                       {user?.photoURL ? (
                         <img
                           src={user.photoURL}
@@ -156,13 +156,13 @@ const UserMenuDropdown = ({
                         <User className="w-5 h-5" />
                       )}
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success-500 border border-white dark:border-ink-950 rounded-full" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success-500 border border-stone-800 rounded-full" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-label font-bold text-ink-900 dark:text-paper-50 truncate leading-tight">
+                    <p className="text-label font-bold text-stone-200 truncate leading-tight">
                       {userProfile?.displayName?.split(' ')[0] || 'User'}
                     </p>
-                    <p className="text-label text-ink-400 dark:text-paper-600 truncate opacity-60 leading-tight">
+                    <p className="text-label text-stone-400 truncate opacity-60 leading-tight">
                       {userProfile?.email}
                     </p>
                   </div>
@@ -188,8 +188,8 @@ const UserMenuDropdown = ({
                       }}
                       disabled={isSignOut && logoutLoading}
                       className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all ${isSignOut
-                        ? 'text-error-600 dark:text-error-400 hover:bg-error-500/10'
-                        : 'text-ink-600 dark:text-paper-400 hover:bg-paper-100 dark:hover:bg-ink-900/40 hover:text-ink-900 dark:hover:text-paper-50'
+                        ? 'text-red-400 hover:bg-red-500/10'
+                        : 'text-stone-400 hover:bg-stone-800/50 hover:text-stone-200'
                         } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : 'active:scale-[0.98] group'}`}
                     >
                       <IconBox

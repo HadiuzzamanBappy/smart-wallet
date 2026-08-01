@@ -65,8 +65,8 @@ export default function SalaryManager({ userId, onClose, initialView }) {
 
   if (view === 'loading') {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm">
-        <div className="flex flex-col items-center space-y-4 text-teal-400">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/80 backdrop-blur-sm">
+        <div className="flex flex-col items-center space-y-4 text-emerald-400">
           <RefreshCw className="w-8 h-8 animate-spin" />
           <p>Loading your financial plan...</p>
         </div>

@@ -107,10 +107,10 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-5">
         {/* Compact User Identity */}
-        <div className="p-3 rounded-2xl bg-paper-100/50 dark:bg-ink-950/20 border border-paper-200/60 dark:border-paper-900/10 shadow-sm">
+        <div className="p-3 rounded-2xl bg-stone-900/60 border border-stone-800/50 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-11 h-11 bg-primary-500 rounded-xl flex items-center justify-center text-white text-lg shadow-lg shadow-primary-500/20 overflow-hidden border border-white/50 dark:border-ink-950">
+              <div className="w-11 h-11 bg-primary-500 rounded-xl flex items-center justify-center text-white text-lg shadow-lg shadow-primary-500/20 overflow-hidden border border-stone-800">
                 {user?.photoURL ? (
                   <img
                     src={user.photoURL}
@@ -124,10 +124,10 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                   </span>
                 )}
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success-500 border border-white dark:border-ink-950 rounded-full" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success-500 border border-stone-800 rounded-full" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-label font-bold text-ink-900 dark:text-paper-50 truncate leading-tight">
+              <p className="text-label font-bold text-stone-200 truncate leading-tight">
                 {formData.displayName || 'Identity Node'}
               </p>
               <div className="flex items-center gap-3 mt-0.5">
@@ -182,8 +182,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
           </div>
         </div>
 
-        <GlassCard variant="flat" padding="p-2.5" className="bg-primary-500/[0.03] dark:bg-primary-500/[0.01] border-primary-500/10">
-          <p className="text-overline text-primary-600/60 dark:text-primary-400/40 text-center uppercase tracking-tighter">
+        <GlassCard variant="flat" padding="p-2.5" className="bg-emerald-500/5 border-emerald-500/10">
+          <p className="text-overline text-emerald-500/60 text-center uppercase tracking-tighter">
             Modifications propagate through all historical audit logs.
           </p>
         </GlassCard>

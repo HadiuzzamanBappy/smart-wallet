@@ -221,13 +221,13 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
       {/* Chat Interface */}
       {isOpen && (
         <div className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-40 w-[calc(100vw-2rem)] sm:w-80 animate-in slide-in-from-bottom duration-300">
-          <div className="bg-surface-card dark:bg-surface-card-dark backdrop-blur-3xl rounded-3xl shadow-2xl border border-paper-200 dark:border-paper-900/10 overflow-hidden flex flex-col max-h-[80vh]">
+          <div className="bg-stone-950/95 backdrop-blur-3xl rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-stone-800/80 overflow-hidden flex flex-col max-h-[80vh]">
             {/* Header */}
-            <div className="p-4 border-b border-paper-100 dark:border-white/5 bg-paper-50/50 dark:bg-white/[0.02]">
+            <div className="p-4 border-b border-stone-800/80 bg-stone-900/60">
               <div className="flex items-center gap-3">
                 <IconBox icon={MessageSquare} variant="glass" size="sm" color="primary" />
                 <div className="flex flex-col">
-                  <h3 className="text-label font-bold text-ink-900 dark:text-white uppercase tracking-wider">Financial Assistant</h3>
+                  <h3 className="text-label font-bold text-stone-200 uppercase tracking-wider">Financial Assistant</h3>
                   <p className="text-overline opacity-40">Intelligence Layer</p>
                 </div>
               </div>
@@ -250,8 +250,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                           <div className="flex items-center gap-2.5 min-w-0">
                             <span className="text-base">{getCategoryEmoji(transaction.category)}</span>
                             <div className="min-w-0">
-                              <div className="text-body truncate text-ink-900 dark:text-white">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
-                              <div className="text-overline text-ink-400 mt-0.5">{humanizeType(transaction.type)}</div>
+                              <div className="text-body truncate text-stone-200">{(transaction.description || '').replace(/\s+/g, ' ').trim()}</div>
+                              <div className="text-overline text-stone-400 mt-0.5">{humanizeType(transaction.type)}</div>
                             </div>
                           </div>
                           <Badge
@@ -282,7 +282,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                         ? "e.g., 'লাঞ্চে ২৫০ টাকা' or 'bought groceries for 500 taka'"
                         : `e.g., 'bought lunch for ${userCurrency === 'USD' ? '$25' : '...'}'`
                     }
-                    className="w-full px-4 py-3 bg-paper-100/50 dark:bg-white/[0.02] border border-paper-200 dark:border-white/5 rounded-2xl text-body text-ink-900 dark:text-white placeholder-paper-400 dark:placeholder-paper-700 outline-none transition-all focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500/30 resize-none min-h-[80px]"
+                    className="w-full px-4 py-3 bg-stone-900/60 border border-stone-800 rounded-2xl text-body text-stone-200 placeholder-stone-500 outline-none transition-all focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 resize-none min-h-[80px]"
                     rows="3"
                     disabled={loading}
                   />
@@ -305,7 +305,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
 
               {/* Preview / Confirm area */}
               {isPreviewOpen && Array.isArray(parsedTransactions) && parsedTransactions.length > 0 && (
-                <div className="pt-3 border-t border-paper-100 dark:border-white/5 space-y-3">
+                <div className="pt-3 border-t border-stone-800 space-y-3">
                   <div className="p-2 sm:p-3 rounded-2xl bg-amber-500/[0.03] dark:bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
                     <AlertTriangle size={14} className="text-amber-500 shrink-0" />
                     <p className="text-overline text-amber-700 dark:text-amber-400 ">Verify parsed entries before saving to vault</p>
@@ -317,14 +317,14 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                         key={index}
                         variant="flat"
                         padding="p-2"
-                        className="!bg-paper-100/30 dark:!bg-white/[0.01] border-paper-200/40 dark:border-white/5"
+                        className="!bg-stone-900/40 border-stone-800"
                       >
                         <div className="flex items-center gap-3">
                           {/* Normal row view */}
                           {editingIndex !== index ? (
                             <>
                               <div className="flex-1 min-w-0">
-                                <div className="text-label font-bold text-ink-900 dark:text-white truncate">
+                                <div className="text-label font-bold text-stone-200 truncate">
                                   {transaction.description}
                                 </div>
                                 <div className="text-overline opacity-40 uppercase tracking-widest mt-0.5">
@@ -337,10 +337,10 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                                   {formatCurrency(transaction.amount, userCurrency)}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-0.5 border-l border-paper-100 dark:border-white/5 ml-1 pl-1">
+                              <div className="flex items-center gap-0.5 border-l border-stone-800 ml-1 pl-1">
                                 <button
                                   onClick={() => setEditingIndex(index)}
-                                  className="p-1.5 rounded-lg hover:bg-paper-100 dark:hover:bg-white/5 transition-colors text-ink-400 hover:text-primary-500"
+                                  className="p-1.5 rounded-lg hover:bg-stone-800 transition-colors text-stone-400 hover:text-emerald-500"
                                 >
                                   <Edit className="w-3.5 h-3.5" />
                                 </button>
@@ -360,20 +360,20 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                                   type="text"
                                   value={transaction.description || ''}
                                   onChange={(e) => updateParsedTransaction(index, { description: e.target.value })}
-                                  className="px-2 py-1.5 text-label rounded-xl border border-paper-200 dark:border-white/10 bg-white dark:bg-ink-950 text-ink-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/10"
+                                  className="px-2 py-1.5 text-label rounded-xl border border-stone-800 bg-stone-900 text-stone-200 outline-none focus:ring-2 focus:ring-emerald-500/10"
                                 />
                                 <input
                                   type="number"
                                   value={transaction.amount ?? ''}
                                   onChange={(e) => updateParsedTransaction(index, { amount: e.target.value })}
-                                  className="px-2 py-1.5 text-label rounded-xl border border-paper-200 dark:border-white/10 bg-white dark:bg-ink-950 text-ink-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/10"
+                                  className="px-2 py-1.5 text-label rounded-xl border border-stone-800 bg-stone-900 text-stone-200 outline-none focus:ring-2 focus:ring-emerald-500/10"
                                 />
                               </div>
                               <div className="flex items-center justify-between gap-2">
                                 <select
                                   value={transaction.type || 'expense'}
                                   onChange={(e) => updateParsedTransaction(index, { type: e.target.value })}
-                                  className="flex-1 px-2 py-1.5 text-label rounded-xl border border-paper-200 dark:border-white/10 bg-white dark:bg-ink-950 text-ink-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/10"
+                                  className="flex-1 px-2 py-1.5 text-label rounded-xl border border-stone-800 bg-stone-900 text-stone-200 outline-none focus:ring-2 focus:ring-emerald-500/10"
                                 >
                                   <option value="expense">Expense</option>
                                   <option value="income">Income</option>
@@ -424,8 +424,8 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
               {/* Examples with quick-insert templates */}
               {!lastResponse && !isPreviewOpen && (
                 <div className="space-y-2">
-                  <p className="text-overline text-ink-400 px-1">Suggestions</p>
-                  <div className="space-y-2">
+                  <p className="text-overline text-stone-400 px-1">Suggestions</p>
+                  <div className="space-y-1.5">
                     {[
                       {
                         title: userCurrency === 'BDT' ? 'Bought groceries for 500 taka' : 'Groceries for $50',
@@ -436,26 +436,19 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
                         msg: userCurrency === 'BDT' ? 'লাঞ্চে ২৫০ টাকা খরচ করেছি' : 'Lunch expense: 25'
                       }
                     ].map((item, i) => (
-                      <GlassCard
+                      <button
                         key={i}
-                        variant="flat"
-                        hover={true}
-                        padding="p-2.5"
-                        className="!bg-paper-100/30 dark:!bg-white/[0.03] border-paper-200/50 dark:border-white/5 group/template"
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-900/40 border border-stone-800/50 hover:bg-stone-800/60 hover:border-stone-700 transition-all group/template text-left"
                         onClick={() => {
                           setMessage(item.msg);
                           textareaRef.current?.focus();
                         }}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1 pr-2">
-                            <div className="text-label text-ink-900 dark:text-white opacity-40 group-hover/template:opacity-100 transition-all duration-300 transform group-hover/template:translate-x-1">
-                              {item.title}
-                            </div>
-                          </div>
-                          <IconBox icon={Plus} variant="glass" size="xs" color="primary" className="opacity-0 group-hover/template:opacity-100 scale-50 group-hover/template:scale-100 transition-all" />
-                        </div>
-                      </GlassCard>
+                        <span className="text-label text-stone-300 opacity-70 group-hover/template:opacity-100 transition-opacity">
+                          {item.title}
+                        </span>
+                        <Plus className="w-3.5 h-3.5 text-emerald-500 opacity-0 group-hover/template:opacity-100 transition-opacity" />
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -468,7 +461,7 @@ const ChatWidget = ({ onTransactionAdded, className = '' }) => {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-gray-900/10 dark:bg-black/40 backdrop-blur-[2px] z-30 transition-all"
+          className="fixed inset-0 bg-stone-950/40 backdrop-blur-[2px] z-30 transition-all"
           onClick={() => setIsOpen(false)}
         />
       )}

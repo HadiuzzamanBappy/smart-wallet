@@ -96,7 +96,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
     return (
       <GlassCard
         padding="p-3.5"
-        className="cursor-pointer group hover:bg-paper-100/50 dark:hover:bg-white/[0.04] transition-all border-paper-200/50 dark:border-white/5"
+        className="cursor-pointer group hover:bg-stone-800/60 transition-all border-stone-700/50"
         onClick={() => onOpen('wizard')}
         backgroundIcon={BarChart2}
         iconColor="primary"
@@ -106,7 +106,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
             <IconBox icon={BarChart2} size="xs" color="primary" variant="glass" />
             <div>
               <div className="text-overline opacity-40 uppercase tracking-widest mb-1 ">Financial Intelligence</div>
-              <div className="text-label font-bold text-ink-900 dark:text-paper-50">Setup 50/30/20 & Daily Limits</div>
+              <div className="text-label font-bold text-stone-200">Setup 50/30/20 & Daily Limits</div>
             </div>
           </div>
           <IconBox icon={Edit3} size="xs" color="ink" variant="soft" className="group-hover:text-primary-500 opacity-40 group-hover:opacity-100" />
@@ -119,7 +119,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
     <div className="relative group/card w-full">
       <GlassCard
         padding="p-3.5"
-        className="cursor-pointer transition-all active:scale-[0.99] hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-500 border-paper-200/50 dark:border-white/5"
+        className="cursor-pointer transition-all active:scale-[0.99] hover:bg-stone-800/60 transition-all duration-500 border-stone-700/50"
         onClick={() => onOpen('result')}
         backgroundIcon={BarChart2}
         iconColor="primary"
@@ -130,7 +130,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
             <div>
               <div className="text-overline opacity-40 uppercase tracking-widest mb-1 ">Intelligence Suite</div>
               <div className="flex items-center gap-2.5">
-                <div className="text-h5 font-bold tracking-tight text-ink-900 dark:text-paper-50">
+                <div className="text-h5 font-bold tracking-tight text-stone-200">
                   {planData.currencySymbol}{Math.round(totalAssets).toLocaleString()}
                 </div>
                 {runway > 0 && (
@@ -167,9 +167,9 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
               color: savePct < 20 ? 'text-error-600 dark:text-error-400' : 'text-primary-600 dark:text-primary-400'
             },
           ].map((item, i) => (
-            <div key={i} className={`bg-paper-100/30 dark:bg-white/[0.01] py-2.5 px-2 rounded-2xl border transition-all duration-500 flex flex-col items-center justify-center text-center ${item.color.includes('error') ? 'border-error-500/20 bg-error-500/5' : 'border-paper-100 dark:border-white/5'
+            <div key={i} className={`bg-stone-800/20 py-2.5 px-2 rounded-2xl border transition-all duration-500 flex flex-col items-center justify-center text-center ${item.color.includes('error') ? 'border-red-500/20 bg-red-500/5' : 'border-stone-700/30'
               }`}>
-              <span className={`text-nano uppercase mb-1 ${item.color.includes('error') ? 'text-error-600/60 dark:text-error-400/60' : 'text-ink-400 dark:text-paper-700'}`}>{item.label}</span>
+              <span className={`text-nano uppercase mb-1 ${item.color.includes('error') ? 'text-red-400/60' : 'text-stone-400'}`}>{item.label}</span>
               <div className="flex items-center justify-center gap-1 mb-1.5 min-w-0">
                 <div className={`text-nano font-bold ${item.color} shrink-0`}>{item.pct}%</div>
                 <div className="flex items-center gap-0.5 opacity-30 text-[8px] font-black uppercase tracking-tighter shrink-0">
@@ -177,7 +177,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
                   <span>{item.target}%</span>
                 </div>
               </div>
-              <span className="text-nano text-ink-900 dark:text-paper-50 ">
+              <span className="text-nano text-stone-200">
                 {planData.currencySymbol}{Math.round(item.val).toLocaleString()}
               </span>
             </div>
@@ -193,11 +193,11 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
             <span className="text-label font-bold">{planData.currencySymbol}{Math.round(totalSurplus).toLocaleString()}</span>
           </div>
           <div className={`flex-[3] rounded-xl py-2 px-4 border flex justify-between items-center group/limit transition-colors ${totalSurplus >= 0
-            ? 'bg-paper-100/30 dark:bg-white/[0.01] border-ink-100/50 dark:border-white/5 hover:bg-white dark:hover:bg-white/[0.04]'
-            : 'bg-error-500/5 dark:bg-error-500/[0.02] border-error-500/10 hover:bg-error-500/10'
+            ? 'bg-stone-800/20 border-stone-700/30 hover:bg-stone-800/40'
+            : 'bg-red-500/5 border-red-500/10 hover:bg-red-500/10'
             }`}>
-            <span className={`text-overline opacity-40 uppercase ${totalSurplus >= 0 ? 'text-ink-400 dark:text-paper-700' : 'text-error-600/60 dark:text-error-400/60'}`}>Daily Ops</span>
-            <span className={`text-label font-bold ${totalSurplus >= 0 ? 'text-ink-900 dark:text-paper-50' : 'text-error-600 dark:text-error-400'}`}>
+            <span className={`text-overline opacity-40 uppercase ${totalSurplus >= 0 ? 'text-stone-400' : 'text-red-400/60'}`}>Daily Ops</span>
+            <span className={`text-label font-bold ${totalSurplus >= 0 ? 'text-stone-200' : 'text-red-400'}`}>
               {planData.currencySymbol}{Math.round(dailyLimit).toLocaleString()}
             </span>
           </div>
@@ -208,7 +208,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
       <div className="absolute top-3.5 right-3.5 z-10 transition-all">
         <button
           onClick={(e) => { e.stopPropagation(); onOpen('wizard'); }}
-          className="p-1.5 rounded-lg bg-ink-900/5 dark:bg-white/5 text-paper-400 hover:text-primary-500 transition-colors border border-transparent hover:border-primary-500/20"
+          className="p-1.5 rounded-lg bg-stone-800 text-stone-400 hover:text-emerald-500 transition-colors border border-transparent hover:border-primary-500/20"
         >
           <Edit3 className="w-3 h-3" />
         </button>

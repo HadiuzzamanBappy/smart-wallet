@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import VaultAuth from '../components/Entry/VaultAuth';
 import MagicalForestScene from '../components/Entry/MagicalForestScene';
+import Tooltip from '../components/UI/base/Tooltip';
 
 const EntryPoint = () => {
   const [doorState, setDoorState] = useState('closed'); // 'closed', 'opening', 'open'
@@ -197,19 +198,31 @@ const EntryPoint = () => {
               {securityFeatures.map((feat, index) => {
                 const Icon = feat.icon;
                 return (
-                  <div key={index} className="flex items-center gap-3 group">
-                    <div className={`p-2 rounded-full bg-stone-900 border border-stone-800 shadow-inner ${feat.color}`}>
-                      <Icon className="w-4 h-4" />
+                  <Tooltip
+                    key={index}
+                    content={
+                      <div className="flex flex-col gap-1 text-center md:text-left">
+                        <span className="font-bold text-stone-200">{feat.title}</span>
+                        <span className="text-stone-400">{feat.desc}</span>
+                      </div>
+                    }
+                    position="top"
+                    className="flex"
+                  >
+                    <div className="flex items-center gap-3 group cursor-pointer md:cursor-default">
+                      <div className={`p-3 md:p-2 rounded-full bg-stone-900 border border-stone-800 shadow-inner ${feat.color}`}>
+                        <Icon className="w-5 h-5 md:w-4 md:h-4" />
+                      </div>
+                      <div className="hidden md:block text-left">
+                        <h3 className="text-xs font-bold tracking-widest text-stone-200 uppercase">
+                          {feat.title}
+                        </h3>
+                        <p className="text-[10px] text-stone-500 font-medium max-w-[150px]">
+                          {feat.desc}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <h3 className="text-xs font-bold tracking-widest text-stone-200 uppercase">
-                        {feat.title}
-                      </h3>
-                      <p className="text-[10px] text-stone-500 font-medium max-w-[150px]">
-                        {feat.desc}
-                      </p>
-                    </div>
-                  </div>
+                  </Tooltip>
                 );
               })}
             </div>

@@ -49,7 +49,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: generateScale('#14b8a6'),
+        primary: generateScale('#10b981'),
         secondary: generateScale('#8b5cf6'),
         success: generateScale('#10b981'),
         warning: generateScale('#f59e0b'),

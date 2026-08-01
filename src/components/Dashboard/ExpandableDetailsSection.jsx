@@ -133,8 +133,8 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
               key={section.id}
               onClick={() => toggleSection(section.id)}
               className={`group relative flex items-center gap-4 px-6 py-5 rounded-3xl transition-all duration-500 border w-full sm:w-auto sm:min-w-[280px] ${isActive
-                ? `bg-surface-card dark:bg-surface-card-dark border-primary-500 shadow-xl shadow-primary-500/10 scale-[1.02] z-10`
-                : `bg-paper-100/30 dark:bg-white/[0.02] border-paper-100 dark:border-white/5 hover:border-paper-200 dark:hover:border-white/10 shadow-sm opacity-70 hover:opacity-100`
+                ? `bg-stone-900/80 border-emerald-500 shadow-xl shadow-emerald-500/10 scale-[1.02] z-10`
+                : `bg-stone-800/20 border-stone-700/30 hover:border-stone-600/50 shadow-sm opacity-70 hover:opacity-100`
                 }`}
             >
               <IconBox
@@ -146,25 +146,25 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
               />
               <div className="text-left flex-1 min-w-0">
                 <h3 className={`text-label ${isActive
-                    ? 'text-ink-900 dark:text-paper-50'
-                    : 'text-ink-400 dark:text-paper-700'
+                    ? 'text-stone-200'
+                    : 'text-stone-400'
                   }`}>
                   {section.title}
                 </h3>
                 <p className={`text-nano opacity-30 ${isActive
-                  ? 'text-primary-600 dark:text-primary-400 font-bold'
-                  : 'text-ink-300 dark:text-paper-900'
+                  ? 'text-emerald-400 font-bold'
+                  : 'text-stone-500'
                   }`}>
                   {section.description}
                 </p>
               </div>
 
-              <div className={`transition-all duration-500 ${isActive ? 'rotate-180 text-primary-500' : 'text-ink-400 group-hover:text-ink-900'}`}>
+              <div className={`transition-all duration-500 ${isActive ? 'rotate-180 text-emerald-500' : 'text-stone-400 group-hover:text-stone-200'}`}>
                 <ChevronDown className="w-4 h-4" />
               </div>
 
               {isActive && (
-                <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-12 h-1 bg-primary-500 rounded-full shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+                <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-12 h-1 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
               )}
             </button>
           );

@@ -64,11 +64,11 @@ const Button = ({
             glow: "shadow-info-500/20"
         },
         ink: {
-            bg: "bg-ink-800 dark:bg-ink-700",
-            text: "text-paper-500 dark:text-paper-100",
-            contrast: "text-white dark:text-paper-50",
-            border: "border-ink-800 dark:border-ink-700",
-            glow: "shadow-ink-950/10"
+            bg: "bg-stone-800",
+            text: "text-stone-200",
+            contrast: "text-white",
+            border: "border-stone-700",
+            glow: "shadow-stone-950/10"
         }
     };
 
@@ -79,8 +79,8 @@ const Button = ({
         outlined: `bg-transparent border ${config.border} ${config.text} hover:bg-current/10 hover:border-current/60 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`,
         soft: `${config.bg}/10 ${config.text} hover:bg-current/20 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`,
         text: `${config.text} hover:${config.bg}/10 hover:-translate-y-0.5`,
-        ghost: "bg-transparent hover:bg-paper-100 dark:hover:bg-ink-800 text-ink-500 dark:text-paper-400 transition-colors hover:-translate-y-0.5",
-        icon: `p-2 rounded-xl bg-paper-100 dark:bg-ink-800 border border-paper-200 dark:border-ink-700 ${config.text} hover:bg-current/10 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`
+        ghost: "bg-transparent hover:bg-stone-800 text-stone-400 transition-colors hover:-translate-y-0.5",
+        icon: `p-2 rounded-xl bg-stone-900/60 border border-stone-800 ${config.text} hover:bg-current/10 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`
     };
 
     const sizes = {

@@ -12,8 +12,8 @@ const Skeleton = ({
 }) => (
   <div
     className={`
-      bg-paper-200/60 dark:bg-white/5
-      shadow-sm shadow-paper-200/40 dark:shadow-black/20
+      bg-stone-800/50
+      shadow-sm shadow-stone-950/20
       ${width} ${height} ${rounded} 
       ${animated ? 'animate-pulse' : ''}
       ${className}
@@ -25,7 +25,7 @@ const Skeleton = ({
  * Skeleton for transaction cards
  */
 export const TransactionSkeleton = ({ count = 5 }) => (
-  <div className="divide-y divide-paper-200/50 dark:divide-white/5">
+  <div className="divide-y divide-stone-800/50">
     {Array.from({ length: count }, (_, index) => (
       <div key={index} className="p-4">
         <div className="flex items-center gap-4">
@@ -67,7 +67,7 @@ export const SummaryCardSkeleton = ({ count = 4 }) => (
     {Array.from({ length: count }, (_, index) => (
       <div
         key={index}
-        className="relative overflow-hidden rounded-3xl p-3.5 bg-paper-100/50 dark:bg-white/[0.02] border border-paper-200/60 dark:border-white/5 flex flex-col gap-3"
+        className="relative overflow-hidden rounded-3xl p-3.5 bg-stone-900/60 border border-stone-800/50 flex flex-col gap-3"
       >
         <div className="flex items-center justify-between">
           <Skeleton width="w-8" height="h-8" rounded="rounded-xl" />
@@ -113,11 +113,11 @@ export const FilterSkeleton = () => (
  * Complete skeleton for transaction list
  */
 export const TransactionListSkeleton = () => (
-  <div className="flex flex-col h-full bg-surface-card dark:bg-surface-card-dark rounded-[2.5rem] overflow-hidden border border-paper-200/60 dark:border-white/5">
-    <div className="px-5 py-5 space-y-4 border-b border-paper-200/60 dark:border-white/5 bg-paper-100/30 dark:bg-white/[0.01]">
+  <div className="flex flex-col h-full bg-stone-950/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-stone-800/50">
+    <div className="px-5 py-5 space-y-4 border-b border-stone-800/50 bg-stone-900/30">
       {/* Header - Audit Log Count */}
       <div className="flex items-center gap-3">
-        <div className="w-2 h-2 rounded-full bg-primary-500/30 animate-pulse" />
+        <div className="w-2 h-2 rounded-full bg-emerald-500/30 animate-pulse" />
         <Skeleton width="w-48" height="h-3" rounded="rounded-sm" />
       </div>
 
@@ -134,7 +134,7 @@ export const TransactionListSkeleton = () => (
     <TransactionSkeleton count={4} />
 
     {/* Pagination placeholder */}
-    <div className="p-6 flex items-center justify-between bg-paper-100/30 dark:bg-white/[0.01] border-t border-paper-200/60 dark:border-white/5">
+    <div className="p-6 flex items-center justify-between bg-stone-900/30 border-t border-stone-800/50">
       <Skeleton width="w-32" height="h-3.5" />
       <div className="flex items-center gap-3">
         <Skeleton width="w-20" height="h-10" rounded="rounded-2xl" />
@@ -158,7 +158,7 @@ export const CompactSummarySkeleton = () => (
  * Skeleton specifically for the BudgetProgress card to match full-width layout
  */
 export const BudgetSkeleton = () => (
-  <div className="rounded-[2rem] p-5 bg-paper-100/30 dark:bg-white/[0.02] border border-paper-200/60 dark:border-white/5 w-full">
+  <div className="rounded-[2rem] p-5 bg-stone-900/60 border border-stone-800/50 w-full">
     <div className="flex items-start justify-between gap-4 mb-4">
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <Skeleton width="w-10" height="h-10" rounded="rounded-2xl" />
@@ -217,14 +217,14 @@ export const AnalyticsSkeleton = () => (
     </div>
 
     {/* Chart Placeholder */}
-    <div className="rounded-[2.5rem] p-6 bg-paper-100/30 dark:bg-white/[0.02] border border-paper-200/60 dark:border-white/5 h-72 sm:h-80">
+    <div className="rounded-[2.5rem] p-6 bg-stone-900/60 border border-stone-800/50 h-72 sm:h-80">
       <Skeleton width="w-full" height="h-full" rounded="rounded-[2rem]" />
     </div>
 
     {/* Quick Stats Grid */}
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
       {Array.from({ length: 4 }, (_, i) => (
-        <div key={i} className="p-5 rounded-[2rem] bg-paper-100/30 dark:bg-white/[0.01] border border-paper-200/60 dark:border-white/5 flex flex-col items-center">
+        <div key={i} className="p-5 rounded-[2rem] bg-stone-900/60 border border-stone-800/50 flex flex-col items-center">
           <Skeleton width="w-9" height="h-9" rounded="rounded-2xl" className="mb-4" />
           <Skeleton width="w-20" height="h-3" className="mb-2" />
           <Skeleton width="w-24" height="h-4" />

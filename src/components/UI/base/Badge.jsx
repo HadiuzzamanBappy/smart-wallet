@@ -22,8 +22,8 @@ const Badge = ({
         error: { text: 'text-error-600 dark:text-error-400', bg: 'bg-error-500/10', border: 'border-error-500/30' },
         warning: { text: 'text-warning-600 dark:text-warning-400', bg: 'bg-warning-500/10', border: 'border-warning-500/30' },
         info: { text: 'text-info-600 dark:text-info-400', bg: 'bg-info-500/10', border: 'border-info-500/30' },
-        ink: { text: 'text-ink-600 dark:text-paper-400', bg: 'bg-ink-500/10', border: 'border-ink-500/20' },
-        paper: { text: 'text-ink-500 dark:text-paper-100', bg: 'bg-paper-100/30 dark:bg-ink-700/40', border: 'border-paper-200 dark:border-ink-600' }
+        ink: { text: 'text-stone-400', bg: 'bg-stone-800', border: 'border-stone-700' },
+        paper: { text: 'text-stone-500', bg: 'bg-stone-900/60', border: 'border-stone-800' }
     };
 
     const sizes = {

@@ -183,7 +183,7 @@ const TransactionList = ({ onTransactionChange }) => {
   return (
     <>
       <div className="flex flex-col h-full">
-        <div className="px-4 py-4 space-y-3 border-b border-paper-100 dark:border-white/5 bg-paper-100 dark:bg-white/5">
+        <div className="px-4 py-4 space-y-3 border-b border-stone-800 bg-stone-900/60">
           {/* Filters Bar - Executive Style Compact */}
           <div className="flex flex-col sm:flex-row gap-2">
             <GlassInput
@@ -239,10 +239,10 @@ const TransactionList = ({ onTransactionChange }) => {
         <div className="divide-y divide-gray-100 dark:divide-white/5">
           {filteredTransactions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center px-8">
-              <div className="w-16 h-16 rounded-3xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-center mb-6 opacity-40">
-                <Filter className="w-8 h-8 text-ink-400" />
+              <div className="w-16 h-16 rounded-3xl bg-stone-900/40 border border-stone-800 flex items-center justify-center mb-6 opacity-40">
+                <Filter className="w-8 h-8 text-stone-400" />
               </div>
-              <p className="text-label text-ink-400 dark:text-paper-700">
+              <p className="text-label text-stone-400">
                 {transactions.length === 0 ? "No Transactions Yet" : "No Matches Found"}
               </p>
             </div>
@@ -252,23 +252,23 @@ const TransactionList = ({ onTransactionChange }) => {
               const isPositive = ['income', 'loan', 'collection'].includes(transaction.type);
 
               return (
-                <div key={transaction.id} className="px-4 py-3 hover:bg-paper-100/30 dark:hover:bg-white/[0.02] transition-all group border-b border-paper-100 dark:border-white/5 last:border-0">
+                <div key={transaction.id} className="px-4 py-3 hover:bg-stone-900/40 hover:bg-stone-800 transition-all group border-b border-stone-800 last:border-0">
                   <div className="grid grid-cols-[auto_1fr_auto] gap-4 items-center">
                     {/* Left: Premium Avatar Compact */}
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-2xl bg-paper-100/30 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 flex items-center justify-center text-lg shadow-sm">
+                      <div className="w-10 h-10 rounded-2xl bg-stone-900/40 border border-stone-800 flex items-center justify-center text-lg shadow-sm">
                         <span className="opacity-80 drop-shadow-sm">{getCategoryEmoji(dc)}</span>
                       </div>
-                      <div className={`absolute -right-1 -bottom-1 w-5 h-5 rounded-2xl flex items-center justify-center border-2 border-surface-card dark:border-surface-card-dark shadow-sm ${isPositive ? 'bg-success-500 text-white' : 'bg-error-500 text-white'}`}>
+                      <div className={`absolute -right-1 -bottom-1 w-5 h-5 rounded-2xl flex items-center justify-center border-2 border-stone-800 shadow-sm ${isPositive ? 'bg-success-500 text-white' : 'bg-error-500 text-white'}`}>
                         {isPositive ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
                       </div>
                     </div>
 
                     {/* Middle: Executive Typography */}
                     <div className="min-w-0">
-                      <p className="text-label font-bold text-ink-900 dark:text-paper-50 truncate mb-1">{transaction.description}</p>
+                      <p className="text-label font-bold text-stone-200 truncate mb-1">{transaction.description}</p>
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-paper-100 dark:bg-white/5 border border-paper-200/50 dark:border-white/5">
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-stone-900/60 border border-stone-800">
                           <span className="text-xs">{getCategoryEmoji(dc)}</span>
                           <span className="text-overline opacity-60 uppercase tracking-widest">{dc}</span>
                         </div>
@@ -280,14 +280,14 @@ const TransactionList = ({ onTransactionChange }) => {
 
                     {/* Right: Premium Currency & Quick Actions */}
                     <div className="flex flex-col items-end gap-1.5">
-                      <div className={`text-label font-bold whitespace-nowrap ${isPositive ? 'text-success-600 dark:text-success-400' : 'text-ink-900 dark:text-paper-50'}`}>
+                      <div className={`text-label font-bold whitespace-nowrap ${isPositive ? 'text-success-600 dark:text-success-400' : 'text-stone-200'}`}>
                         {isPositive ? '+' : '-'}{formatCurrency(transaction.amount, currency)}
                       </div>
                       <div className="flex gap-1 transition-all">
                         {(transaction.type === 'repayment' || transaction.type === 'collection') && (
                           <button
                             onClick={() => { setAdjustmentDetail(transaction); setAdjustmentModalOpen(true); }}
-                            className="p-1 hover:bg-paper-100 dark:hover:bg-white/10 rounded-xl text-ink-400 hover:text-ink-900 dark:hover:text-white transition-all border border-transparent"
+                            className="p-1 hover:bg-stone-800 rounded-xl text-stone-400 hover:text-stone-200 transition-all border border-transparent"
                             title="View details"
                           >
                             <Eye className="w-3 h-3" />
@@ -304,7 +304,7 @@ const TransactionList = ({ onTransactionChange }) => {
                         )}
                         <button
                           onClick={() => handlePrepareDelete(transaction)}
-                          className="p-1 hover:bg-error-500/10 rounded-xl text-ink-400 hover:text-error-600 transition-all border border-transparent"
+                          className="p-1 hover:bg-error-500/10 rounded-xl text-stone-400 hover:text-error-500 transition-all border border-transparent"
                           title="Delete"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -320,9 +320,9 @@ const TransactionList = ({ onTransactionChange }) => {
 
         {/* Pagination Controls - Executive Density */}
         {filteredTransactions.length > PAGE_SIZE && (
-          <div className="py-6 px-5 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-paper-100 dark:border-white/5 bg-paper-50 dark:bg-white/[0.02]">
-            <div className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest">
-              Audit Page <span className="text-ink-900 dark:text-white font-bold">{page}</span> of {totalPages}
+          <div className="py-6 px-5 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-stone-800 bg-stone-900/40">
+            <div className="text-overline text-stone-400 uppercase tracking-widest">
+              Audit Page <span className="text-stone-200 font-bold">{page}</span> of {totalPages}
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -343,7 +343,7 @@ const TransactionList = ({ onTransactionChange }) => {
                     onClick={() => setPage(i + 1)}
                     className={`w-8 h-8 flex items-center justify-center rounded-xl text-overline transition-all duration-300 ${page === i + 1
                       ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20 font-bold'
-                      : 'text-ink-400 dark:text-paper-700 hover:bg-paper-100 dark:hover:bg-white/10'
+                      : 'text-stone-400 hover:bg-stone-800'
                       }`}
                   >
                     {i + 1}
@@ -376,9 +376,9 @@ const TransactionList = ({ onTransactionChange }) => {
       >
         {adjustmentDetail ? (
           <div className="space-y-6">
-            <GlassCard padding="p-5" className="flex items-center justify-between gap-4 !bg-paper-50 dark:!bg-white/[0.02] border-paper-200/50 dark:border-white/5">
+            <GlassCard padding="p-5" className="flex items-center justify-between gap-4 !bg-stone-900/40 border-stone-800">
               <div>
-                <div className="text-overline text-ink-400 dark:text-paper-700 mb-1 uppercase tracking-widest">Net Adjustment</div>
+                <div className="text-overline text-stone-400 mb-1 uppercase tracking-widest">Net Adjustment</div>
                 <div className={`text-h2 font-bold tracking-tighter ${adjustmentDetail.type === 'collection' ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
                   {adjustmentDetail.type === 'collection' ? '+' : '-'}{formatCurrency(adjustmentDetail.amount, currency)}
                 </div>
@@ -396,23 +396,23 @@ const TransactionList = ({ onTransactionChange }) => {
             <div className="grid grid-cols-2 gap-4">
               {adjustmentDetail.originalAmount !== undefined && (
                 <div className="space-y-1.5 px-1">
-                  <label className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest opacity-50">Principal</label>
-                  <div className="text-label font-bold text-ink-900 dark:text-white">{formatCurrency(adjustmentDetail.originalAmount, currency)}</div>
+                  <label className="text-overline text-stone-400 uppercase tracking-widest opacity-50">Principal</label>
+                  <div className="text-label font-bold text-stone-200">{formatCurrency(adjustmentDetail.originalAmount, currency)}</div>
                 </div>
               )}
               <div className="space-y-1.5 px-1">
-                <label className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest opacity-50">Timestamp</label>
-                <div className="text-label font-bold text-ink-900 dark:text-white">{formatDate(adjustmentDetail.date || adjustmentDetail.createdAt)}</div>
+                <label className="text-overline text-stone-400 uppercase tracking-widest opacity-50">Timestamp</label>
+                <div className="text-label font-bold text-stone-200">{formatDate(adjustmentDetail.date || adjustmentDetail.createdAt)}</div>
               </div>
-              <div className="space-y-1.5 px-1 col-span-2 pt-2 border-t border-paper-100 dark:border-white/5">
-                <label className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest opacity-50">Reference Entity</label>
-                <div className="text-label font-bold text-ink-900 dark:text-white truncate">{adjustmentDetail.originalDescription || 'No Reference Found'}</div>
+              <div className="space-y-1.5 px-1 col-span-2 pt-2 border-t border-stone-800">
+                <label className="text-overline text-stone-400 uppercase tracking-widest opacity-50">Reference Entity</label>
+                <div className="text-label font-bold text-stone-200 truncate">{adjustmentDetail.originalDescription || 'No Reference Found'}</div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-overline text-ink-400 dark:text-paper-700 uppercase tracking-widest opacity-50 px-1">Internal Audit Notes</label>
-              <GlassCard padding="p-4" className="!bg-paper-100/50 dark:!bg-black/20 text-label text-ink-900 dark:text-white leading-relaxed border-none">
+              <label className="text-overline text-stone-400 uppercase tracking-widest opacity-50 px-1">Internal Audit Notes</label>
+              <GlassCard padding="p-4" className="!bg-stone-900/40 text-label text-stone-200 leading-relaxed border-none">
                 {adjustmentDetail.description || 'No manual notes recorded for this operation.'}
               </GlassCard>
             </div>

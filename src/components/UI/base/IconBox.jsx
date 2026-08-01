@@ -14,44 +14,44 @@ const IconBox = ({
 
     const colorConfigs = {
         primary: {
-            text: "text-primary-600 dark:text-primary-400",
-            bg: "bg-primary-500/10",
-            border: "border-primary-500/30"
+            text: "text-emerald-500",
+            bg: "bg-emerald-500/10",
+            border: "border-emerald-500/30"
         },
         secondary: {
-            text: "text-secondary-600 dark:text-secondary-400",
-            bg: "bg-secondary-500/10",
-            border: "border-secondary-500/30"
+            text: "text-amber-500",
+            bg: "bg-amber-500/10",
+            border: "border-amber-500/30"
         },
         success: {
-            text: "text-success-600 dark:text-success-400",
-            bg: "bg-success-500/10",
-            border: "border-success-500/30"
+            text: "text-emerald-400",
+            bg: "bg-emerald-500/10",
+            border: "border-emerald-500/30"
         },
         error: {
-            text: "text-error-600 dark:text-error-400",
-            bg: "bg-error-500/10",
-            border: "border-error-500/30"
+            text: "text-red-500",
+            bg: "bg-red-500/10",
+            border: "border-red-500/30"
         },
         warning: {
-            text: "text-warning-600 dark:text-warning-400",
-            bg: "bg-warning-500/10",
-            border: "border-warning-500/30"
+            text: "text-amber-500",
+            bg: "bg-amber-500/10",
+            border: "border-amber-500/30"
         },
         info: {
-            text: "text-info-600 dark:text-info-400",
-            bg: "bg-info-500/10",
-            border: "border-info-500/30"
+            text: "text-cyan-500",
+            bg: "bg-cyan-500/10",
+            border: "border-cyan-500/30"
         },
         ink: {
-            text: "text-ink-600 dark:text-paper-400",
-            bg: "bg-ink-500/10",
-            border: "border-ink-500/20"
+            text: "text-stone-400",
+            bg: "bg-stone-500/10",
+            border: "border-stone-500/20"
         },
         white: {
-            text: "text-white",
-            bg: "bg-white/10",
-            border: "border-white/20"
+            text: "text-stone-200",
+            bg: "bg-white/5",
+            border: "border-white/10"
         }
     };
 
@@ -74,7 +74,7 @@ const IconBox = ({
     };
 
     const variants = {
-        glass: `bg-surface-card dark:bg-surface-card-dark backdrop-blur-md border ${config.border} shadow-sm`,
+        glass: `bg-stone-800/60 backdrop-blur-md border ${config.border} shadow-sm`,
         soft: bgClass || `${config.bg} border ${config.border}`,
         solid: bgClass || `${config.bg.replace('/10', '')} border ${config.border}`,
         ghost: `bg-transparent border ${config.border}`

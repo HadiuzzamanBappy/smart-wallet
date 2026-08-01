@@ -67,10 +67,10 @@ const AboutModal = ({ isOpen, onClose }) => {
                     className="group-hover/feature:scale-110 transition-transform duration-500"
                   />
                   <div>
-                    <h4 className="text-label font-bold text-ink-900 dark:text-paper-50">
+                    <h4 className="text-label font-bold text-stone-200">
                       {feature.title}
                     </h4>
-                    <p className="text-body text-ink-500 dark:text-paper-400 mt-1">
+                    <p className="text-body text-stone-400 mt-1">
                       {feature.description}
                     </p>
                   </div>
@@ -94,7 +94,7 @@ const AboutModal = ({ isOpen, onClose }) => {
                 key={index}
                 variant="flat"
                 padding="p-4"
-                className="bg-paper-100/50 dark:bg-ink-950/20 border-paper-200/50 dark:border-paper-900/10"
+                className="bg-stone-900/60 border-stone-800/50"
               >
                 <div className="flex flex-col gap-2">
                   <Badge
@@ -105,7 +105,7 @@ const AboutModal = ({ isOpen, onClose }) => {
                   >
                     {type.label}
                   </Badge>
-                  <p className="text-body text-ink-500 dark:text-paper-500">
+                  <p className="text-body text-stone-400">
                     {type.desc}
                   </p>
                 </div>
@@ -122,7 +122,7 @@ const AboutModal = ({ isOpen, onClose }) => {
             titleSize="text-h6"
             className="mb-4"
           />
-          <GlassCard variant="flat" padding="p-4" className="bg-primary-500/[0.03] dark:bg-primary-500/10 border-primary-500/20">
+          <GlassCard variant="flat" padding="p-4" className="bg-emerald-500/5 border-emerald-500/10">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
               {[
                 'Use "Paid 500 for lunch" for instant AI logging',
@@ -134,16 +134,16 @@ const AboutModal = ({ isOpen, onClose }) => {
               ].map((tip, index) => (
                 <div key={index} className="flex items-start gap-2.5">
                   <IconBox icon={Zap} variant="glass" size="xs" color="primary" className="shrink-0 mt-0.5 opacity-40" />
-                  <p className="text-body text-ink-600 dark:text-paper-400">{tip}</p>
+                  <p className="text-body text-stone-300">{tip}</p>
                 </div>
               ))}
             </div>
           </GlassCard>
         </section>
 
-        <div className="flex items-center justify-center pt-4 border-t border-paper-200 dark:border-paper-900/10 gap-3">
+        <div className="flex items-center justify-center pt-4 border-t border-stone-800 gap-3">
           <Badge color="ink" variant="soft" size="sm">v{APP_VERSION}</Badge>
-          <span className="text-overline text-ink-300 dark:text-paper-700 uppercase">
+          <span className="text-overline text-stone-500 uppercase">
             Financial Intelligence Guide
           </span>
         </div>

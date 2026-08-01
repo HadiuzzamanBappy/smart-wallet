@@ -121,7 +121,7 @@ const Header = ({
 
     return (
         <>
-            <header className="bg-surface-card dark:bg-surface-card-dark backdrop-blur-xl shadow-sm border-b border-paper-100 dark:border-white/5 fixed top-0 left-0 right-0 w-full z-50">
+            <header className="bg-stone-900/60 backdrop-blur-xl shadow-lg border-b border-stone-800/80 fixed top-0 left-0 right-0 w-full z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center space-x-3">
@@ -136,10 +136,10 @@ const Header = ({
                             />
                             <Wallet className="w-6 h-6 text-gray-900 dark:text-white" style={{ display: 'none' }} />
                             <div>
-                                <h1 className="text-body font-bold text-ink-900 dark:text-paper-50 tracking-tight">
+                                <h1 className="text-body font-bold text-stone-200 tracking-tight">
                                     Smart Wallet
                                 </h1>
-                                <div className={`flex items-center gap-2 text-label text-gray-400 dark:text-gray-500`}>
+                                <div className={`flex items-center gap-2 text-label text-stone-400`}>
                                     {isRefreshing || isLocalRefreshing || globalLoading ? (
                                         <div className="flex items-center gap-2">
                                             <Skeleton width="w-16" height="h-3" />
@@ -194,7 +194,7 @@ const Header = ({
             {showFloatingBalance && (
                 <>
                     <div
-                        className={`fixed inset-0 z-[45] bg-ink-950/20 backdrop-blur-md transition-opacity duration-300 ${entered && !isClosing ? 'opacity-100' : 'opacity-0'}`}
+                        className={`fixed inset-0 z-[45] bg-stone-950/40 backdrop-blur-md transition-opacity duration-300 ${entered && !isClosing ? 'opacity-100' : 'opacity-0'}`}
                         onClick={handleFloatingClose}
                     />
                     <div className="fixed top-16 left-0 right-0 flex justify-center z-50 pointer-events-none">
@@ -202,19 +202,19 @@ const Header = ({
                             <GlassCard
                                 variant="flat"
                                 padding="p-5"
-                                className={`relative !overflow-visible !bg-surface-card dark:!bg-surface-card-dark backdrop-blur-2xl text-ink-900 dark:text-paper-50 shadow-2xl border-paper-200 dark:border-white/10 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-3' : 'opacity-0 translate-y-0'}`}
+                                className={`relative !overflow-visible !bg-stone-900/90 backdrop-blur-2xl text-stone-200 shadow-2xl border-stone-700/50 transform transition-all duration-300 ease-out ${entered && !isClosing ? 'opacity-100 translate-y-3' : 'opacity-0 translate-y-0'}`}
                             >
                                 <Button
                                     variant="icon"
                                     size="sm"
                                     onClick={handleFloatingClose}
-                                    className="absolute -top-7 -right-7 z-10 w-8 h-8 !rounded-full bg-white dark:bg-ink-950 shadow-xl border border-paper-200 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-transform text-ink-400 hover:text-ink-900 dark:text-paper-700 dark:hover:text-paper-50"
+                                    className="absolute -top-7 -right-7 z-10 w-8 h-8 !rounded-full bg-stone-900 shadow-xl border border-stone-800 flex items-center justify-center hover:scale-110 transition-transform text-stone-400 hover:text-stone-200"
                                 >
                                     <X className="w-4 h-4" />
                                 </Button>
 
                                 <div className="flex flex-col gap-6 select-none">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 pb-4 border-b border-paper-100 dark:border-white/5">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 pb-4 border-b border-stone-800">
                                         <div className="space-y-1">
                                             <Tooltip content="Your total comprehensive wealth across all tracked liquid assets and accounts." position="top" block>
                                                 <div className="flex items-center gap-1.5 cursor-help group/vault">
@@ -223,7 +223,7 @@ const Header = ({
                                                 </div>
                                             </Tooltip>
                                             <div className="flex items-baseline gap-2 flex-wrap">
-                                                <h2 className="text-h3 text-ink-900 dark:text-paper-50 leading-none">
+                                                <h2 className="text-h3 text-stone-200 leading-none">
                                                     {formatCurrency(balance, userProfile?.currency || 'BDT')}
                                                 </h2>
                                                 <span className="text-label opacity-40 font-normal">
@@ -280,10 +280,10 @@ const Header = ({
                                             }
                                         ].map(item => (
                                             <Tooltip key={item.label} content={item.tip} position="top" block>
-                                                <div className="p-2.5 rounded-xl bg-paper-100/50 dark:bg-white/[0.02] border border-paper-100 dark:border-white/5 w-full cursor-help hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-300 group/item">
+                                                <div className="p-2.5 rounded-xl bg-stone-900/40 border border-stone-800 w-full cursor-help hover:bg-stone-800/50 transition-all duration-300 group/item">
                                                     <div className="flex items-center justify-between mb-1">
-                                                        <p className="text-nano text-ink-400 dark:text-paper-700 uppercase tracking-wider">{item.label}</p>
-                                                        <Info size={10} className="text-ink-400 dark:text-paper-700 opacity-20 group-hover/item:opacity-60 transition-opacity" />
+                                                        <p className="text-nano text-stone-400 uppercase tracking-wider">{item.label}</p>
+                                                        <Info size={10} className="text-stone-400 opacity-20 group-hover/item:opacity-60 transition-opacity" />
                                                     </div>
                                                     <p className={`text-label ${item.color}`}>{item.val}</p>
                                                 </div>
