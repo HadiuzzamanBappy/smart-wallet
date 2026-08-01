@@ -109,20 +109,20 @@ const BudgetProgress = () => {
                         className="transition-all duration-500 group-hover:scale-110"
                     />
                     <div>
-                        <div className="text-overline text-stone-400 mb-1">
+                        <div className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 mb-1">
                             {budgetStatus.status}
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-nano uppercase text-stone-400 opacity-40">Limit:</span>
-                            <span className="text-label text-stone-200">{formatCurrency(budgetLimit, currency)}</span>
+                            <span className="text-nano uppercase text-stone-600 dark:text-stone-500 dark:text-stone-400 opacity-40">Limit:</span>
+                            <span className="text-label text-stone-800 dark:text-stone-200">{formatCurrency(budgetLimit, currency)}</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="text-overline text-stone-200">{percentage}%</div>
+                <div className="text-overline text-stone-800 dark:text-stone-200">{percentage}%</div>
             </div>
 
-            <div className="w-full h-1.5 bg-stone-900/40 rounded-full overflow-hidden mb-4">
+            <div className="w-full h-1.5 bg-white/80 dark:bg-stone-900/40 rounded-full overflow-hidden mb-4">
                 <div
                     className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.05)] ${colors.color === 'error' ? 'bg-error-500' :
                             colors.color === 'warning' ? 'bg-warning-500' :
@@ -135,11 +135,11 @@ const BudgetProgress = () => {
             <div className="flex items-end justify-between">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <span className="text-h5 text-stone-200">{formatCurrency(currentSpending, currency)}</span>
-                        <span className="text-overline text-stone-400 opacity-40">Spent</span>
+                        <span className="text-h5 text-stone-800 dark:text-stone-200">{formatCurrency(currentSpending, currency)}</span>
+                        <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 opacity-40">Spent</span>
                     </div>
                     {fixedSpending > 0 && (
-                        <div className="text-nano text-stone-400">
+                        <div className="text-nano text-stone-600 dark:text-stone-500 dark:text-stone-400">
                             Incl. <span className="text-primary-600 dark:text-primary-400">{formatCurrency(fixedSpending, currency)}</span> fixed ops
                         </div>
                     )}

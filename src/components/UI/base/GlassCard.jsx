@@ -15,10 +15,10 @@ const GlassCard = ({
     const isClickable = !!onClick;
     
     const glassStyles = {
-        card: "bg-stone-900/60 backdrop-blur-xl border border-stone-700/50 shadow-[0_8px_30px_rgba(0,0,0,0.6)]",
-        thick: "bg-stone-900/80 backdrop-blur-2xl border border-stone-600/50 shadow-[0_12px_40px_rgba(0,0,0,0.8)]",
-        flat: "bg-stone-800/40 border border-stone-700/30",
-        elevated: "bg-stone-900/70 border border-stone-700/60 shadow-[0_10px_35px_rgba(0,0,0,0.7)]"
+        card: "bg-stone-50 dark:bg-stone-900/60 backdrop-blur-xl border border-stone-300 dark:border-stone-700/50 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)]",
+        thick: "bg-white/95 dark:bg-stone-900/80 backdrop-blur-2xl border border-stone-200 dark:border-stone-600/50 shadow-[0_12px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.8)]",
+        flat: "bg-stone-50 dark:bg-stone-800/40 border border-stone-300 dark:border-stone-700/30",
+        elevated: "bg-white/90 dark:bg-stone-900/70 border border-stone-200 dark:border-stone-700/60 shadow-[0_10px_35px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.7)]"
     };
 
     const iconColorClasses = {
@@ -26,7 +26,7 @@ const GlassCard = ({
         error: "text-red-500",
         info: "text-cyan-500",
         warning: "text-amber-500",
-        ink: "text-stone-400"
+        ink: "text-stone-600 dark:text-stone-500 dark:text-stone-400"
     };
     
     return (

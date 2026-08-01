@@ -36,10 +36,10 @@ const Tooltip = ({
   };
 
   const arrowPositions = {
-    top: 'top-full left-1/2 -translate-x-1/2 border-t-stone-900/90',
-    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-stone-900/90',
-    left: 'left-full top-1/2 -translate-y-1/2 border-l-stone-900/90',
-    right: 'right-full top-1/2 -translate-y-1/2 border-r-stone-900/90',
+    top: 'top-full left-1/2 -translate-x-1/2 border-t-white/95 dark:border-t-stone-900/90',
+    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-white/95 dark:border-b-stone-900/90',
+    left: 'left-full top-1/2 -translate-y-1/2 border-l-white/95 dark:border-l-stone-900/90',
+    right: 'right-full top-1/2 -translate-y-1/2 border-r-white/95 dark:border-r-stone-900/90',
   };
 
   return (
@@ -60,7 +60,7 @@ const Tooltip = ({
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className={`absolute z-[100] ${positions[position]} ${className} pointer-events-none`}
           >
-            <div className="bg-stone-900/90 text-stone-200 px-3 py-2 rounded-xl shadow-2xl border border-stone-800/50 backdrop-blur-xl min-w-[180px] max-w-[240px]">
+            <div className="bg-white/95 dark:bg-stone-900/90 text-stone-800 dark:text-stone-200 px-3 py-2 rounded-xl shadow-2xl border border-stone-200 dark:border-stone-800/50 backdrop-blur-xl min-w-[180px] max-w-[240px]">
               <div className="text-nano leading-relaxed ">
                 {content}
               </div>

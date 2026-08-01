@@ -6,7 +6,7 @@
 
 @layer base {
   body {
-    @apply bg-paper-50 text-ink-900 dark:bg-ink-950 dark:text-paper-50 transition-colors duration-300 antialiased;
+    @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100 transition-colors duration-300 antialiased;
     font-family: 'Poppins', sans-serif;
   }
 

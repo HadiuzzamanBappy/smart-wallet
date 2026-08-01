@@ -138,13 +138,13 @@ const UserMenuDropdown = ({
             <GlassCard
               variant="thick"
               padding="p-0"
-              className="overflow-hidden shadow-2xl border-stone-800/50"
+              className="overflow-hidden shadow-2xl border-stone-200 dark:border-stone-800/50"
             >
               {/* Compact Profile Section */}
-              <GlassCard variant="flat" padding="p-3" className="bg-stone-900/40 rounded-none border-none">
+              <GlassCard variant="flat" padding="p-3" className="bg-white/80 dark:bg-stone-900/40 rounded-none border-none">
                 <div className="flex items-center gap-2.5">
                   <div className="relative">
-                    <div className="w-9 h-9 bg-primary-500 rounded-xl flex items-center justify-center text-white text-base shadow-lg shadow-primary-500/20 overflow-hidden border border-stone-800">
+                    <div className="w-9 h-9 bg-primary-500 rounded-xl flex items-center justify-center text-white text-base shadow-lg shadow-primary-500/20 overflow-hidden border border-stone-200 dark:border-stone-800">
                       {user?.photoURL ? (
                         <img
                           src={user.photoURL}
@@ -156,13 +156,13 @@ const UserMenuDropdown = ({
                         <User className="w-5 h-5" />
                       )}
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success-500 border border-stone-800 rounded-full" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success-500 border border-stone-200 dark:border-stone-800 rounded-full" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-label font-bold text-stone-200 truncate leading-tight">
+                    <p className="text-label font-bold text-stone-800 dark:text-stone-200 truncate leading-tight">
                       {userProfile?.displayName?.split(' ')[0] || 'User'}
                     </p>
-                    <p className="text-label text-stone-400 truncate opacity-60 leading-tight">
+                    <p className="text-label text-stone-600 dark:text-stone-500 dark:text-stone-400 truncate opacity-60 leading-tight">
                       {userProfile?.email}
                     </p>
                   </div>
@@ -189,7 +189,7 @@ const UserMenuDropdown = ({
                       disabled={isSignOut && logoutLoading}
                       className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all ${isSignOut
                         ? 'text-red-400 hover:bg-red-500/10'
-                        : 'text-stone-400 hover:bg-stone-800/50 hover:text-stone-200'
+                        : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-800 dark:hover:text-stone-200'
                         } ${isSignOut && logoutLoading ? 'opacity-60 cursor-wait' : 'active:scale-[0.98] group'}`}
                     >
                       <IconBox

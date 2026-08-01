@@ -44,12 +44,12 @@ const IconBox = ({
             border: "border-cyan-500/30"
         },
         ink: {
-            text: "text-stone-400",
+            text: "text-stone-600 dark:text-stone-500 dark:text-stone-400",
             bg: "bg-stone-500/10",
             border: "border-stone-500/20"
         },
         white: {
-            text: "text-stone-200",
+            text: "text-stone-800 dark:text-stone-200",
             bg: "bg-white/5",
             border: "border-white/10"
         }
@@ -74,7 +74,7 @@ const IconBox = ({
     };
 
     const variants = {
-        glass: `bg-stone-800/60 backdrop-blur-md border ${config.border} shadow-sm`,
+        glass: `bg-stone-100 dark:bg-stone-800/60 backdrop-blur-md border ${config.border} shadow-sm`,
         soft: bgClass || `${config.bg} border ${config.border}`,
         solid: bgClass || `${config.bg.replace('/10', '')} border ${config.border}`,
         ghost: `bg-transparent border ${config.border}`

@@ -121,15 +121,15 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-stone-950 text-stone-200 transition-colors duration-500 relative font-sans">
+      <div className="min-h-screen bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-200 transition-colors duration-500 relative font-sans">
         
         {/* --- SOOTHING NATURE ATMOSPHERE BACKGROUND WITH WATERMARK IMAGE --- */}
-        <div className="fixed inset-0 bg-stone-950 pointer-events-none z-0" />
+        <div className="fixed inset-0 bg-stone-50 dark:bg-stone-950 pointer-events-none z-0" />
         <div
-          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-20 mix-blend-screen blur-sm scale-105"
+          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-[0.15] dark:opacity-20 blur-xl dark:blur-sm grayscale dark:grayscale-0 mix-blend-luminosity dark:mix-blend-screen scale-105"
           style={{ backgroundImage: "url('/img/forest-bg.png')" }}
         />
-        <div className="fixed inset-0 bg-gradient-to-b from-transparent via-emerald-950/40 to-stone-950 pointer-events-none z-0" />
+        <div className="fixed inset-0 bg-gradient-to-b from-transparent via-emerald-500/5 dark:via-emerald-950/40 to-stone-50 dark:to-stone-950 pointer-events-none z-0" />
 
         {/* Warm sunlight filtering from the top left */}
         <div className="fixed -top-40 -left-40 w-[800px] h-[800px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none z-0 mix-blend-screen" />

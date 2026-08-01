@@ -33,10 +33,10 @@ const PaymentDialog = ({
             }
         >
             <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-stone-900/60 border border-stone-800">
+                <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800">
                     <div className="space-y-1">
-                        <div className="text-overline text-stone-400 mb-1 opacity-60">Principal</div>
-                        <div className="text-label text-stone-200 opacity-40">{formatCurrencyWithUser(item.amount, userProfile)}</div>
+                        <div className="text-overline text-stone-500 dark:text-stone-400 mb-1 opacity-60">Principal</div>
+                        <div className="text-label text-stone-800 dark:text-stone-200 opacity-60 dark:opacity-40">{formatCurrencyWithUser(item.amount, userProfile)}</div>
                     </div>
                     <div>
                         <div className="text-overline text-warning-500 mb-1">Outstanding</div>
@@ -45,7 +45,7 @@ const PaymentDialog = ({
                 </div>
 
                 <div className="space-y-2">
-                    <label className="block text-overline text-stone-400 px-1">Repayment Amount</label>
+                    <label className="block text-overline text-stone-500 dark:text-stone-400 px-1">Repayment Amount</label>
                     <GlassInput
                         type="number"
                         placeholder="0.00"
@@ -57,7 +57,7 @@ const PaymentDialog = ({
                 </div>
 
                 <div className="space-y-2">
-                    <label className="block text-overline text-stone-400 px-1">Audit Note (Optional)</label>
+                    <label className="block text-overline text-stone-500 dark:text-stone-400 px-1">Audit Note (Optional)</label>
                     <GlassInput
                         placeholder="Internal correction..."
                         value={description}

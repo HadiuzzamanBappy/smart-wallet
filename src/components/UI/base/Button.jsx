@@ -23,6 +23,8 @@ const Button = ({
     const colorConfigs = {
         primary: {
             bg: "bg-primary-500",
+            softBg: "bg-primary-500/10 hover:bg-primary-500/20",
+            textHoverBg: "hover:bg-primary-500/10",
             text: "text-primary-600 dark:text-primary-400",
             contrast: "text-white",
             border: "border-primary-500/40",
@@ -30,6 +32,8 @@ const Button = ({
         },
         secondary: {
             bg: "bg-secondary-500",
+            softBg: "bg-secondary-500/10 hover:bg-secondary-500/20",
+            textHoverBg: "hover:bg-secondary-500/10",
             text: "text-secondary-600 dark:text-secondary-400",
             contrast: "text-white",
             border: "border-secondary-500/40",
@@ -37,6 +41,8 @@ const Button = ({
         },
         success: {
             bg: "bg-success-500",
+            softBg: "bg-success-500/10 hover:bg-success-500/20",
+            textHoverBg: "hover:bg-success-500/10",
             text: "text-success-600 dark:text-success-400",
             contrast: "text-white",
             border: "border-success-500/40",
@@ -44,6 +50,8 @@ const Button = ({
         },
         error: {
             bg: "bg-error-500",
+            softBg: "bg-error-500/10 hover:bg-error-500/20",
+            textHoverBg: "hover:bg-error-500/10",
             text: "text-error-600 dark:text-error-400",
             contrast: "text-white",
             border: "border-error-500/40",
@@ -51,6 +59,8 @@ const Button = ({
         },
         warning: {
             bg: "bg-warning-500",
+            softBg: "bg-warning-500/10 hover:bg-warning-500/20",
+            textHoverBg: "hover:bg-warning-500/10",
             text: "text-warning-600 dark:text-warning-400",
             contrast: "text-white",
             border: "border-warning-500/40",
@@ -58,16 +68,20 @@ const Button = ({
         },
         info: {
             bg: "bg-info-500",
+            softBg: "bg-info-500/10 hover:bg-info-500/20",
+            textHoverBg: "hover:bg-info-500/10",
             text: "text-info-600 dark:text-info-400",
             contrast: "text-white",
             border: "border-info-500/40",
             glow: "shadow-info-500/20"
         },
         ink: {
-            bg: "bg-stone-800",
-            text: "text-stone-200",
-            contrast: "text-white",
-            border: "border-stone-700",
+            bg: "bg-stone-800 dark:bg-stone-200",
+            softBg: "bg-stone-500/10 hover:bg-stone-500/20 dark:bg-stone-400/10 dark:hover:bg-stone-400/20",
+            textHoverBg: "hover:bg-stone-500/10 dark:hover:bg-stone-400/10",
+            text: "text-stone-800 dark:text-stone-200",
+            contrast: "text-white dark:text-stone-900",
+            border: "border-stone-300 dark:border-stone-700",
             glow: "shadow-stone-950/10"
         }
     };
@@ -77,10 +91,10 @@ const Button = ({
     const variants = {
         filled: `${config.bg} ${config.contrast} hover:brightness-110 shadow-lg ${config.glow} hover:-translate-y-0.5`,
         outlined: `bg-transparent border ${config.border} ${config.text} hover:bg-current/10 hover:border-current/60 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`,
-        soft: `${config.bg}/10 ${config.text} hover:bg-current/20 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`,
-        text: `${config.text} hover:${config.bg}/10 hover:-translate-y-0.5`,
-        ghost: "bg-transparent hover:bg-stone-800 text-stone-400 transition-colors hover:-translate-y-0.5",
-        icon: `p-2 rounded-xl bg-stone-900/60 border border-stone-800 ${config.text} hover:bg-current/10 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`
+        soft: `${config.softBg} ${config.text} hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`,
+        text: `${config.text} ${config.textHoverBg} hover:-translate-y-0.5`,
+        ghost: "bg-transparent hover:bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-500 dark:text-stone-400 transition-colors hover:-translate-y-0.5",
+        icon: `p-2 rounded-xl bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 ${config.text} hover:bg-stone-500/10 dark:hover:bg-stone-400/10 hover:brightness-110 hover:shadow-lg ${config.glow} hover:-translate-y-0.5`
     };
 
     const sizes = {

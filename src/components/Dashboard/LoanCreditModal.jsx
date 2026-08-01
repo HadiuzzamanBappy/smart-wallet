@@ -215,11 +215,11 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
             <Modal isOpen={open} onClose={onClose} title={title} size="lg" disableScroll={true} fullMobile>
                 <div className="flex flex-col h-full">
                     {/* Summary Header - Executive Metrics */}
-                    <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-stone-800">
+                    <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-stone-200 dark:border-stone-800">
                         <div className="flex items-center gap-3">
-                            <div className="px-4 py-3 rounded-2xl bg-stone-900/40 border border-stone-800 shadow-sm">
-                                <div className="text-overline text-stone-400 mb-1 opacity-60">Capital Principal</div>
-                                <div className="text-label text-stone-200">{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</div>
+                            <div className="px-4 py-3 rounded-2xl bg-white/80 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 shadow-sm">
+                                <div className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 mb-1 opacity-60">Capital Principal</div>
+                                <div className="text-label text-stone-800 dark:text-stone-200">{formatCurrencyWithUser(totalOriginalAmount, userProfile)}</div>
                             </div>
                             <div className="px-4 py-3 rounded-2xl bg-warning-500/5 border border-warning-500/20 shadow-sm">
                                 <div className="text-overline text-warning-500 mb-1">Outstanding Due</div>
@@ -228,26 +228,26 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                         </div>
 
                         {/* Modern Toggle System */}
-                        <div className="flex p-0.5 bg-stone-900/60 border border-stone-800 rounded-2xl w-fit">
+                        <div className="flex p-0.5 bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 rounded-2xl w-fit">
                             <button
                                 onClick={() => setShowAllItems(false)}
                                 className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-xl text-overline transition-all duration-300 ${!showAllItems
                                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
-                                    : 'text-stone-400 hover:text-stone-200'}`}
+                                    : 'text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:text-stone-200'}`}
                             >
                                 <User className={`w-3 h-3 ${!showAllItems ? 'text-white' : ''}`} />
                                 <span className={!showAllItems ? 'text-white' : ''}>Unpaid</span>
-                                <span className={`px-1.5 py-0.5 rounded-md text-nano ml-1 ${!showAllItems ? 'bg-white/20 text-white' : 'bg-stone-800 text-stone-400'}`}>{unpaidCount}</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-nano ml-1 ${!showAllItems ? 'bg-white/20 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-500 dark:text-stone-400'}`}>{unpaidCount}</span>
                             </button>
                             <button
                                 onClick={() => setShowAllItems(true)}
                                 className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-xl text-overline transition-all duration-300 ${showAllItems
                                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
-                                    : 'text-stone-400 hover:text-stone-200'}`}
+                                    : 'text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:text-stone-200'}`}
                             >
                                 <CheckCircle className={`w-3 h-3 ${showAllItems ? 'text-white' : ''}`} />
                                 <span className={showAllItems ? 'text-white' : ''}>Paid</span>
-                                <span className={`px-1.5 py-0.5 rounded-md text-nano ml-1 ${showAllItems ? 'bg-white/20 text-white' : 'bg-stone-800 text-stone-400'}`}>{paidCount}</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-nano ml-1 ${showAllItems ? 'bg-white/20 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-500 dark:text-stone-400'}`}>{paidCount}</span>
                             </button>
                         </div>
                     </div>
@@ -256,10 +256,10 @@ const LoanCreditModal = ({ open, onClose, type = 'loans' }) => {
                         <div className="flex-1 flex items-center justify-center p-10"><LoadingSpinner /></div>
                     ) : displayedItems.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-                            <div className="w-16 h-16 rounded-3xl bg-stone-900/40 border border-stone-800 flex items-center justify-center mb-5 opacity-40">
-                                <AlertCircle className="w-8 h-8 text-stone-400" />
+                            <div className="w-16 h-16 rounded-3xl bg-white/80 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 flex items-center justify-center mb-5 opacity-40">
+                                <AlertCircle className="w-8 h-8 text-stone-600 dark:text-stone-500 dark:text-stone-400" />
                             </div>
-                            <p className="text-overline text-stone-400">{showAllItems ? emptyMessage : `No active ${isLoans ? 'loans' : 'credits'}`}</p>
+                            <p className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400">{showAllItems ? emptyMessage : `No active ${isLoans ? 'loans' : 'credits'}`}</p>
                         </div>
                     ) : (
                         <div className="flex-1 overflow-y-auto p-5 space-y-3 custom-scrollbar">

@@ -46,14 +46,14 @@ const StepBar = ({ current, total }) => {
         <div className="flex items-center gap-3">
           <IconBox icon={steps[current].icon} size="sm" color="primary" variant="glass" />
           <div className="flex flex-col">
-            <h3 className="text-label font-bold text-stone-200 uppercase tracking-wider">{steps[current].label}</h3>
-            <p className="text-overline text-stone-500">Phase {current + 1} of {total}</p>
+            <h3 className="text-label font-bold text-stone-800 dark:text-stone-200 uppercase tracking-wider">{steps[current].label}</h3>
+            <p className="text-overline text-stone-600 dark:text-stone-500">Phase {current + 1} of {total}</p>
           </div>
         </div>
       </div>
       <div className="flex gap-1.5 px-0.5">
         {Array.from({ length: total }).map((_, i) => (
-          <div key={i} className="flex-1 h-1.5 rounded-full bg-stone-800/50 overflow-hidden relative">
+          <div key={i} className="flex-1 h-1.5 rounded-full bg-stone-100 dark:bg-stone-800/50 overflow-hidden relative">
             <div
               className={`absolute inset-0 transition-all duration-700 ease-in-out ${i <= current ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-transparent'}`}
             />
@@ -125,7 +125,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
       <div className="space-y-2">
         <label className="flex items-center gap-2 px-1">
           <Briefcase className="w-3.5 h-3.5 text-emerald-500" />
-          <span className="text-overline text-stone-400">Base Salary (After Tax)</span>
+          <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400">Base Salary (After Tax)</span>
         </label>
         <GlassInput
           type="number"
@@ -139,7 +139,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
       <div className="space-y-2">
         <label className="flex items-center gap-2 px-1">
           <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-          <span className="text-overline text-stone-400">Side Revenue</span>
+          <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400">Side Revenue</span>
         </label>
         <GlassInput
           type="number"
@@ -151,7 +151,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
       <div className="grid grid-cols-2 gap-5 pt-2">
         <div className="space-y-2">
-          <label className="block text-overline text-stone-400 px-1">Age Bracket</label>
+          <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 px-1">Age Bracket</label>
           <Select
             value={form.ageBracket}
             onChange={e => update('ageBracket', e.target.value)}
@@ -164,7 +164,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
           />
         </div>
         <div className="space-y-2">
-          <label className="block text-overline text-stone-400 px-1">Location Tier</label>
+          <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 px-1">Location Tier</label>
           <Select
             value={form.cityTier}
             onChange={e => update('cityTier', e.target.value)}
@@ -191,10 +191,10 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
             onClick={() => update(item.key, !form[item.key])}
             className={`flex items-center gap-3 p-5 rounded-3xl border transition-all duration-300 shadow-sm ${form[item.key]
               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-              : 'bg-stone-900/60 border-stone-800 text-stone-400 hover:bg-stone-800 hover:border-stone-700'
+              : 'bg-stone-50 dark:bg-stone-900/60 border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:bg-stone-800 hover:border-stone-300 dark:border-stone-700'
               }`}
           >
-            <item.icon className={`w-4 h-4 ${form[item.key] ? 'text-emerald-400' : 'text-stone-500'}`} />
+            <item.icon className={`w-4 h-4 ${form[item.key] ? 'text-emerald-400' : 'text-stone-600 dark:text-stone-500'}`} />
             <span className="text-overline">{item.label}</span>
           </button>
         ))}
@@ -203,22 +203,22 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
       <div className="grid grid-cols-2 gap-5">
         {form.hasRent && (
           <div className="space-y-2 animate-in zoom-in-95 duration-200">
-            <label className="block text-overline text-stone-400 tracking-widest px-1">Monthly Rent</label>
+            <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 tracking-widest px-1">Monthly Rent</label>
             <GlassInput type="number" value={form.rent} onChange={e => update('rent', e.target.value)} placeholder="0" />
           </div>
         )}
         {form.hasFamilySend && (
           <div className="space-y-2 animate-in zoom-in-95 duration-200">
-            <label className="block text-overline text-stone-400 tracking-widest px-1">Family Support</label>
+            <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 tracking-widest px-1">Family Support</label>
             <GlassInput type="number" value={form.familySend} onChange={e => update('familySend', e.target.value)} placeholder="0" />
           </div>
         )}
         <div className="space-y-2">
-          <label className="block text-overline text-stone-400 tracking-widest px-1">Utilities</label>
+          <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 tracking-widest px-1">Utilities</label>
           <GlassInput type="number" value={form.bills} onChange={e => update('bills', e.target.value)} placeholder="Bills & Subs" />
         </div>
         <div className="space-y-2">
-          <label className="block text-overline text-stone-400 tracking-widest px-1">Transport</label>
+          <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 tracking-widest px-1">Transport</label>
           <GlassInput type="number" value={form.transport} onChange={e => update('transport', e.target.value)} placeholder="Commute" />
         </div>
       </div>
@@ -229,7 +229,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="space-y-4">
         {form.loans.map((loan, idx) => (
-          <GlassCard key={idx} padding="p-4" className="bg-stone-900/60 border-stone-800">
+          <GlassCard key={idx} padding="p-4" className="bg-stone-50 dark:bg-stone-900/60 border-stone-200 dark:border-stone-800">
             <div className="flex gap-4 items-center">
               <div className="flex-1 space-y-4">
                 <GlassInput
@@ -280,7 +280,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
       <div className="space-y-2">
         <label className="flex items-center gap-2 px-1">
           <Wallet2 className="w-3.5 h-3.5 text-amber-500" />
-          <span className="text-overline text-stone-400 tracking-widest">Liquid Cash in Hand</span>
+          <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 tracking-widest">Liquid Cash in Hand</span>
         </label>
         <GlassInput
           type="number"
@@ -292,7 +292,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
 
       <div className="space-y-5">
         {form.deposits.map((dep, idx) => (
-          <GlassCard key={idx} padding="p-5" className="bg-stone-900/60 border-stone-800">
+          <GlassCard key={idx} padding="p-5" className="bg-stone-50 dark:bg-stone-900/60 border-stone-200 dark:border-stone-800">
             <div className="space-y-4">
               <div className="flex gap-4">
                 <Select
@@ -372,11 +372,11 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="grid grid-cols-2 gap-5">
         <div className="space-y-2">
-          <label className="block text-overline text-stone-400 tracking-widest px-1">Goal Value</label>
+          <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 tracking-widest px-1">Goal Value</label>
           <GlassInput type="number" value={form.goal} onChange={e => update('goal', e.target.value)} placeholder="Target Price" />
         </div>
         <div className="space-y-2">
-          <label className="block text-overline text-stone-400 tracking-widest px-1">Horizon (Months)</label>
+          <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 tracking-widest px-1">Horizon (Months)</label>
           <Select
             value={form.goalMonths}
             onChange={e => update('goalMonths', e.target.value)}
@@ -389,22 +389,22 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
         <GlassCard className="bg-emerald-500/5 border-emerald-500/20 shadow-sm" padding="p-6">
           <div className="flex items-center gap-4 mb-5">
             <IconBox icon={Target} size="sm" color="primary" variant="glass" />
-            <span className="text-overline text-stone-200 tracking-widest">Plan Projection</span>
+            <span className="text-overline text-stone-800 dark:text-stone-200 tracking-widest">Plan Projection</span>
           </div>
           <div className="space-y-4">
             {[
-              { label: 'Target Value', val: c(form.goal), color: 'text-stone-200' },
+              { label: 'Target Value', val: c(form.goal), color: 'text-stone-800 dark:text-stone-200' },
               { label: 'Asset Offset', val: c(livePlan.projectedAssets), color: 'text-emerald-400' },
               { label: 'Net Gap', val: c(livePlan.remainingGoal), color: 'text-amber-400' }
             ].map(item => (
               <div key={item.label} className="flex justify-between items-center">
-                <span className="text-overline text-stone-400 opacity-70">{item.label}</span>
+                <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 opacity-70">{item.label}</span>
                 <span className={`text-label font-mono ${item.color}`}>{item.val}</span>
               </div>
             ))}
-            <div className="pt-4 border-t border-stone-800 flex justify-between items-center">
+            <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex justify-between items-center">
               <span className="text-overline text-emerald-500">Required / mo</span>
-              <span className="text-h4 font-mono text-stone-200">{c(livePlan.monthlyForGoal)}</span>
+              <span className="text-h4 font-mono text-stone-800 dark:text-stone-200">{c(livePlan.monthlyForGoal)}</span>
             </div>
           </div>
         </GlassCard>
@@ -450,26 +450,26 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
         <GlassCard
           variant="flat"
           padding="p-4 sm:p-6"
-          className="!bg-stone-900/80 backdrop-blur-xl rounded-3xl border-stone-800/50 shadow-sm"
+          className="!bg-white/95 dark:!bg-stone-900/80 backdrop-blur-xl rounded-3xl border-stone-200 dark:border-stone-800/50 shadow-sm"
         >
           <div className="grid grid-cols-2 md:grid-cols-6 gap-y-4 sm:gap-y-6 items-center">
             {[
-              { label: 'Income', val: c(livePlan.totalIncome), color: 'text-stone-200' },
+              { label: 'Income', val: c(livePlan.totalIncome), color: 'text-stone-800 dark:text-stone-200' },
               { label: 'Fixed Ops', val: c(livePlan.totalFixedCosts), color: 'text-red-400' },
               { label: 'Debt Load', val: c(livePlan.totalEMI), color: 'text-amber-400' },
               { label: 'Saved', val: c(livePlan.actualSavings), color: 'text-emerald-400' },
               { label: 'Goal Alloc', val: c(livePlan.monthlyForGoal), color: 'text-cyan-400' },
               { label: 'Surplus', val: `${livePlan.isDeficit ? '-' : '+'}${c(Math.abs(livePlan.netBalance))}`, color: livePlan.isDeficit ? 'text-red-500' : 'text-emerald-400' }
             ].map((metric, i) => (
-              <div key={metric.label} className={`flex flex-col items-center text-center px-1 ${i < 5 ? 'md:border-r border-stone-800/50' : ''}`}>
-                <span className="text-overline text-stone-400 mb-1 opacity-50 uppercase tracking-widest">{metric.label}</span>
+              <div key={metric.label} className={`flex flex-col items-center text-center px-1 ${i < 5 ? 'md:border-r border-stone-200 dark:border-stone-800/50' : ''}`}>
+                <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 mb-1 opacity-50 uppercase tracking-widest">{metric.label}</span>
                 <span className={`text-label font-bold truncate max-w-full ${metric.color}`}>{metric.val}</span>
               </div>
             ))}
           </div>
 
           <div className="mt-6 space-y-4">
-            <div className="h-1.5 w-full bg-stone-800/50 rounded-full flex overflow-hidden border border-stone-800">
+            <div className="h-1.5 w-full bg-stone-100 dark:bg-stone-800/50 rounded-full flex overflow-hidden border border-stone-200 dark:border-stone-800">
               <div className="h-full bg-red-500 transition-all duration-700" style={{ width: `${Math.min(livePlan.fixedRatio * 100, 100)}%` }} />
               <div className="h-full bg-amber-500 transition-all duration-700 border-l border-stone-950/50" style={{ width: `${Math.min(livePlan.loanRatio * 100, 100)}%` }} />
               <div className="h-full bg-emerald-500 transition-all duration-700 border-l border-stone-950/50" style={{ width: `${Math.min(livePlan.savingsRatio * 100, 100)}%` }} />
@@ -486,7 +486,7 @@ const SalaryFormModal = ({ isOpen, onClose, initialData, onComplete }) => {
               ].map(leg => (
                 <div key={leg.label} className="flex items-center gap-1.5">
                   <div className={`w-1.5 h-1.5 rounded-full ${leg.color}`} />
-                  <span className="text-overline text-stone-400 tracking-wider ">{leg.pct}% <span className="opacity-40">{leg.label}</span></span>
+                  <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 tracking-wider ">{leg.pct}% <span className="opacity-40">{leg.label}</span></span>
                 </div>
               ))}
             </div>

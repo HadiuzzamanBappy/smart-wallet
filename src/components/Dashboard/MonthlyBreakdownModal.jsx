@@ -165,7 +165,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <IconBox icon={Calendar} size="lg" color="ink" variant="soft" className="mb-6 opacity-40" />
             <h3 className="text-overline mb-2 uppercase">No Reports Available</h3>
-            <p className="text-overline text-stone-400 max-w-[200px] leading-relaxed">
+            <p className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 max-w-[200px] leading-relaxed">
               Generate transactions to activate your intelligence suite.
             </p>
           </div>
@@ -173,7 +173,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
           <>
             {/* Month Selector */}
             <div className="px-1">
-              <label className="text-overline text-stone-400 mb-2.5 px-1 block uppercase">Select Reporting Period</label>
+              <label className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 mb-2.5 px-1 block uppercase">Select Reporting Period</label>
               <Select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
@@ -200,10 +200,10 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                       <IconBox icon={TrendingUp} size="xs" color="primary" variant="soft" />
                       <span className="text-overline text-primary-600 dark:text-primary-400 uppercase">Inflow</span>
                     </div>
-                    <div className="text-h4 text-stone-200 mb-2">
+                    <div className="text-h4 text-stone-800 dark:text-stone-200 mb-2">
                       {formatCurrencyWithUser(selectedData.income, userProfile)}
                     </div>
-                    <div className="text-overline text-stone-400 opacity-60 leading-none">
+                    <div className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 opacity-60 leading-none">
                       {selectedData.incomeCount} Audit Logs
                     </div>
                   </GlassCard>
@@ -213,10 +213,10 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                       <IconBox icon={TrendingDown} size="xs" color="error" variant="soft" />
                       <span className="text-overline text-error-600 dark:text-error-400 uppercase">Outflow</span>
                     </div>
-                    <div className="text-h4 text-stone-200 mb-2">
+                    <div className="text-h4 text-stone-800 dark:text-stone-200 mb-2">
                       {formatCurrencyWithUser(selectedData.expense, userProfile)}
                     </div>
-                    <div className="text-overline text-stone-400 opacity-60 leading-none">
+                    <div className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 opacity-60 leading-none">
                       {selectedData.expenseCount} Audit Logs
                     </div>
                   </GlassCard>
@@ -224,8 +224,8 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
 
                 {/* Net Change & Month End Cash in Hand */}
                 <div className="space-y-3">
-                  <div className="p-4 rounded-3xl bg-stone-900/60 border border-stone-800 flex items-center justify-between">
-                    <span className="text-overline text-stone-400 uppercase">Net Surplus / Deficit</span>
+                  <div className="p-4 rounded-3xl bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 flex items-center justify-between">
+                    <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 uppercase">Net Surplus / Deficit</span>
                     <Badge
                       color={selectedData.income - selectedData.expense >= 0 ? 'success' : 'error'}
                       variant="soft"
@@ -236,8 +236,8 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                     </Badge>
                   </div>
 
-                  <div className="p-4 rounded-3xl bg-stone-900/60 border border-stone-800 flex items-center justify-between">
-                    <span className="text-overline text-stone-400 uppercase">Cash in Hand (Month End)</span>
+                  <div className="p-4 rounded-3xl bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 flex items-center justify-between">
+                    <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 uppercase">Cash in Hand (Month End)</span>
                     <Badge
                       color={selectedData.cashInHandAtEnd >= 0 ? 'primary' : 'error'}
                       variant="filled"
@@ -250,7 +250,7 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
 
                 {/* Transaction Details */}
                 <div className="space-y-4">
-                  <h4 className="text-overline text-stone-400 px-1 uppercase">Detailed Ledger ({selectedData.transactions.length})</h4>
+                  <h4 className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 px-1 uppercase">Detailed Ledger ({selectedData.transactions.length})</h4>
                   <div className="space-y-2 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
                     {selectedData.transactions
                       .filter(tx => ['income', 'expense', 'loan', 'credit', 'repayment', 'collection'].includes(tx.type))
@@ -258,23 +258,23 @@ const MonthlyBreakdownModal = ({ open, onClose }) => {
                       .map(tx => {
                         const isInflow = ['income', 'loan', 'collection'].includes(tx.type);
                         return (
-                          <div key={tx.id} className="p-4 rounded-2xl bg-stone-900/40 border border-stone-800 hover:bg-stone-800 transition-all group">
+                          <div key={tx.id} className="p-4 rounded-2xl bg-white/80 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 hover:bg-stone-100 dark:bg-stone-800 transition-all group">
                             <div className="flex items-center justify-between gap-4">
                               <div className="flex-1 min-w-0">
-                                <div className="text-label text-stone-200 truncate mb-1">
+                                <div className="text-label text-stone-800 dark:text-stone-200 truncate mb-1">
                                   {tx.description}
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="text-overline text-stone-400 opacity-60">
+                                  <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 opacity-60">
                                     {new Date(tx.date || tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                   </span>
-                                  <div className="w-1 h-1 rounded-full bg-stone-700" />
-                                  <span className="text-overline text-stone-400 opacity-60">
+                                  <div className="w-1 h-1 rounded-full bg-stone-200 dark:bg-stone-700" />
+                                  <span className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 opacity-60">
                                     {tx.category}
                                   </span>
                                 </div>
                               </div>
-                              <div className={`text-label whitespace-nowrap ${isInflow ? 'text-primary-600 dark:text-primary-400' : 'text-stone-200'}`}>
+                              <div className={`text-label whitespace-nowrap ${isInflow ? 'text-primary-600 dark:text-primary-400' : 'text-stone-800 dark:text-stone-200'}`}>
                                 {isInflow ? '+' : '-'}{formatCurrencyWithUser(tx.amount, userProfile)}
                               </div>
                             </div>

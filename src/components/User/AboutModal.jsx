@@ -67,10 +67,10 @@ const AboutModal = ({ isOpen, onClose }) => {
                     className="group-hover/feature:scale-110 transition-transform duration-500"
                   />
                   <div>
-                    <h4 className="text-label font-bold text-stone-200">
+                    <h4 className="text-label font-bold text-stone-800 dark:text-stone-200">
                       {feature.title}
                     </h4>
-                    <p className="text-body text-stone-400 mt-1">
+                    <p className="text-body text-stone-600 dark:text-stone-500 dark:text-stone-400 mt-1">
                       {feature.description}
                     </p>
                   </div>
@@ -94,7 +94,7 @@ const AboutModal = ({ isOpen, onClose }) => {
                 key={index}
                 variant="flat"
                 padding="p-4"
-                className="bg-stone-900/60 border-stone-800/50"
+                className="bg-stone-50 dark:bg-stone-900/60 border-stone-200 dark:border-stone-800/50"
               >
                 <div className="flex flex-col gap-2">
                   <Badge
@@ -105,7 +105,7 @@ const AboutModal = ({ isOpen, onClose }) => {
                   >
                     {type.label}
                   </Badge>
-                  <p className="text-body text-stone-400">
+                  <p className="text-body text-stone-600 dark:text-stone-500 dark:text-stone-400">
                     {type.desc}
                   </p>
                 </div>
@@ -141,9 +141,9 @@ const AboutModal = ({ isOpen, onClose }) => {
           </GlassCard>
         </section>
 
-        <div className="flex items-center justify-center pt-4 border-t border-stone-800 gap-3">
+        <div className="flex items-center justify-center pt-4 border-t border-stone-200 dark:border-stone-800 gap-3">
           <Badge color="ink" variant="soft" size="sm">v{APP_VERSION}</Badge>
-          <span className="text-overline text-stone-500 uppercase">
+          <span className="text-overline text-stone-600 dark:text-stone-500 uppercase">
             Financial Intelligence Guide
           </span>
         </div>

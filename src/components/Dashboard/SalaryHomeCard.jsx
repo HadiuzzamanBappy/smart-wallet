@@ -96,7 +96,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
     return (
       <GlassCard
         padding="p-3.5"
-        className="cursor-pointer group hover:bg-stone-800/60 transition-all border-stone-700/50"
+        className="cursor-pointer group hover:bg-stone-100 dark:bg-stone-800/60 transition-all border-stone-300 dark:border-stone-700/50"
         onClick={() => onOpen('wizard')}
         backgroundIcon={BarChart2}
         iconColor="primary"
@@ -106,7 +106,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
             <IconBox icon={BarChart2} size="xs" color="primary" variant="glass" />
             <div>
               <div className="text-overline opacity-40 uppercase tracking-widest mb-1 ">Financial Intelligence</div>
-              <div className="text-label font-bold text-stone-200">Setup 50/30/20 & Daily Limits</div>
+              <div className="text-label font-bold text-stone-800 dark:text-stone-200">Setup 50/30/20 & Daily Limits</div>
             </div>
           </div>
           <IconBox icon={Edit3} size="xs" color="ink" variant="soft" className="group-hover:text-primary-500 opacity-40 group-hover:opacity-100" />
@@ -119,7 +119,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
     <div className="relative group/card w-full">
       <GlassCard
         padding="p-3.5"
-        className="cursor-pointer transition-all active:scale-[0.99] hover:bg-stone-800/60 transition-all duration-500 border-stone-700/50"
+        className="cursor-pointer transition-all active:scale-[0.99] hover:bg-stone-100 dark:bg-stone-800/60 transition-all duration-500 border-stone-300 dark:border-stone-700/50"
         onClick={() => onOpen('result')}
         backgroundIcon={BarChart2}
         iconColor="primary"
@@ -130,7 +130,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
             <div>
               <div className="text-overline opacity-40 uppercase tracking-widest mb-1 ">Intelligence Suite</div>
               <div className="flex items-center gap-2.5">
-                <div className="text-h5 font-bold tracking-tight text-stone-200">
+                <div className="text-h5 font-bold tracking-tight text-stone-800 dark:text-stone-200">
                   {planData.currencySymbol}{Math.round(totalAssets).toLocaleString()}
                 </div>
                 {runway > 0 && (
@@ -167,9 +167,9 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
               color: savePct < 20 ? 'text-error-600 dark:text-error-400' : 'text-primary-600 dark:text-primary-400'
             },
           ].map((item, i) => (
-            <div key={i} className={`bg-stone-800/20 py-2.5 px-2 rounded-2xl border transition-all duration-500 flex flex-col items-center justify-center text-center ${item.color.includes('error') ? 'border-red-500/20 bg-red-500/5' : 'border-stone-700/30'
+            <div key={i} className={`bg-stone-100 dark:bg-stone-800/20 py-2.5 px-2 rounded-2xl border transition-all duration-500 flex flex-col items-center justify-center text-center ${item.color.includes('error') ? 'border-red-500/20 bg-red-500/5' : 'border-stone-300 dark:border-stone-700/30'
               }`}>
-              <span className={`text-nano uppercase mb-1 ${item.color.includes('error') ? 'text-red-400/60' : 'text-stone-400'}`}>{item.label}</span>
+              <span className={`text-nano uppercase mb-1 ${item.color.includes('error') ? 'text-red-400/60' : 'text-stone-600 dark:text-stone-500 dark:text-stone-400'}`}>{item.label}</span>
               <div className="flex items-center justify-center gap-1 mb-1.5 min-w-0">
                 <div className={`text-nano font-bold ${item.color} shrink-0`}>{item.pct}%</div>
                 <div className="flex items-center gap-0.5 opacity-30 text-[8px] font-black uppercase tracking-tighter shrink-0">
@@ -177,7 +177,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
                   <span>{item.target}%</span>
                 </div>
               </div>
-              <span className="text-nano text-stone-200">
+              <span className="text-nano text-stone-800 dark:text-stone-200">
                 {planData.currencySymbol}{Math.round(item.val).toLocaleString()}
               </span>
             </div>
@@ -193,11 +193,11 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
             <span className="text-label font-bold">{planData.currencySymbol}{Math.round(totalSurplus).toLocaleString()}</span>
           </div>
           <div className={`flex-[3] rounded-xl py-2 px-4 border flex justify-between items-center group/limit transition-colors ${totalSurplus >= 0
-            ? 'bg-stone-800/20 border-stone-700/30 hover:bg-stone-800/40'
+            ? 'bg-stone-100 dark:bg-stone-800/20 border-stone-300 dark:border-stone-700/30 hover:bg-stone-100 dark:bg-stone-800/40'
             : 'bg-red-500/5 border-red-500/10 hover:bg-red-500/10'
             }`}>
-            <span className={`text-overline opacity-40 uppercase ${totalSurplus >= 0 ? 'text-stone-400' : 'text-red-400/60'}`}>Daily Ops</span>
-            <span className={`text-label font-bold ${totalSurplus >= 0 ? 'text-stone-200' : 'text-red-400'}`}>
+            <span className={`text-overline opacity-40 uppercase ${totalSurplus >= 0 ? 'text-stone-600 dark:text-stone-500 dark:text-stone-400' : 'text-red-400/60'}`}>Daily Ops</span>
+            <span className={`text-label font-bold ${totalSurplus >= 0 ? 'text-stone-800 dark:text-stone-200' : 'text-red-400'}`}>
               {planData.currencySymbol}{Math.round(dailyLimit).toLocaleString()}
             </span>
           </div>
@@ -208,7 +208,7 @@ const SalaryHomeCard = ({ userId, onOpen }) => {
       <div className="absolute top-3.5 right-3.5 z-10 transition-all">
         <button
           onClick={(e) => { e.stopPropagation(); onOpen('wizard'); }}
-          className="p-1.5 rounded-lg bg-stone-800 text-stone-400 hover:text-emerald-500 transition-colors border border-transparent hover:border-primary-500/20"
+          className="p-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:text-emerald-500 transition-colors border border-transparent hover:border-primary-500/20"
         >
           <Edit3 className="w-3 h-3" />
         </button>

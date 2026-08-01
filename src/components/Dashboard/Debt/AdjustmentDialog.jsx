@@ -34,13 +34,13 @@ const AdjustmentDialog = ({
             }
         >
             <div className="space-y-4">
-                <div className="bg-stone-900/60 p-4 rounded-2xl border border-stone-800">
-                    <div className="text-overline text-stone-400 mb-1 opacity-60">Net Principal</div>
-                    <div className="text-h4 text-stone-200">{formatCurrencyWithUser(item.amount, userProfile)}</div>
+                <div className="bg-stone-50 dark:bg-stone-900/60 p-4 rounded-2xl border border-stone-200 dark:border-stone-800">
+                    <div className="text-overline text-stone-500 dark:text-stone-400 mb-1 opacity-60">Net Principal</div>
+                    <div className="text-h4 text-stone-800 dark:text-stone-200">{formatCurrencyWithUser(item.amount, userProfile)}</div>
                 </div>
 
                 <div className="space-y-2 relative">
-                    <label className="block text-overline text-stone-400 px-1">Adjustment Delta</label>
+                    <label className="block text-overline text-stone-500 dark:text-stone-400 px-1">Adjustment Delta</label>
                     <div className="relative group">
                         <GlassInput
                             type="number"
@@ -51,11 +51,11 @@ const AdjustmentDialog = ({
                             className="!rounded-2xl"
                         />
                     </div>
-                    <p className="text-nano uppercase text-stone-400 px-1 mt-1 opacity-50">+ Increase / - Decrease</p>
+                    <p className="text-nano uppercase text-stone-500 dark:text-stone-400 px-1 mt-1 opacity-50">+ Increase / - Decrease</p>
                 </div>
 
                 <div className="space-y-2">
-                    <label className="block text-overline text-stone-400 px-1">Adjustment Reason</label>
+                    <label className="block text-overline text-stone-500 dark:text-stone-400 px-1">Adjustment Reason</label>
                     <GlassInput
                         placeholder="Audit log correction..."
                         value={reason}

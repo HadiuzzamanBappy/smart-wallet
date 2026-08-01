@@ -244,12 +244,12 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         )}
 
         {/* Modern Glass Mode Toggle */}
-        <div className="flex bg-stone-900/60 p-0.5 rounded-2xl border border-stone-800 mx-1 w-fit">
+        <div className="flex bg-stone-50 dark:bg-stone-900/60 p-0.5 rounded-2xl border border-stone-200 dark:border-stone-800 mx-1 w-fit">
           <button
             onClick={() => setMode('chat')}
             className={`flex items-center justify-center gap-2 px-6 py-1.5 rounded-xl text-overline transition-all duration-300 ${mode === 'chat'
               ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
-              : 'text-stone-400 hover:text-stone-200'
+              : 'text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:text-stone-200'
               }`}
           >
             <MessageSquare className="w-3 h-3" />
@@ -259,7 +259,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             onClick={() => setMode('manual')}
             className={`flex items-center justify-center gap-2 px-6 py-1.5 rounded-xl text-overline transition-all duration-300 ${mode === 'manual'
               ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
-              : 'text-stone-400 hover:text-stone-200'
+              : 'text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:text-stone-200'
               }`}
           >
             <Edit className="w-3 h-3" />
@@ -270,7 +270,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
         {mode === 'chat' ? (
           <div className="space-y-5">
             <div className="relative group">
-              <label className="block text-overline text-stone-400 mb-2.5 px-1">
+              <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 mb-2.5 px-1">
                 Natural Language Description
               </label>
               <textarea
@@ -278,7 +278,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 placeholder={`e.g., I bought groceries for ${userCurrency === 'BDT' ? '500 taka' : '50'} today`}
-                className="w-full h-28 bg-stone-900/40 border border-stone-800 rounded-2xl p-4 text-label text-stone-200 placeholder:text-stone-500 outline-none transition-all focus:border-primary-500/30 focus:ring-1 focus:ring-primary-500/20 resize-none "
+                className="w-full h-28 bg-white/80 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 text-label text-stone-800 dark:text-stone-200 placeholder:text-stone-600 dark:text-stone-500 outline-none transition-all focus:border-primary-500/30 focus:ring-1 focus:ring-primary-500/20 resize-none "
                 rows="3"
               />
               <div className="absolute bottom-3 right-3">
@@ -298,7 +298,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             {/* Smart Templates */}
             {!isPreviewOpen && !aiLoading && (
               <div className="space-y-3 px-1">
-                <div className="text-overline text-stone-400 font-black uppercase tracking-widest leading-none">
+                <div className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 font-black uppercase tracking-widest leading-none">
                   Quick Templates
                 </div>
                 <div className="flex flex-col gap-2">
@@ -309,9 +309,9 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                     <button
                       key={i}
                       onClick={() => setChatMessage(msg)}
-                      className="flex items-center justify-between p-3.5 rounded-xl bg-stone-900/40 border border-stone-800 hover:border-primary-500/30 hover:bg-white dark:hover:bg-white/[0.04] transition-all group"
+                      className="flex items-center justify-between p-3.5 rounded-xl bg-white/80 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 hover:border-primary-500/30 hover:bg-white dark:hover:bg-white/[0.04] transition-all group"
                     >
-                      <span className="text-nano text-stone-400 group-hover:text-stone-200 transition-colors">"{msg}"</span>
+                      <span className="text-nano text-stone-600 dark:text-stone-500 dark:text-stone-400 group-hover:text-stone-800 dark:text-stone-200 transition-colors">"{msg}"</span>
                       <Plus className="w-3 h-3 text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
                   ))}
@@ -323,7 +323,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             {isPreviewOpen && Array.isArray(parsedTransactions) && parsedTransactions.length > 0 && (
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between px-1">
-                  <div className="text-overline text-stone-400 font-black uppercase tracking-widest leading-none">
+                  <div className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 font-black uppercase tracking-widest leading-none">
                     Entry Preview ({parsedTransactions.length})
                   </div>
                   <Badge color="info" variant="soft" size="sm" className="mb-2">New Entry</Badge>
@@ -335,7 +335,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                     return (
                       <div
                         key={idx}
-                        className="p-3 rounded-2xl bg-stone-900/40 border border-stone-800 hover:bg-white dark:hover:bg-white/[0.03] transition-all"
+                        className="p-3 rounded-2xl bg-white/80 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 hover:bg-white dark:hover:bg-white/[0.03] transition-all"
                       >
                         {editingIndex === idx ? (
                           <div className="space-y-4">
@@ -374,7 +374,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                                 className="!rounded-xl"
                               />
                               <div>
-                                <div className="text-label font-bold text-stone-200 truncate leading-tight">{tx.description}</div>
+                                <div className="text-label font-bold text-stone-800 dark:text-stone-200 truncate leading-tight">{tx.description}</div>
                                 <div className="text-overline opacity-40 mt-0.5">{humanizeType(tx.type)} • {getCategoryLabel(tx.category)}</div>
                               </div>
                             </div>
@@ -383,10 +383,10 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                                 {isPositive ? '+' : '-'}{formatCurrency(tx.amount, userCurrency)}
                               </div>
                               <div className="flex items-center gap-1.5">
-                                <button onClick={() => setEditingIndex(idx)} className="p-1.5 hover:bg-stone-800 rounded-xl text-stone-400 hover:text-stone-200 transition-all">
+                                <button onClick={() => setEditingIndex(idx)} className="p-1.5 hover:bg-stone-100 dark:bg-stone-800 rounded-xl text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:text-stone-200 transition-all">
                                   <Edit className="w-3.5 h-3.5" />
                                 </button>
-                                <button onClick={() => removeParsedTransaction(idx)} className="p-1.5 hover:bg-rose-500/10 rounded-xl text-stone-400 hover:text-rose-600 transition-all">
+                                <button onClick={() => removeParsedTransaction(idx)} className="p-1.5 hover:bg-rose-500/10 rounded-xl text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:text-rose-600 transition-all">
                                   <Trash className="w-3.5 h-3.5" />
                                 </button>
                               </div>
@@ -398,7 +398,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                   })}
                 </div>
 
-                <div className="pt-4 border-t border-stone-800 flex gap-3">
+                <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex gap-3">
                   <Button
                     variant="ghost"
                     color="ink"
@@ -432,7 +432,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
               <label className="block text-overline opacity-40 uppercase tracking-widest mb-2 px-1">
                 Transaction Type
               </label>
-              <div className="flex p-0.5 bg-stone-900/60 border border-stone-800 rounded-2xl w-fit">
+              <div className="flex p-0.5 bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 rounded-2xl w-fit">
                 {[
                   { value: 'expense', label: 'Expense', color: 'error' },
                   { value: 'income', label: 'Income', color: 'primary' },
@@ -454,7 +454,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
                         type.color === 'error' ? 'bg-rose-500 text-white' :
                           type.color === 'info' ? 'bg-blue-500 text-white' :
                             'bg-amber-500 text-white'
-                      : 'text-stone-400 hover:text-stone-200'}`}
+                      : 'text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:text-stone-200'}`}
                   >
                     {type.label}
                   </button>
@@ -479,7 +479,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-overline text-stone-400 mb-2.5 px-1">
+                <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 mb-2.5 px-1">
                   Date
                 </label>
                 <GlassInput
@@ -494,7 +494,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-overline text-stone-400 mb-2.5 px-1">
+              <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 mb-2.5 px-1">
                 Description
               </label>
               <GlassInput
@@ -509,7 +509,7 @@ const AddTransactionModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-overline text-stone-400 mb-2.5 px-1">
+              <label className="block text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 mb-2.5 px-1">
                 Category
               </label>
               <Select

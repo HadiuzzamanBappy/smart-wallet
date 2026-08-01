@@ -133,8 +133,8 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
               key={section.id}
               onClick={() => toggleSection(section.id)}
               className={`group relative flex items-center gap-4 px-6 py-5 rounded-3xl transition-all duration-500 border w-full sm:w-auto sm:min-w-[280px] ${isActive
-                ? `bg-stone-900/80 border-emerald-500 shadow-xl shadow-emerald-500/10 scale-[1.02] z-10`
-                : `bg-stone-800/20 border-stone-700/30 hover:border-stone-600/50 shadow-sm opacity-70 hover:opacity-100`
+                ? `bg-white/95 dark:bg-stone-900/80 border-emerald-500 shadow-xl shadow-emerald-500/10 scale-[1.02] z-10`
+                : `bg-stone-100 dark:bg-stone-800/20 border-stone-300 dark:border-stone-700/30 hover:border-stone-600/50 shadow-sm opacity-70 hover:opacity-100`
                 }`}
             >
               <IconBox
@@ -146,20 +146,20 @@ const ExpandableDetailsSection = ({ onSectionChange, onTransactionChange }) => {
               />
               <div className="text-left flex-1 min-w-0">
                 <h3 className={`text-label ${isActive
-                    ? 'text-stone-200'
-                    : 'text-stone-400'
+                    ? 'text-stone-800 dark:text-stone-200'
+                    : 'text-stone-600 dark:text-stone-500 dark:text-stone-400'
                   }`}>
                   {section.title}
                 </h3>
                 <p className={`text-nano opacity-30 ${isActive
                   ? 'text-emerald-400 font-bold'
-                  : 'text-stone-500'
+                  : 'text-stone-600 dark:text-stone-500'
                   }`}>
                   {section.description}
                 </p>
               </div>
 
-              <div className={`transition-all duration-500 ${isActive ? 'rotate-180 text-emerald-500' : 'text-stone-400 group-hover:text-stone-200'}`}>
+              <div className={`transition-all duration-500 ${isActive ? 'rotate-180 text-emerald-500' : 'text-stone-600 dark:text-stone-500 dark:text-stone-400 group-hover:text-stone-800 dark:text-stone-200'}`}>
                 <ChevronDown className="w-4 h-4" />
               </div>
 

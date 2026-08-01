@@ -20,7 +20,7 @@ const DebtItem = ({
     const hasRemainingAmount = (Number(item.remainingAmount) || 0) > 0;
 
     return (
-        <div className="relative p-4 rounded-3xl bg-stone-900/40 border border-stone-800 hover:border-primary-500/30 transition-all group overflow-hidden">
+        <div className="relative p-4 rounded-3xl bg-white/80 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 hover:border-primary-500/30 transition-all group overflow-hidden">
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3 min-w-0">
                     <IconBox
@@ -30,16 +30,16 @@ const DebtItem = ({
                         size="sm"
                     />
                     <div className="min-w-0">
-                        <h4 className="text-label text-stone-200 truncate">{item.description}</h4>
+                        <h4 className="text-label text-stone-800 dark:text-stone-200 truncate">{item.description}</h4>
                         <div className="flex items-center gap-3 mt-1.5">
                             <div className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3 text-stone-400 opacity-40" />
-                                <span className="text-overline text-stone-400">{formatDate(item.date)}</span>
+                                <Calendar className="w-3 h-3 text-stone-500 dark:text-stone-400 opacity-60 dark:opacity-40" />
+                                <span className="text-overline text-stone-500 dark:text-stone-400">{formatDate(item.date)}</span>
                             </div>
                             {item.category && (
                                 <div className="flex items-center gap-1.5">
                                     <div className="w-1 h-1 rounded-full bg-primary-500" />
-                                    <span className="text-overline text-stone-400">{item.category}</span>
+                                    <span className="text-overline text-stone-500 dark:text-stone-400">{item.category}</span>
                                 </div>
                             )}
                         </div>
@@ -49,7 +49,7 @@ const DebtItem = ({
                     {hasPaidAmount && (
                         <button
                             onClick={() => onReset(item)}
-                            className="p-1.5 bg-stone-900/60 hover:bg-stone-800 rounded-xl text-stone-400 hover:text-stone-200 transition-all border border-stone-800"
+                            className="p-1.5 bg-stone-100 dark:bg-stone-900/60 hover:bg-stone-200 dark:hover:bg-stone-800 rounded-xl text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-all border border-stone-200 dark:border-stone-800"
                             title="Reset all payments"
                         >
                             <RotateCcw className="w-3 h-3" />
@@ -58,7 +58,7 @@ const DebtItem = ({
                     {hasRemainingAmount && (
                         <button
                             onClick={() => onAdjust(item)}
-                            className="p-1.5 bg-stone-900/60 hover:bg-warning-500/10 rounded-xl text-warning-500 hover:text-warning-600 dark:hover:text-warning-400 transition-all border border-stone-800"
+                            className="p-1.5 bg-stone-100 dark:bg-stone-900/60 hover:bg-warning-500/10 rounded-xl text-warning-600 dark:text-warning-500 hover:text-warning-700 dark:hover:text-warning-400 transition-all border border-stone-200 dark:border-stone-800"
                             title="Adjust amount"
                         >
                             <Edit3 className="w-3 h-3" />
@@ -67,10 +67,10 @@ const DebtItem = ({
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4 bg-stone-900/60 p-3 rounded-2xl border border-stone-800">
+            <div className="grid grid-cols-2 gap-4 mb-4 bg-stone-50 dark:bg-stone-900/60 p-3 rounded-2xl border border-stone-200 dark:border-stone-800">
                 <div className="space-y-1">
-                    <div className="text-overline text-stone-400">Principal</div>
-                    <div className="text-label text-stone-200 opacity-40">{formatCurrencyWithUser(item.amount, userProfile)}</div>
+                    <div className="text-overline text-stone-500 dark:text-stone-400">Principal</div>
+                    <div className="text-label text-stone-800 dark:text-stone-200 opacity-60 dark:opacity-40">{formatCurrencyWithUser(item.amount, userProfile)}</div>
                 </div>
                 <div className="space-y-1">
                     <div className="text-overline text-warning-500">Remaining</div>
@@ -84,7 +84,7 @@ const DebtItem = ({
                     <div className="space-y-1.5">
                         {item.adjustmentHistory.slice(-2).map((adj, idx) => (
                             <div key={idx} className="flex justify-between items-center text-nano">
-                                <span className="text-stone-400 truncate mr-3 opacity-70">{adj.reason || 'Correction'}</span>
+                                <span className="text-stone-500 dark:text-stone-400 truncate mr-3 opacity-80 dark:opacity-70">{adj.reason || 'Correction'}</span>
                                 <span className={`${adj.amount > 0 ? 'text-primary-600 dark:text-primary-400' : 'text-error-600 dark:text-error-400'}`}>
                                     {adj.amount > 0 ? '+' : ''}{formatCurrencyWithUser(adj.amount, userProfile)}
                                 </span>

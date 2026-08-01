@@ -1,7 +1,7 @@
 /**
  * SectionHeader - Standardized header for dashboard sections.
  */
-const SectionHeader = ({ icon: Icon, title, subtitle, children, titleSize = 'text-h4', subtitleColor = 'text-stone-400', className = '' }) => {
+const SectionHeader = ({ icon: Icon, title, subtitle, children, titleSize = 'text-h4', subtitleColor = 'text-stone-600 dark:text-stone-500 dark:text-stone-400', className = '' }) => {
     return (
         <div className={`flex items-center justify-between mb-3 ${className}`}>
             <div className="flex flex-col">
@@ -12,7 +12,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, children, titleSize = 'tex
                 )}
                 <h2 className="flex items-center gap-2">
                     {Icon && <Icon className="w-5 h-5 text-stone-300 opacity-90" />}
-                    <span className={`${titleSize} text-stone-200`}>
+                    <span className={`${titleSize} text-stone-800 dark:text-stone-200`}>
                         {title}
                     </span>
                 </h2>

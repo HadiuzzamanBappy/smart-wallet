@@ -33,7 +33,7 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000, po
   };
 
   const getStyles = () => {
-    const base = "bg-stone-900/60 backdrop-blur-md shadow-2xl border border-stone-800/50";
+    const base = "bg-stone-50 dark:bg-stone-900/60 backdrop-blur-md shadow-2xl border border-stone-200 dark:border-stone-800/50";
     switch (type) {
       case 'success':
         return `${base} border-l-2 border-l-success-500`;
@@ -64,7 +64,7 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000, po
             {getIcon()}
           </div>
           <div className="flex-1 min-w-0 py-0.5">
-            <p className="text-body text-stone-200">
+            <p className="text-body text-stone-800 dark:text-stone-200">
               {message}
             </p>
           </div>
@@ -73,7 +73,7 @@ const Toast = ({ message, type = 'info', isVisible, onClose, duration = 5000, po
               setShow(false);
               setTimeout(onClose, 300);
             }}
-            className="flex-shrink-0 p-1.5 hover:bg-stone-800/50 rounded-xl text-stone-500 hover:text-stone-300 transition-colors"
+            className="flex-shrink-0 p-1.5 hover:bg-stone-100 dark:bg-stone-800/50 rounded-xl text-stone-600 dark:text-stone-500 hover:text-stone-300 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

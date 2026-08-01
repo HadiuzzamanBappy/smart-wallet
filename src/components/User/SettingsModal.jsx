@@ -284,7 +284,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                     onClick={() => setSettings(prev => ({ ...prev, theme: t.value }))}
                     className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all duration-300 ${isActive
                       ? 'bg-primary-500/10 border-primary-500/30 shadow-md shadow-primary-500/5'
-                      : 'bg-stone-900/60 border-stone-800 hover:bg-stone-800/50'
+                      : 'bg-stone-50 dark:bg-stone-900/60 border-stone-200 dark:border-stone-800 hover:bg-stone-100 dark:bg-stone-800/50'
                       }`}
                   >
                     <IconBox
@@ -294,7 +294,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                       color={isActive ? 'primary' : 'ink'}
                       className="!p-1.5"
                     />
-                    <span className={`text-label  ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-stone-400'}`}>
+                    <span className={`text-label  ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-stone-600 dark:text-stone-500 dark:text-stone-400'}`}>
                       {t.label}
                     </span>
                   </button>
@@ -305,7 +305,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
 
           {/* Regional & Intelligence */}
           <div className="grid grid-cols-2 gap-3">
-            <GlassCard padding="p-2.5" variant="flat" className="bg-stone-900/60">
+            <GlassCard padding="p-2.5" variant="flat" className="bg-stone-50 dark:bg-stone-900/60">
               <SectionHeader icon={Globe} title="Locale" titleSize="text-label" className="mb-2" />
               <Select
                 size="sm"
@@ -316,7 +316,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               />
             </GlassCard>
 
-            <GlassCard padding="p-2.5" variant="flat" className="bg-stone-900/60">
+            <GlassCard padding="p-2.5" variant="flat" className="bg-stone-50 dark:bg-stone-900/60">
               <SectionHeader icon={ShieldCheck} title="Intelligence" titleSize="text-label" className="mb-2" />
               <div className="space-y-2">
                 {[
@@ -324,7 +324,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                   { key: 'notifications', label: 'Insights' }
                 ].map(item => (
                   <label key={item.key} className="flex items-center justify-between cursor-pointer group">
-                    <span className="text-label text-stone-200 group-hover:text-primary-500 transition-colors">{item.label}</span>
+                    <span className="text-label text-stone-800 dark:text-stone-200 group-hover:text-primary-500 transition-colors">{item.label}</span>
                     <div className="relative inline-flex items-center cursor-pointer scale-75 origin-right">
                       <input
                         type="checkbox"
@@ -332,7 +332,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
                         checked={settings[item.key]}
                         onChange={(e) => setSettings(prev => ({ ...prev, [item.key]: e.target.checked }))}
                       />
-                      <div className="w-9 h-5 bg-stone-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500"></div>
+                      <div className="w-9 h-5 bg-stone-100 dark:bg-stone-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500"></div>
                     </div>
                   </label>
                 ))}
@@ -346,21 +346,21 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={handleExportData}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-stone-900/60 border border-stone-800 hover:border-emerald-500/30 transition-all group"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 hover:border-emerald-500/30 transition-all group"
               >
                 <div className="text-left">
-                  <p className="text-label font-bold text-stone-200">Export</p>
-                  <p className="text-overline text-stone-400 opacity-60 uppercase">JSON Snapshot</p>
+                  <p className="text-label font-bold text-stone-800 dark:text-stone-200">Export</p>
+                  <p className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 opacity-60 uppercase">JSON Snapshot</p>
                 </div>
                 <IconBox icon={Download} size="xs" variant="glass" color="ink" className="group-hover:text-primary-500" />
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-stone-900/60 border border-stone-800 hover:border-emerald-500/30 transition-all group"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 hover:border-emerald-500/30 transition-all group"
               >
                 <div className="text-left">
-                  <p className="text-label font-bold text-stone-200">Restore</p>
-                  <p className="text-overline text-stone-400 opacity-60 uppercase">Import Vault</p>
+                  <p className="text-label font-bold text-stone-800 dark:text-stone-200">Restore</p>
+                  <p className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 opacity-60 uppercase">Import Vault</p>
                 </div>
                 <IconBox icon={Plus} size="xs" variant="glass" color="ink" className="group-hover:text-success-500" />
               </button>
@@ -417,7 +417,7 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               <div className="flex items-center gap-4">
                 <IconBox icon={Database} size="lg" variant="glass" color="success" />
                 <div>
-                  <p className="text-body text-stone-200">{importPreview?.totalTransactions} Audit Entries</p>
+                  <p className="text-body text-stone-800 dark:text-stone-200">{importPreview?.totalTransactions} Audit Entries</p>
                   <p className="text-overline text-success-600 dark:text-success-500 mt-1 uppercase">Integrity Verified</p>
                 </div>
               </div>
@@ -430,12 +430,12 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
               ].map(item => (
                 <label key={item.key} className="flex items-center justify-between cursor-pointer group">
                   <div className="flex-1 pr-4">
-                    <p className="text-label text-stone-200 group-hover:text-primary-500 transition-colors">{item.label}</p>
-                    <p className="text-overline text-stone-400 mt-1 uppercase">{item.desc}</p>
+                    <p className="text-label text-stone-800 dark:text-stone-200 group-hover:text-primary-500 transition-colors">{item.label}</p>
+                    <p className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 mt-1 uppercase">{item.desc}</p>
                   </div>
                   <div className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={item.state} onChange={(e) => item.setState(e.target.checked)} className="sr-only peer" />
-                    <div className="w-9 h-5 bg-stone-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500"></div>
+                    <div className="w-9 h-5 bg-stone-100 dark:bg-stone-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500"></div>
                   </div>
                 </label>
               ))}
@@ -512,8 +512,8 @@ const SettingsModal = ({ isOpen, onClose, resultClearMs = 10000 }) => {
         <div className="flex flex-col items-center gap-6 py-10 px-4">
           <IconBox icon={CheckCircle} size="xl" variant="glass" color="success" className="w-20 h-20 rounded-[2.5rem]" />
           <div className="text-center space-y-2">
-            <p className="text-h4 text-stone-200">Vault Purged</p>
-            <p className="text-label text-stone-400 px-8">
+            <p className="text-h4 text-stone-800 dark:text-stone-200">Vault Purged</p>
+            <p className="text-label text-stone-600 dark:text-stone-500 dark:text-stone-400 px-8">
               Operational logs and ledger entries have been permanently decommissioned.
             </p>
           </div>

@@ -22,7 +22,7 @@ const Select = ({
     return (
         <div className={`${fullWidth ? 'w-full' : ''} ${className}`}>
             {label && (
-                <label className="text-overline text-stone-400 mb-1.5 block px-1">
+                <label className="text-overline text-stone-600 dark:text-stone-500 dark:text-stone-400 mb-1.5 block px-1">
                     {label}
                 </label>
             )}
@@ -33,11 +33,11 @@ const Select = ({
                     onChange={onChange}
                     className={`
                         appearance-none w-full pr-10
-                        bg-stone-900/60 backdrop-blur-sm
-                        border border-stone-800
-                        ${size === 'sm' ? 'rounded-xl' : 'rounded-2xl'} text-stone-200
+                        bg-stone-50 dark:bg-stone-900/60 backdrop-blur-sm
+                        border border-stone-200 dark:border-stone-800
+                        ${size === 'sm' ? 'rounded-xl' : 'rounded-2xl'} text-stone-800 dark:text-stone-200
                         outline-none transition-all cursor-pointer
-                        hover:bg-stone-800/50
+                        hover:bg-stone-100 dark:bg-stone-800/50
                         focus:ring-4 focus:ring-emerald-500/10
                         focus:border-emerald-500/50
                         shadow-sm
@@ -49,13 +49,13 @@ const Select = ({
                         <option
                             key={opt.value}
                             value={opt.value}
-                            className="bg-stone-900 text-stone-200"
+                            className="bg-stone-900 text-stone-800 dark:text-stone-200"
                         >
                             {opt.label}
                         </option>
                     ))}
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-500 group-focus-within:text-emerald-500 transition-colors">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-600 dark:text-stone-500 group-focus-within:text-emerald-500 transition-colors">
                     <ChevronDown className="w-4 h-4" />
                 </div>
             </div>

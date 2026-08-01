@@ -69,7 +69,7 @@ const CompactSummary = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowMonthlyBreakdown(true)}
-            className="p-2 hover:bg-stone-800/50 rounded-2xl text-stone-400 hover:text-stone-200 transition-all border border-transparent hover:border-stone-700/50"
+            className="p-2 hover:bg-stone-100 dark:bg-stone-800/50 rounded-2xl text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:text-stone-200 transition-all border border-transparent hover:border-stone-300 dark:border-stone-700/50"
             title="Breakdown"
           >
             <BarChart3 className="w-4 h-4" />
@@ -77,7 +77,7 @@ const CompactSummary = () => {
           <button
             onClick={refreshData}
             disabled={refreshing}
-            className="p-2 hover:bg-stone-800/50 rounded-2xl text-stone-400 hover:text-stone-200 transition-all border border-transparent hover:border-stone-700/50 disabled:opacity-30"
+            className="p-2 hover:bg-stone-100 dark:bg-stone-800/50 rounded-2xl text-stone-600 dark:text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:text-stone-200 transition-all border border-transparent hover:border-stone-300 dark:border-stone-700/50 disabled:opacity-30"
             title="Refresh Suite"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -101,7 +101,7 @@ const CompactSummary = () => {
                 padding="p-3.5"
                 backgroundIcon={card.icon}
                 iconColor={card.color}
-                className="group relative overflow-hidden hover:bg-stone-800/60 transition-all border-stone-700/50"
+                className="group relative overflow-hidden hover:bg-stone-100 dark:bg-stone-800/60 transition-all border-stone-300 dark:border-stone-700/50"
               >
                 <div className="flex flex-col gap-3 relative z-10">
                   <div className="flex items-center justify-between">
@@ -113,7 +113,7 @@ const CompactSummary = () => {
                       className={`group-hover:scale-110 transition-transform ${importance === 'medium' ? 'opacity-60' : 'opacity-90'}`}
                     />
                     {card.onClick && (
-                      <div className="shrink-0 w-5 h-5 flex items-center justify-center rounded-lg bg-stone-800 text-stone-400 group-hover:text-emerald-500 transition-colors">
+                      <div className="shrink-0 w-5 h-5 flex items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-500 dark:text-stone-400 group-hover:text-emerald-500 transition-colors">
                         <Eye className="w-3 h-3" />
                       </div>
                     )}

@@ -89,15 +89,15 @@ const EntryPoint = () => {
   );
 
   return (
-    <div className="min-h-screen w-full bg-stone-950 font-sans relative overflow-hidden flex flex-col items-center justify-center p-4 sm:p-8 select-none">
+    <div className="min-h-screen w-full bg-stone-50 dark:bg-stone-950 font-sans relative overflow-hidden flex flex-col items-center justify-center p-4 sm:p-8 select-none">
 
       {/* --- SOOTHING NATURE ATMOSPHERE BACKGROUND WITH WATERMARK IMAGE --- */}
-      <div className="absolute inset-0 bg-stone-950 pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-stone-50 dark:bg-stone-950 pointer-events-none z-0" />
       <div
-        className={`absolute inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-screen transition-opacity duration-[2000ms] ${doorState !== 'closed' ? 'opacity-0' : ''}`}
+        className={`absolute inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-[0.15] dark:opacity-40 blur-xl dark:blur-none grayscale dark:grayscale-0 mix-blend-luminosity dark:mix-blend-screen transition-opacity duration-[2000ms] ${doorState !== 'closed' ? 'opacity-0' : ''}`}
         style={{ backgroundImage: "url('/img/forest-bg.png')" }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-950/60 to-stone-950 pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/10 dark:via-emerald-950/60 to-stone-50 dark:to-stone-950 pointer-events-none z-0" />
 
       {/* WebGL 3D Forest Scene (Wire trees, 3D leaves, sparkles) */}
       <MagicalForestScene />
@@ -202,22 +202,22 @@ const EntryPoint = () => {
                     key={index}
                     content={
                       <div className="flex flex-col gap-1 text-center md:text-left">
-                        <span className="font-bold text-stone-200">{feat.title}</span>
-                        <span className="text-stone-400">{feat.desc}</span>
+                        <span className="font-bold text-stone-800 dark:text-stone-200">{feat.title}</span>
+                        <span className="text-stone-600 dark:text-stone-500 dark:text-stone-400">{feat.desc}</span>
                       </div>
                     }
                     position="top"
                     className="flex"
                   >
                     <div className="flex items-center gap-3 group cursor-pointer md:cursor-default">
-                      <div className={`p-3 md:p-2 rounded-full bg-stone-900 border border-stone-800 shadow-inner ${feat.color}`}>
+                      <div className={`p-3 md:p-2 rounded-full bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-inner ${feat.color}`}>
                         <Icon className="w-5 h-5 md:w-4 md:h-4" />
                       </div>
                       <div className="hidden md:block text-left">
-                        <h3 className="text-xs font-bold tracking-widest text-stone-200 uppercase">
+                        <h3 className="text-xs font-bold tracking-widest text-stone-800 dark:text-stone-200 uppercase">
                           {feat.title}
                         </h3>
-                        <p className="text-[10px] text-stone-500 font-medium max-w-[150px]">
+                        <p className="text-[10px] text-stone-600 dark:text-stone-500 font-medium max-w-[150px]">
                           {feat.desc}
                         </p>
                       </div>

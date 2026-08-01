@@ -56,7 +56,7 @@ const ConfirmDialog = ({
       className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-stone-950/40 backdrop-blur-md animate-in fade-in duration-300"
       onClick={handleBackdropClick}
     >
-      <div className="w-full max-w-[360px] bg-stone-950/40 backdrop-blur-3xl rounded-3xl shadow-2xl border border-stone-800 p-6 transform transition-all animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-[360px] bg-stone-950/40 backdrop-blur-3xl rounded-3xl shadow-2xl border border-stone-200 dark:border-stone-800 p-6 transform transition-all animate-in zoom-in-95 duration-200">
         <div className="flex flex-col items-center text-center gap-5">
           <IconBox
             icon={styles.icon}
@@ -66,10 +66,10 @@ const ConfirmDialog = ({
           />
 
           <div className="mt-4 mb-8">
-            <h3 className="text-h5 text-stone-200">
+            <h3 className="text-h5 text-stone-800 dark:text-stone-200">
               {title}
             </h3>
-            <p className="text-body text-stone-400 px-1">
+            <p className="text-body text-stone-600 dark:text-stone-500 dark:text-stone-400 px-1">
               {message}
             </p>
           </div>
