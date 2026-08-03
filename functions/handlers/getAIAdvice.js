@@ -1,5 +1,5 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
-const { getAPIKey, getModel } = require("../utils/parser");
+const { getAPIKey, getModel, getAdvicePrompt } = require("../utils/parser");
 
 module.exports = onCall({ cors: true }, async (request) => {
   const { planData, formData } = request.data;
@@ -14,22 +14,22 @@ module.exports = onCall({ cors: true }, async (request) => {
   }
 
   const payload = {
-    income: { 
-      salary: planData.salary, 
-      extra: planData.extra, 
-      total: planData.totalIncome 
+    income: {
+      salary: planData.salary,
+      extra: planData.extra,
+      total: planData.totalIncome
     },
-    fixed: { 
-      rent: planData.rent, 
+    fixed: {
+      rent: planData.rent,
       familySend: planData.familySend,
-      totalEMI: planData.totalEMI, 
-      bills: planData.bills 
+      totalEMI: planData.totalEMI,
+      bills: planData.bills
     },
-    savings: { 
-      monthly: planData.actualSavings, 
+    savings: {
+      monthly: planData.actualSavings,
       rate: planData.savingsRate,
-      gap: planData.savingsGap, 
-      efMonths: planData.efMonths 
+      gap: planData.savingsGap,
+      efMonths: planData.efMonths
     },
     loans: formData.loans || [],
     deposits: formData.deposits || [],
@@ -41,33 +41,18 @@ module.exports = onCall({ cors: true }, async (request) => {
     currency: planData.currency,
   };
 
-  const systemPrompt = `You are a sharp personal finance advisor inside a Smart Wallet app.
-The user's full financial breakdown is below as JSON.
-Respond with exactly 3 sections, plain text, no markdown, no asterisks:
-
-BIGGEST RISK: One sentence. Name the exact amount and rule being violated.
-BIGGEST OPPORTUNITY: One sentence. Name the exact amount they could gain/save.  
-PRIORITY ACTIONS:
-1. [Specific action with exact number]
-2. [Specific action with exact number]
-3. [Specific action with exact number]
-4. [Specific action with exact number]
-
-Use their currency symbol. Talk like a smart financially-savvy friend, not a banker. 
-Be specific. No fluff. If their situation is actually good, say so and focus on growth.`;
-
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
-      headers: { 
+      headers: {
         "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json" 
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         model: getModel(),
         max_tokens: 800,
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: getAdvicePrompt() },
           { role: "user", content: JSON.stringify(payload) }
         ],
       }),
