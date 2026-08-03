@@ -26,6 +26,7 @@ import Badge from '../UI/base/Badge';
 import IconBox from '../UI/base/IconBox';
 import Button from '../UI/base/Button';
 import ConfirmDialog from '../UI/base/ConfirmDialog';
+import { LoadingSpinner } from '../UI/LoadingOverlay';
 
 export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onSave, onRecalculate, onClose }) {
   const { advice, loading, error, generate } = useAIAdvice();
@@ -493,7 +494,7 @@ export default function SalaryResult({ isOpen, planData, formData, aiAdvice, onS
           </div>
           {loading ? (
             <div className="py-6 flex flex-col items-center justify-center gap-3">
-              <RefreshCw className="w-5 h-5 text-emerald-500 animate-spin" />
+              <LoadingSpinner size="md" />
               <p className="text-overline text-emerald-500/40 animate-pulse">Neural Synthesis Active...</p>
             </div>
           ) : (

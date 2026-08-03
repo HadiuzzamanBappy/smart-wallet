@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { LoadingSpinner } from '../LoadingOverlay';
 
 /**
  * Button - Centralized button component for the app's premium design system.
@@ -116,6 +116,10 @@ const Button = ({
 
     const widthStyle = fullWidth ? "w-full" : "";
 
+    const spinnerColor = variant === 'filled' 
+        ? (color === 'ink' ? 'ink' : 'white') 
+        : color;
+
     return (
         <button
             type={type}
@@ -124,7 +128,7 @@ const Button = ({
             className={`${baseStyles} ${variants[variant] || variants.filled} ${getFinalSizeStyles()} ${widthStyle} ${className}`}
         >
             {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <LoadingSpinner size="xs" color={spinnerColor} />
             ) : (
                 <>
                     {Icon && <Icon className={`${(size === 'sm' || size === 'xsm') ? 'w-4 h-4' : 'w-5 h-5'} shrink-0 text-inherit transition-colors duration-300`} />}

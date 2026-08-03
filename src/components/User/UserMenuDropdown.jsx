@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   User,
   Settings,
   LogOut,
   ChevronDown,
-  Loader2,
   HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -14,7 +13,7 @@ import Button from '../UI/base/Button';
 import Badge from '../UI/base/Badge';
 import IconBox from '../UI/base/IconBox';
 import GlassCard from '../UI/base/GlassCard';
-import LoadingOverlay from '../UI/LoadingOverlay';
+import LoadingOverlay, { LoadingSpinner } from '../UI/LoadingOverlay';
 
 const UserMenuDropdown = ({
   onOpenProfile,
@@ -22,7 +21,24 @@ const UserMenuDropdown = ({
   onOpenHelp,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const { userProfile, user } = useAuth();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
 
@@ -75,7 +91,7 @@ const UserMenuDropdown = ({
   ];
 
   return (
-    <div className="relative flex items-center">
+    <div className="relative flex items-center" ref={dropdownRef}>
       {logoutLoading && (
         <div className="fixed inset-0 z-[9999]">
           <LoadingOverlay loading={true} text="Securing Account...">
@@ -106,10 +122,6 @@ const UserMenuDropdown = ({
 
       {isOpen && (
         <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
           <div className="absolute right-0 top-full mt-2 w-52 z-20 animate-in fade-in zoom-in-95 origin-top-right duration-200">
             <GlassCard
               variant="thick"
@@ -177,7 +189,7 @@ const UserMenuDropdown = ({
                       />
                       <span className="flex-1 text-left text-label ">{item.label}</span>
                       {isSignOut && logoutLoading && (
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <LoadingSpinner size="xs" color="error" />
                       )}
                     </button>
                   );

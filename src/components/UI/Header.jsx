@@ -14,6 +14,7 @@ import Badge from './base/Badge';
 import IconBox from './base/IconBox';
 import GlassCard from './base/GlassCard';
 import Tooltip from './base/Tooltip';
+import { LoadingSpinner } from './LoadingOverlay';
 
 const Header = ({
     onAddTransaction,
@@ -143,7 +144,7 @@ const Header = ({
                                     {isRefreshing || isLocalRefreshing || globalLoading ? (
                                         <div className="flex items-center gap-2">
                                             <Skeleton width="w-16" height="h-3" />
-                                            <RefreshCw className="w-3 h-3 animate-spin text-teal-500" />
+                                            <LoadingSpinner size="xs" />
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-1.5 group/balance">
@@ -159,7 +160,7 @@ const Header = ({
                                                 onClick={handleBalanceClick}
                                                 className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-400 hover:text-teal-500 transition-all active:scale-90 opacity-40 group-hover/balance:opacity-100"
                                             >
-                                                <RefreshCw className={`w-3 h-3 ${isLocalRefreshing ? 'animate-spin' : ''}`} />
+                                                <RefreshCw className="w-3 h-3" />
                                             </button>
                                         </div>
                                     )}
