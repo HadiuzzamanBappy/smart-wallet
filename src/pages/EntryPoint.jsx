@@ -191,43 +191,42 @@ const EntryPoint = () => {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* --- BOTTOM ROW: MINIMAL FEATURES --- */}
-          <div className={`absolute top-[100%] mt-12 w-[100vw] left-1/2 -translate-x-1/2 flex flex-col items-center justify-center transition-all duration-1000 ${doorState !== 'closed' ? 'opacity-0 pointer-events-none translate-y-12' : 'opacity-100 translate-y-0'}`}>
-            <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 w-full max-w-4xl px-4">
-              {securityFeatures.map((feat, index) => {
-                const Icon = feat.icon;
-                return (
-                  <Tooltip
-                    key={index}
-                    content={
-                      <div className="flex flex-col gap-1 text-center md:text-left">
-                        <span className="font-bold text-stone-800 dark:text-stone-200">{feat.title}</span>
-                        <span className="text-stone-600 dark:text-stone-500 dark:text-stone-400">{feat.desc}</span>
-                      </div>
-                    }
-                    position="top"
-                    className="flex"
-                  >
-                    <div className="flex items-center gap-3 group cursor-pointer md:cursor-default">
-                      <div className={`p-3 md:p-2 rounded-full bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-inner ${feat.color}`}>
-                        <Icon className="w-5 h-5 md:w-4 md:h-4" />
-                      </div>
-                      <div className="hidden md:block text-left">
-                        <h3 className="text-xs font-bold tracking-widest text-stone-800 dark:text-stone-200 uppercase">
-                          {feat.title}
-                        </h3>
-                        <p className="text-[10px] text-stone-600 dark:text-stone-500 font-medium max-w-[150px]">
-                          {feat.desc}
-                        </p>
-                      </div>
+        {/* --- BOTTOM ROW: MINIMAL FEATURES --- */}
+        <div className={`absolute bottom-6 sm:bottom-10 left-0 right-0 z-20 flex flex-col items-center justify-center transition-all duration-1000 ${doorState !== 'closed' ? 'opacity-0 pointer-events-none translate-y-12' : 'opacity-100 translate-y-0'}`}>
+          <div className="flex flex-row items-center justify-center gap-6 sm:gap-12 w-full max-w-4xl px-4">
+            {securityFeatures.map((feat, index) => {
+              const Icon = feat.icon;
+              return (
+                <Tooltip
+                  key={index}
+                  content={
+                    <div className="flex flex-col gap-1 text-center md:text-left">
+                      <span className="font-bold text-stone-800 dark:text-stone-200">{feat.title}</span>
+                      <span className="text-stone-600 dark:text-stone-500 dark:text-stone-400">{feat.desc}</span>
                     </div>
-                  </Tooltip>
-                );
-              })}
-            </div>
+                  }
+                  position="top"
+                  className="flex"
+                >
+                  <div className="flex items-center gap-3 group cursor-pointer md:cursor-default">
+                    <div className={`p-3 md:p-2 rounded-full bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-inner ${feat.color}`}>
+                      <Icon className="w-5 h-5 md:w-4 md:h-4" />
+                    </div>
+                    <div className="hidden md:block text-left">
+                      <h3 className="text-xs font-bold tracking-widest text-stone-800 dark:text-stone-200 uppercase">
+                        {feat.title}
+                      </h3>
+                      <p className="text-[10px] text-stone-600 dark:text-stone-500 font-medium max-w-[150px]">
+                        {feat.desc}
+                      </p>
+                    </div>
+                  </div>
+                </Tooltip>
+              );
+            })}
           </div>
-
         </div>
 
     </div>

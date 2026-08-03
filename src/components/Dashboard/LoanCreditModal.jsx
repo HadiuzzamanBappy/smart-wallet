@@ -10,7 +10,7 @@ import {
 import { normalizeLoanCreditNumbers } from '../../utils/transactionHelpers';
 import { formatCurrencyWithUser } from '../../utils/helpers';
 import Modal from '../UI/base/Modal';
-import LoadingSpinner from '../UI/LoadingSpinner';
+import { LoadingSpinner } from '../UI/LoadingOverlay';
 import Toast from '../UI/base/Toast';
 import ConfirmDialog from '../UI/base/ConfirmDialog';
 import {

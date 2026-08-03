@@ -3,7 +3,7 @@ import { getSalaryPlan, saveSalaryPlan } from '../services/salaryService';
 import { calculatePlan } from '../utils/salaryCalculator';
 import SalaryFormModal from '../components/SalaryManager/SalaryFormModal';
 import SalaryResult from '../components/SalaryManager/SalaryResult';
-import { RefreshCw } from 'lucide-react';
+import LoadingOverlay from '../components/UI/LoadingOverlay';
 
 export default function SalaryManager({ userId, onClose, initialView }) {
   const [view, setView] = useState('loading'); // Always start with loading to fetch data first
@@ -65,11 +65,10 @@ export default function SalaryManager({ userId, onClose, initialView }) {
 
   if (view === 'loading') {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/80 dark:bg-stone-950/80 backdrop-blur-md transition-colors duration-300">
-        <div className="flex flex-col items-center space-y-4 text-emerald-600 dark:text-emerald-400">
-          <RefreshCw className="w-8 h-8 animate-spin" />
-          <p className="font-medium">Loading your financial plan...</p>
-        </div>
+      <div className="fixed inset-0 z-[100]">
+        <LoadingOverlay loading={true} text="Loading your financial plan...">
+          <div className="w-screen h-screen bg-stone-50/20 dark:bg-stone-950/20" />
+        </LoadingOverlay>
       </div>
     );
   }

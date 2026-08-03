@@ -14,6 +14,7 @@ import Button from '../UI/base/Button';
 import Badge from '../UI/base/Badge';
 import IconBox from '../UI/base/IconBox';
 import GlassCard from '../UI/base/GlassCard';
+import LoadingOverlay from '../UI/LoadingOverlay';
 
 const UserMenuDropdown = ({
   onOpenProfile,
@@ -29,35 +30,6 @@ const UserMenuDropdown = ({
     try {
       setLogoutLoading(true);
 
-      // Create a global premium overlay
-      let overlay = document.getElementById('logout-overlay');
-      if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.setAttribute('id', 'logout-overlay');
-        overlay.style.position = 'fixed';
-        overlay.style.inset = '0';
-        overlay.style.display = 'flex';
-        overlay.style.alignItems = 'center';
-        overlay.style.justifyContent = 'center';
-        overlay.style.background = 'rgba(15, 23, 42, 0.8)';
-        overlay.style.backdropFilter = 'blur(12px)';
-        overlay.style.zIndex = '9999';
-        overlay.style.animation = 'fade-in 0.3s ease-out';
-        overlay.innerHTML = `
-          <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:32px;border-radius:24px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);box-shadow:0 25px 50px -12px rgba(0,0,0,0.5)">
-            <div style="position:relative">
-              <svg class="animate-spin" style="height:48px;width:48px;color:#14b8a6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle style="opacity:0.2" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path style="opacity:1" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-              </svg>
-            </div>
-            <div style="font-family:inherit;font-size:14px;font-weight:300;letter-spacing:0.1em;color:#fff;text-transform:uppercase">Securing Account...</div>
-          </div>
-        `;
-        document.body.appendChild(overlay);
-      }
-
-      await new Promise((res) => requestAnimationFrame(res));
       const minMs = 1500;
       await new Promise((res) => setTimeout(res, minMs));
 
@@ -70,9 +42,6 @@ const UserMenuDropdown = ({
       }
 
       if (ok) setIsOpen(false);
-
-      const el = document.getElementById('logout-overlay');
-      if (el) document.body.removeChild(el);
     } finally {
       setLogoutLoading(false);
     }
@@ -107,6 +76,13 @@ const UserMenuDropdown = ({
 
   return (
     <div className="relative flex items-center">
+      {logoutLoading && (
+        <div className="fixed inset-0 z-[9999]">
+          <LoadingOverlay loading={true} text="Securing Account...">
+            <div className="w-screen h-screen bg-stone-50/20 dark:bg-stone-950/20" />
+          </LoadingOverlay>
+        </div>
+      )}
       <Button
         onClick={() => setIsOpen(!isOpen)}
         variant={isOpen ? 'soft' : 'gray'}

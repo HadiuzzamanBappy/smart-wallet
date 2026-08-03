@@ -4,7 +4,7 @@ import { TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTransactions } from '../../hooks/useTransactions';
 import { formatCurrencyWithUser } from '../../utils/helpers';
-import LoadingSpinner from '../UI/LoadingSpinner';
+import { LoadingSpinner } from '../UI/LoadingOverlay';
 import { computeTransactionEffects } from '../../utils/transactionHelpers';
 
 // Base UI Components

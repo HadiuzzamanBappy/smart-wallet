@@ -5,6 +5,7 @@ import { getUserProfile } from '../services/transactionService';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { encryptUserProfile } from '../utils/encryption';
 import { AuthContext } from './createAuthContext';
+import LoadingOverlay from '../components/UI/LoadingOverlay';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -87,12 +88,9 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {loading ? (
-        <div className="min-h-screen flex items-center justify-center bg-stone-50 dark:bg-stone-950 transition-colors duration-300">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto"></div>
-            <p className="mt-4 text-stone-600 dark:text-stone-400">Loading your wallet...</p>
-          </div>
-        </div>
+        <LoadingOverlay loading={true} text="Loading your wallet...">
+          <div className="min-h-screen w-screen bg-stone-50 dark:bg-stone-950 transition-colors duration-300" />
+        </LoadingOverlay>
       ) : (
         children
       )}
