@@ -89,10 +89,10 @@ const EntryPoint = () => {
   );
 
   return (
-    <div className="min-h-screen w-full bg-stone-50 dark:bg-stone-950 font-sans relative overflow-hidden flex flex-col items-center justify-center p-4 sm:p-8 select-none">
+    <div className="dark min-h-screen w-full bg-stone-950 font-sans relative overflow-hidden flex flex-col items-center justify-center p-4 sm:p-8 select-none">
 
       {/* --- SOOTHING NATURE ATMOSPHERE BACKGROUND WITH WATERMARK IMAGE --- */}
-      <div className="absolute inset-0 bg-stone-50 dark:bg-stone-950 pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-stone-950 pointer-events-none z-0" />
       <div
         className={`absolute inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-[0.15] dark:opacity-40 blur-xl dark:blur-none grayscale dark:grayscale-0 mix-blend-luminosity dark:mix-blend-screen transition-opacity duration-[2000ms] ${doorState !== 'closed' ? 'opacity-0' : ''}`}
         style={{ backgroundImage: "url('/img/forest-bg.png')" }}
